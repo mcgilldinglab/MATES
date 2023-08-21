@@ -7,7 +7,7 @@ helpFunction()
    echo -e "\t-t Threads number"
    echo -e "\t-f File contains sample name"
    echo -e "\t-p Path to STAR/STAR_Solo aligned bam folder"
-   echo -e "\t-m 10X or Smart-seq2"
+   echo -e "\t-m 10X or Smart-seq"
    exit 1 # Exit script after printing help
 }
 
@@ -23,18 +23,12 @@ do
 done
 
 # Print helpFunction in case parameters are empty
-if [ -z "$threads_num" ] || [ -z "$file_name" ] 
+if [ -z "$threads_num" ] || [ -z "$file_name" ] || [ -z "$path_to_bam" ] || [ -z "$data_mode" ]
 # || [ -z "$path_to_bam" ]
 then
    echo "Some or all of the parameters are empty";
    helpFunction
 fi
-
-# Begin script in case all parameters are correct
-
-line_count=$(wc -l < $file_name)
-file_batch=$((threads_num - 1))
-result=$((line_count / file_batch))
 
 # Check if the directory exists
 if [ ! -d ./file_tmp/ ]; then
@@ -47,45 +41,74 @@ if [ ! -d ./multi_read/ ]; then
     mkdir ./multi_read/
 fi
 
-####### Split sample list based on threads ########
-split -l $result --numeric-suffixes=0 --additional-suffix='' $file_name ./file_tmp/
+# Begin script in case all parameters are correct
+sample_count=$(wc -l < $file_name)+1
+file_batch=$(threads_num)
+
+result=$(echo "scale=2; $sample_count/$file_batch" | bc)
+rounded_result=$(echo "scale=0; ($result + 0.5)/1" | bc)
+split -l $rounded_result --numeric-suffixes=0 --additional-suffix='' $file_name ./file_tmp/
 
 count=0
 for split_file in ./file_tmp/*; do
     new_name=./file_tmp/$count
-
     mv $split_file $new_name
-
     count=$((count + 1))
 done
 
-
-####### Split bam files into unique reads bam files and multi reads bam files ########
-echo Start splitting bam files into unique/multi reads sub-bam files ...
-for ((i=0; i <= file_batch; i++));
-    do 
-        sh helper_sh/split_u_m.sh ./file_tmp/${i}  $path_to_bam &
-    done
-    wait
-
-echo Finish splitting bam files into unique reads and multi reads sub-bam files.
-
-
-echo Start splitting unique sub-bam based on cell barcodes...
-for ((i=0; i <= file_batch; i++));
-    do 
-        sh helper_sh/split_bc_u.sh ./file_tmp/${i}  $path_to_bam &
-    done
-    wait
-echo Finish splitting unique sub-bam.
-
-echo Start splitting multi sub-bam based on cell barcodes...
-for ((i=0; i <= file_batch; i++));
-    do 
-        sh helper_sh/split_bc_m.sh ./file_tmp/${i}  $path_to_bam &
-    done
-    wait
-echo Finish splitting multi sub-bam.
+###### Smart-seq Mode ######
+if [ "$input_command" = "Smart-seq" ]; then
+    ####### Split bam files into unique reads bam files and multi reads bam files ########
+    echo "Start splitting bam files into unique/multi reads sub-bam files ..."
+    for ((i=0; i <= count; i++));
+        do 
+            sh helper_sh/split_u_m.sh ./file_tmp/${i}  $path_to_bam &
+        done
+        wait
+    echo "Finish splitting bam files into unique reads and multi reads sub-bam files."
 
 
+###### 10X Mode ######
+if [ "$input_command" = "10X" ]; then
+####### If the data is 10X, then split each sample by there barcodes ########
+    ####### Split bam files into unique reads bam files and multi reads bam files ########
+    echo "Start splitting bam files into unique/multi reads sub-bam files ..."
+
+    sh helper_sh/split_u_m.sh $file_name $path_to_bam
+
+    echo "Finish splitting bam files into unique reads and multi reads sub-bam files."
+
+    echo "Start splitting unique sub-bam based on cell barcodes..."
+    for ((i=0; i <= count; i++));
+        do 
+            sh helper_sh/split_bc_u.sh ./file_tmp/${i}  $path_to_bam &
+        done
+        wait
+    echo "Finish splitting unique sub-bam."
+
+    echo "Start splitting multi sub-bam based on cell barcodes..."
+    for ((i=0; i <= count; i++));
+        do 
+            sh helper_sh/split_bc_m.sh ./file_tmp/${i}  $path_to_bam &
+        done
+        wait
+    echo "Finish splitting multi sub-bam."
+
+    rm -r ./file_tmp
+##### Count coverage vector #####
+    sample_name = $(cat $file_name)
+    barcodes_file_path = ./STAR_Solo/"$sample_name"/"$sample_name"_Solo.out/Gene/filtered/barcodes.tsv
+    sample_count=$(wc -l < $barcodes_file_path)+1
+    file_batch=$(threads_num)
+
+    result=$(echo "scale=2; $sample_count/$file_batch" | bc)
+    sample_batch_size=$(echo "scale=0; ($result + 0.5)/1" | bc)
+
+    for ((i=0; i < file_batch; i++));do 
+        python scripts/count_coverage_batch.py $file_name $i $sample_batch &
+        done
+        wait
+##### Quant Unique TE #####
+
+fi
 

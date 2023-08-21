@@ -57,4 +57,4 @@ for sample in sample_list:
 
     df1 = pd.DataFrame.from_dict(unique_dict)
     df1 = df1.loc[:,~df1.columns.duplicated()].copy()
-    df1.to_csv('Unique_TE/'+sample+'/Unqie_batch_'+ str(batch) +'_MTX.csv')
+    df1.to_csv('Unique_TE/'+sample+'/Unique_batch_'+ str(batch) +'_MTX.csv')
