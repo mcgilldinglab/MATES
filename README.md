@@ -13,7 +13,7 @@ STAR --soloType CB_UMI_Simple --soloCBwhitelist barcode_whitelist \
 	--outSAMtype BAM SortedByCoordinate --quantMode GeneCounts \
 	--outSAMattributes CR UR CY UY CB UB NH HI
 ```
-    The filtered cell barcodes file provide by STAR-Solo will be at STAR_Solo/sample_name/sample_name.out/Gene/filtered/barcodes.tsv, if you have your own filtered barcodes file, you can simply replace it at the same location.
+\t The filtered cell barcodes file provide by STAR-Solo will be at STAR_Solo/sample_name/sample_name.out/Gene/filtered/barcodes.tsv, if you have your own filtered barcodes file, you can simply replace it at the same location.
 
 - A sample alignment command line for **Smaert-seq2** scRNA Data:
 ```sh
