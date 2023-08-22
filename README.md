@@ -25,11 +25,7 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
 ```
 ## Step 1: Modifying Transposon Element(TE) Reference
 The default option of our tool/procedure involves the removal of all transposable element (TE) regions that share overlapping base pairs with gene references. This step is taken to prevent any potential information leakage. 
-
-The TE reference data is sourced from https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz for mouse and https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz for humans. 
-
-The Gene reference data is sourced from
-https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz for mouse and https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz for humans.
+The TE reference data is sourced from <u>repeatmasker</u> and the Gene reference data is sourced from <u>ebi</u>.
 
 To build the reference:
 ```sh
@@ -49,21 +45,16 @@ If you have your own TE/Gene reference, you can only run the last command, make 
 ```sh
 ## For mouse, name refernce to mm_TEs.csv and mm_Genes.csv
 ## For human, name reference to hg_TEs.csv and hg_Genes.csv
-
-##Note: The first column of TE reference must be index
-cat mm_TEs.csv | head
+##Note: The first column of TE reference must be index and score column is optional.
+cat mm_TEs.csv | head -n 3
 ,TE_chrom,start,end,score,strand,TE_Name,TE_Fam
 0,chr1,10001,10468,(248945954),+,(TAACCC)n,Simple_repeat
 1,chr1,10469,11447,(248944975),-,TAR1,Satellite/telo
-2,chr1,11485,11676,(248944746),-,L1MC5a,LINE/L1
-3,chr1,11678,11780,(248944642),-,MER5B,DNA/hAT-Charlie
 
-cat mm_Genes.csv
+cat mm_Genes.csv | head -n 3
 Chromosome,Feature,Start,End,Strand,gene_id,gene_name
 chr1,gene,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
 chr1,transcript,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
-chr1,exon,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
-chr1,gene,3102015,3102125,+,ENSMUSG00000064842.1,Gm26206
 ```
 
 
