@@ -1,7 +1,7 @@
 # MATES
 A Deep Learning-Based Model for Quantifying Transposable Elements in Single-Cell Sequencing Data
 
-## Alignment
+## Step 0: Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
 
 - A sample alignment command line for **10X scRNA/scATAC** Data:
@@ -13,7 +13,8 @@ STAR --soloType CB_UMI_Simple --soloCBwhitelist barcode_whitelist \
 	--outSAMtype BAM SortedByCoordinate --quantMode GeneCounts \
 	--outSAMattributes CR UR CY UY CB UB NH HI
 ```
-\t The filtered cell barcodes file provide by STAR-Solo will be at STAR_Solo/sample_name/sample_name.out/Gene/filtered/barcodes.tsv, if you have your own filtered barcodes file, you can simply replace it at the same location.
+> The barcode whitelist can be found at **barcode_whitelist** folder, the original data can be obtained from  https://kb.10xgenomics.com/hc/en-us/articles/115004506263-What-is-a-barcode-whitelist-
+> The filtered cell barcodes file provide by STAR-Solo will be at STAR_Solo/sample_name/sample_name.out/Gene/filtered/barcodes.tsv, if you have your own filtered barcodes file, you can simply replace it at the same location.
 
 - A sample alignment command line for **Smaert-seq2** scRNA Data:
 ```sh
@@ -22,6 +23,8 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
         --readFilesIn sample/sample_1.fastq.gz sample/sample_2.fastq.gz \
         --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts
 ```
+## Step 1: Modifying Transposon Element(TE) Reference
+
 
 
 
