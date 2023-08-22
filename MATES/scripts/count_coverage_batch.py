@@ -77,7 +77,7 @@ def get_coverage_vector(aligned_file,chromosome,start,end,total_reads):
     coverage_vector = coverage_vector/(total_reads)
     return coverage_vector, coverage_vector_igv
 
-def generate_unique_matric(samp_bc, path_to_bam, sav_vec = True):
+def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, sav_vec = True):
     TE_index_list = []
     TE_region_read_num = []
     IGV_vecs = []   
@@ -99,7 +99,7 @@ def generate_unique_matric(samp_bc, path_to_bam, sav_vec = True):
     
     pybedtools.set_tempdir(cur_path+'/tmp')  
     b = pybedtools.example_bedtool(path_to_bam)
-    a_with_b = a.intersect(b, c = True, wa = True, nonamecheck=True)
+    a_with_b = TE_ref_bed.intersect(b, c = True, wa = True, nonamecheck=True)
     count_path = join(path,'count.txt')
     a_with_b.saveas(count_path)
 
@@ -150,7 +150,7 @@ def generate_unique_matric(samp_bc, path_to_bam, sav_vec = True):
     aligned_file.close() 
     return TE_index_list
 
-def generate_multi_matric(samp_bc, path_to_bam):
+def generate_multi_matric(samp_bc, path_to_bam, TE_ref_bed):
     TE_index_list = []
     TE_region_read_num = []
     
@@ -171,7 +171,7 @@ def generate_multi_matric(samp_bc, path_to_bam):
 
     pybedtools.set_tempdir(cur_path+'/tmp')  
     b = pybedtools.example_bedtool(path_to_bam)
-    a_with_b = a.intersect(b, c = True, wa = True, nonamecheck=True)
+    a_with_b = TE_ref_bed.intersect(b, c = True, wa = True, nonamecheck=True)
     count_path = join(path,'count.txt')
     a_with_b.saveas(count_path)
 
@@ -216,7 +216,7 @@ def generate_multi_matric(samp_bc, path_to_bam):
 file_name = sys.argv[1]
 batch = int(sys.argv[2])
 batch_size = int(sys.argv[3])
-
+# def build_coverage_vector(file_name, batch, batch_size) :
 with open('./'+file_name) as file:
     sample_list = file.readlines()
 for i in range(len(sample_list)):
@@ -236,7 +236,7 @@ for sample in sample_list:
     TEs=pd.read_csv('TE_nooverlap.csv',header=None)
     TEs.columns = ['chromosome','start','end','name', 'index','strand', 'TE_fam','length']
     
-    a = pybedtools.example_bedtool(cur_path+'/TE_nooverlap.bed')
+    TE_ref_bed = pybedtools.example_bedtool(cur_path+'/TE_nooverlap.bed')
 
     barcodes_file = cur_path + '/STAR_Solo/' + sample + '/'+sample+'_Solo.out'+ "/Gene/filtered/barcodes.tsv"
     if Path(barcodes_file).is_file():
@@ -249,7 +249,7 @@ for sample in sample_list:
         end_idx = len(barcodes)
     else:
         end_idx = (batch+1)*batch_size
-
+    
     for bc in barcodes[start_idx: end_idx]:
         path_to_unique_bam =  join(unique_path, bc+'.bam')
         path_to_multi_bam =  join(multi_path, bc+'.bam')
@@ -257,19 +257,18 @@ for sample in sample_list:
         samp_bc = [sample,bc]
         if not os.path.exists(path_to_unique_bam):        
             continue
-        
 
         ## if the sample do not have multi mapping reads, save unique info, continue
         if not os.path.exists(path_to_multi_bam):
-            TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, sav_vec = False)
+            TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, sav_vec = False)
             k_path = cur_path+'/count_coverage/'+sample+'/'+bc
             k_path_u = k_path + '/unique_vec'
             os.rmdir(k_path_u)        
             continue
 
         
-        TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, sav_vec = True)
-        TE_index_list_multi = generate_multi_matric(samp_bc, path_to_multi_bam)
+        TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, sav_vec = True)
+        TE_index_list_multi = generate_multi_matric(samp_bc, path_to_multi_bam, TE_ref_bed)
         overlap = list(set(TE_index_list_unique) & set(TE_index_list_multi))
         
         ## remove unique reads coverage vector not in overlap list

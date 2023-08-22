@@ -109,6 +109,21 @@ if [ "$input_command" = "10X" ]; then
         done
         wait
 ##### Quant Unique TE #####
+    mkdir Unique_TE
+    for ((i=0; i < file_batch; i++));do     
+        python quant_unique_TE.py $file_name $i $sample_batch ./TE_nooverlap.csv &
+        done
+        wait
+    
+    python combine_unique_TE.py 
+##### Calculate U&M region information #####
+    mkdir MU_Stats
+    python calculate_MU.py $file_name $bin_size $proportion ./TE_nooverlap.csv
 
+##### Prepare training sample #####
+    python generateTraining.py $file_name $bin_size $proportion
+
+##### Prepare prediction sample #####
+    python generatePrediction.py $file_name $bin_size $proportion ./TE_nooverlap.csv
 fi
 

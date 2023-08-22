@@ -55,6 +55,18 @@ chr1,gene,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
 chr1,transcript,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
 ```
 
+## Step 2: Training Preparation
+The follwing procedure not require GPU usage.
+```sh
+sh process_bam_file.sh -t threads_num -f file_name -p path_to_bam -m data_mode
+```
 
+## Step 3: Training and Prediction
+This step requires GPU availablity.
+``` sh
+sh model_training.sh
+```
+
+## Step 4: Downstrem Analysis
 
 
