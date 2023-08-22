@@ -24,8 +24,7 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
         --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts
 ```
 ## Step 1: Modifying Transposon Element(TE) Reference
-The default option of our tool/procedure involves the removal of all transposable element (TE) regions that share overlapping base pairs with gene references. This step is taken to prevent any potential information leakage. 
-The TE reference data is sourced from <u>repeatmasker</u> and the Gene reference data is sourced from <u>ebi</u>.
+The default option of our tool/procedure involves the removal of all transposable element (TE) regions that share overlapping base pairs with gene references. This step is taken to prevent any potential information leakage. The TE reference data is sourced from repeatmasker and the Gene reference data is sourced from ebi.
 
 To build the reference:
 ```sh
@@ -34,7 +33,6 @@ wget https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm1
 wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz
 python Ref2csv.py Human 
 python build_reference.py Human 
-
 ## for mouse data
 wget https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz
 wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz
