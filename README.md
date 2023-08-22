@@ -28,16 +28,44 @@ The default option of our tool/procedure involves the removal of all transposabl
 
 The TE reference data is sourced from https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz for mouse and https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz for humans. 
 
-Convert TE&Gene refrence into csv format:
+The Gene reference data is sourced from
+https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz for mouse and https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz for humans.
+
+To build the reference:
 ```sh
-python Ref2csv.py Human ## for human data
-python Ref2csv.py Mouse ## for mouse data
+## for human data
+wget https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz 
+wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz
+python Ref2csv.py Human 
+python build_reference.py Human 
+
+## for mouse data
+wget https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz
+wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz
+python Ref2csv.py Mouse 
+python build_reference.py Mouse 
+```
+If you have your own TE/Gene reference, you can only run the last command, make sure they are at the csv format with following columns:
+```sh
+## For mouse, name refernce to mm_TEs.csv and mm_Genes.csv
+## For human, name reference to hg_TEs.csv and hg_Genes.csv
+
+##Note: The first column of TE reference must be index
+cat mm_TEs.csv | head
+,TE_chrom,start,end,score,strand,TE_Name,TE_Fam
+0,chr1,10001,10468,(248945954),+,(TAACCC)n,Simple_repeat
+1,chr1,10469,11447,(248944975),-,TAR1,Satellite/telo
+2,chr1,11485,11676,(248944746),-,L1MC5a,LINE/L1
+3,chr1,11678,11780,(248944642),-,MER5B,DNA/hAT-Charlie
+
+cat mm_Genes.csv
+Chromosome,Feature,Start,End,Strand,gene_id,gene_name
+chr1,gene,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
+chr1,transcript,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
+chr1,exon,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
+chr1,gene,3102015,3102125,+,ENSMUSG00000064842.1,Gm26206
 ```
 
-After converting the raw reference data into csv format, we build up refrence for the MATES:
-```sh
-python Gene2csv.py Human ## for human data
-python Gene2csv.py Mouse ## for mouse data
-```
+
 
 
