@@ -62,7 +62,7 @@ sh process_bam_file.sh -t threads_num -f file_name -p path_to_bam -m data_mode
 ```
 
 ## Step 3: Training and Prediction
-This step requires GPU availablity.
+This step requires GPU availablity, after running the below command, will provide the resulted TE matrices inclusing unique TE matrix, multi TE matrix and combined final matrix.
 ``` sh
 sh model_training.sh
 ```

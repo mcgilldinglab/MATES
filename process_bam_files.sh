@@ -1,34 +1,61 @@
 #!/bin/bash
+threads_num= "1"
+bin_size = "5"
+proportion = "80"
 
 helpFunction()
 {
    echo ""
-   echo "Usage: $0 -t threads_num -f file_name -p path_to_bam -m data_mode"
+   echo "Usage: $0 -t threads_num -f file_name -p path_to_bam --data_mode data_mode --bin_size bin_size --proportion proportion"
    echo -e "\t-t Threads number"
    echo -e "\t-f File contains sample name"
    echo -e "\t-p Path to STAR/STAR_Solo aligned bam folder"
-   echo -e "\t-m 10X or Smart-seq"
+   echo -e "\t--data_mode 10X or Smart-seq"
+   echo -e "\t--bin_size Bin size for identifying U/M region"
+   echo -e "\t--proportion Proportion of dominating U/M reads in region"
    exit 1 # Exit script after printing help
 }
-
-while getopts "t:f:p:" opt
-do
-   case "$opt" in
-      t ) threads_num="$OPTARG" ;;
-      f ) file_name="$OPTARG" ;;
-      p ) path_to_bam="$OPTARG" ;;
-      m ) data_mode="$OPTARG" ;;
-      ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
-   esac
+# Loop through the arguments
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        -t)
+            threads_num="$2"
+            shift 2 ;;
+        -f)
+            file_name="$2"
+            shift 2 ;;
+        -p)
+            path_to_bam="$2"
+            shift 2 ;;
+        --data_mode)
+            data_mode="$2"
+            shift 2 ;;
+        --bin_size)
+            bin_size="$2"
+            shift 2 ;;
+        --proportion)
+            proportion="$2"
+            shift 2 ;;
+        *)
+            echo "Unknown option: $1"
+            helpFunction
+            ;;
+    esac
 done
 
 # Print helpFunction in case parameters are empty
 if [ -z "$threads_num" ] || [ -z "$file_name" ] || [ -z "$path_to_bam" ] || [ -z "$data_mode" ]
 # || [ -z "$path_to_bam" ]
 then
-   echo "Some or all of the parameters are empty";
+   echo "Some required parameters are empty";
    helpFunction
 fi
+
+
+bin_size = $((bin_size))
+proportion = $((proportion))
+threads_num = $((threads_num))
 
 # Check if the directory exists
 if [ ! -d ./file_tmp/ ]; then

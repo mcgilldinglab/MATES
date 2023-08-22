@@ -8,6 +8,7 @@ from AutoEncoder import AutoEncoder
 from MLP import MultiLayerPerceptron
 from MLP import MLP_loss
 import sys
+import math
 from pathlib import Path
 from os.path import join
 import scipy
@@ -21,13 +22,13 @@ device = torch.device('cuda:0')
 torch.cuda.empty_cache()
 torch.cuda.memory_allocated()
 EPOCHS = 1
-BATCH_SIZE = 1000
+BATCH_SIZE = 1
 
 
 file_name = sys.argv[1]
 bin_size = sys.argv[2]
 prop = sys.argv[3]
-path_to_TE_ref = sys.argv[3]
+path_to_TE_ref = sys.argv[4]
 TE_ref = pd.read_csv(path_to_TE_ref,header = None)
 TE_ref.columns = ['Chrom', 'start', 'end','group', 'TE_index', 'strand', 'tefam', 'length']
 TE_ref = TE_ref[['TE_index','group']]
@@ -116,7 +117,7 @@ for sample in sample_list:
                 problist_full = np.append(problist_full, alpha.cpu().detach().numpy().reshape(BATCH_SIZE))
                 pbar.update(1)
 
-    import math
+
     print("start calculating")
     tmp = [math.ceil(int(val) * prob) for val, prob in zip(Meta_Data_full[2], problist_full)]
     Multi_mapping_meta_full = [[val1, val2, val3, tmp_val] 

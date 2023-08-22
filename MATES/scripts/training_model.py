@@ -49,8 +49,7 @@ for sample in sample_list:
     barcodes_file = cur_path + '/STAR_Solo/' + sample + '/'+sample+'_Solo.out'+ "/Gene/filtered/barcodes.tsv"
     if Path(barcodes_file).is_file():
         with open(barcodes_file, "r") as fh:
-            barcodes = [l.rstrip() for l in fh.readlines()]
-    
+            barcodes = [l.rstrip() for l in fh.readlines()]  
     path = cur_path + '/MU_Stats/'+sample
     
     if not os.path.isdir(path + '/seperate_training_'+bin_size + '_' + prop):
