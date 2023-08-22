@@ -41,8 +41,8 @@ python build_reference.py Mouse
 ```
 If you have your own TE/Gene reference, you can only run the last command, make sure they are at the csv format with following columns:
 ```sh
-## For mouse, name refernce to mm_TEs.csv and mm_Genes.csv
-## For human, name reference to hg_TEs.csv and hg_Genes.csv
+## for mouse, name refernce to mm_TEs.csv and mm_Genes.csv
+## for human, name reference to hg_TEs.csv and hg_Genes.csv
 ##Note: The first column of TE reference must be index and score column is optional.
 cat mm_TEs.csv | head -n 3
 ,TE_chrom,start,end,score,strand,TE_Name,TE_Fam
