@@ -76,7 +76,13 @@ sh training_preparation.sh -t threads_num -f file_name -p path_to_bam --data_mod
 ## Step 3: Training and Prediction
 This step requires GPU availablity, after running the below command, will provide the resulted TE matrices inclusing unique TE matrix, multi TE matrix and combined final matrix.
 ``` sh
-sh model_training.sh
+sh model_training.sh -f file_name --data_mode data_mode --bin_size bin_size --proportion proportion
+
+##Usage
+# -f File contains sample name
+# --data_mode 10X or Smart_seq
+# --bin_size Bin size for identifying U/M region
+# --proportion Proportion of dominating U/M reads in region
 ```
 
 ## Step 4: Downstrem Analysis
