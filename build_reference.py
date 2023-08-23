@@ -46,7 +46,7 @@ TE = TE[TE['TE_chrom'].isin(Gene_chr)]
 TE = TE.rename(columns = {'TE_chrom': 'chromosome'})
 TE.reset_index(inplace=True)
 TE['index'] = TE.index
-TE = TE[['chromosome', 'start', 'end', 'index', 'strand', 'TE_fam', 'name','length']]
+TE = TE[['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']]
 TE.to_csv('TE_bed.csv',index = False,header=False)
 genes = genes[['Chromosome', 'Start', 'End']]
 genes = genes.drop_duplicates()

@@ -14,8 +14,6 @@ import pysam
 import pybedtools
 
 
-
-
 def count_region_read(aligned_file, chromosome, start, end):    
     read_name = []
     for pileupcolumn in aligned_file.pileup(chromosome,start,end,truncate =True):
@@ -25,13 +23,11 @@ def count_region_read(aligned_file, chromosome, start, end):
                     read_name.append(pileupread.alignment.query_name)
     return len(read_name)
 
-def get_read_num(samp_bc):
+def get_read_num(sample_name):
     total_reads=0
-    sample = samp_bc[0]
-    barcode = samp_bc[1]
     cur_path = os.getcwd()
-    unique_read_path = cur_path +'/unique_read/'+sample+'/by_barcode/'+barcode+'.bam'
-    multi_read_path = cur_path + '/multi_read/'+sample+'/by_barcode/'+barcode+'.bam'
+    unique_read_path = cur_path +'/unique_read/'+sample_name+'_uniqueread.bam'
+    multi_read_path = cur_path + '/multi_read/'+sample_name+'_multireads.bam'
     
     if os.path.exists(unique_read_path):
         unique_file = pysam.AlignmentFile(unique_read_path, "rb")
@@ -77,22 +73,18 @@ def get_coverage_vector(aligned_file,chromosome,start,end,total_reads):
     coverage_vector = coverage_vector/(total_reads)
     return coverage_vector, coverage_vector_igv
 
-def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, sav_vec = True):
+def generate_unique_matric(sample_name, path_to_bam, TE_ref_bed, sav_vec = True):
     TE_index_list = []
     TE_region_read_num = []
     IGV_vecs = []   
     aligned_file = pysam.AlignmentFile(path_to_bam, "rb")
-    total_reads =  get_read_num(samp_bc)
+    total_reads =  get_read_num(sample_name)
     
-    sample_name = samp_bc[0]
-    bc = samp_bc[1]
     cur_path = os.getcwd()
     path = join(cur_path, 'count_coverage/'+sample_name)
     if not os.path.exists(path):
         os.mkdir(path)
-    path = join(path, bc)
-    if not os.path.exists(path):
-        os.mkdir(path)
+
     unique_vec_path = join(path,'unique_vec')
     if not os.path.exists(unique_vec_path):
         os.mkdir(unique_vec_path)
@@ -150,18 +142,15 @@ def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, sav_vec = True):
     aligned_file.close() 
     return TE_index_list
 
-def generate_multi_matric(samp_bc, path_to_bam, TE_ref_bed):
+def generate_multi_matric(sample_name, path_to_bam, TE_ref_bed):
     TE_index_list = []
     TE_region_read_num = []
     
     aligned_file = pysam.AlignmentFile(path_to_bam, "rb")
-    total_reads =  get_read_num(samp_bc)
+    total_reads =  get_read_num(sample_name)
     
-    sample_name = samp_bc[0]
-    bc = samp_bc[1]
     cur_path = os.getcwd()
     path = join(cur_path, 'count_coverage/' + sample_name)
-    path = join(path, bc)
     if not os.path.exists(path):
         os.mkdir(path)
 
@@ -176,7 +165,7 @@ def generate_multi_matric(samp_bc, path_to_bam, TE_ref_bed):
     a_with_b.saveas(count_path)
 
     TE_vec_count = pd.read_csv(count_path,sep='\t', header=None, low_memory=False)
-    TE_vec_count.columns = ['chromosome', 'start', 'end', 'name', 'index', 'strand','TE_fam', 'length', 'count']
+    TE_vec_count.columns = ['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length', 'count']
     TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
     
     for idx, row in TE_selected.iterrows():
@@ -225,109 +214,101 @@ cur_path = os.getcwd()
 if not os.path.exists(join(cur_path,'count_coverage')):
     os.mkdir(join(cur_path,'count_coverage'))
 
-for sample in sample_list:
+counted = 0
+start_idx = batch*batch_size
+if (batch+1)*batch_size > len(sample_list):
+    end_idx = len(sample_list)
+else:
+    end_idx = (batch+1)*batch_size
+
+TEs=pd.read_csv('TE_nooverlap.csv',header=None)
+TEs.columns = ['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']
+TE_ref_bed = pybedtools.example_bedtool(cur_path+'/TE_nooverlap.bed')
+
+for sample in sample_list[start_idx: end_idx]:
     if not os.path.exists(join(cur_path,'count_coverage/'+sample)):
         os.mkdir(join(cur_path,'count_coverage/'+sample))
     unique_path = join(cur_path,'unique_read/'+sample)
-    unique_path = join(unique_path, 'by_barcode')
     multi_path = join(cur_path, 'multi_read/'+sample)
-    multi_path = join(multi_path, 'by_barcode')
-
-    TEs=pd.read_csv('TE_nooverlap.csv',header=None)
-    TEs.columns = ['chromosome','start','end','name', 'index','strand', 'TE_fam','length']
-    
-    TE_ref_bed = pybedtools.example_bedtool(cur_path+'/TE_nooverlap.bed')
-
-    barcodes_file = cur_path + '/STAR_Solo/' + sample + '/'+sample+'_Solo.out'+ "/Gene/filtered/barcodes.tsv"
-    if Path(barcodes_file).is_file():
-        with open(barcodes_file, "r") as fh:
-            barcodes = [l.rstrip() for l in fh.readlines()]
-
+   
     counted = 0
-    start_idx = batch*batch_size
-    if (batch+1)*batch_size > len(barcodes):
-        end_idx = len(barcodes)
-    else:
-        end_idx = (batch+1)*batch_size
     
-    for bc in barcodes[start_idx: end_idx]:
-        path_to_unique_bam =  join(unique_path, bc+'.bam')
-        path_to_multi_bam =  join(multi_path, bc+'.bam')
-        
-        samp_bc = [sample,bc]
-        if not os.path.exists(path_to_unique_bam):        
-            continue
+    path_to_unique_bam =  join(unique_path, sample+'_uniqueread.bam')
+    path_to_multi_bam =  join(multi_path, sample+'_multireads.bam')
+    
+    if not os.path.exists(path_to_unique_bam):        
+        continue
 
-        ## if the sample do not have multi mapping reads, save unique info, continue
-        if not os.path.exists(path_to_multi_bam):
-            TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, sav_vec = False)
-            k_path = cur_path+'/count_coverage/'+sample+'/'+bc
-            k_path_u = k_path + '/unique_vec'
-            os.rmdir(k_path_u)        
-            continue
-
-        
-        TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, sav_vec = True)
-        TE_index_list_multi = generate_multi_matric(samp_bc, path_to_multi_bam, TE_ref_bed)
-        overlap = list(set(TE_index_list_unique) & set(TE_index_list_multi))
-        
-        ## remove unique reads coverage vector not in overlap list
-        for rname in os.listdir(cur_path+'/count_coverage/'+sample+'/'+bc+'/unique_vec'):
-            if int(rname[:-4]) not in overlap:
-                r_path = cur_path+'/count_coverage/'+sample+'/'+bc+'/unique_vec/'+str(rname)
-                if os.path.isfile(r_path):
-                    os.remove(r_path)
-
-        ## save full multi TE for prediction    
-        k_path = cur_path+'/count_coverage/'+sample+'/'+bc
-        k_path_m = k_path + '/multi_vec'
-        k_m = []
-        k_meta = TE_index_list_multi
-        for kname in k_meta:
-            data_m = scipy.sparse.load_npz(join(k_path_m, str(kname)+'.npz'))
-            k_m.append(data_m.toarray()[0])
-        k_m = np.array(k_m)
-        multi_mtx = sparse.csr_matrix(k_m)
-        scipy.sparse.save_npz(join(k_path,"multi_full.npz"), multi_mtx)
-        with open(join(k_path,"meta_multi_full.npz"),'wb') as f:
-            pickle.dump(k_meta,f)
-
-        for rname in os.listdir(cur_path+'/count_coverage/'+sample+'/'+bc+'/multi_vec'):
-            if int(rname[:-4]) not in overlap:
-                h_path = cur_path+'/count_coverage/'+sample+'/'+bc+'/multi_vec/'+str(rname)
-                if os.path.isfile(h_path):
-                    os.remove(h_path)        
-
-        ## save samples could use for training
-        k_path = cur_path+'/count_coverage/'+sample+'/'+bc
+    ## if the sample do not have multi mapping reads, save unique info, continue
+    if not os.path.exists(path_to_multi_bam):
+        TE_index_list_unique = generate_unique_matric(sample,path_to_unique_bam, TE_ref_bed, sav_vec = False)
+        k_path = cur_path+'/count_coverage/'+sample
         k_path_u = k_path + '/unique_vec'
-        k_path_m = k_path + '/multi_vec'
-        k_u = []
-        k_m = []
-        k_meta = overlap
-        for kname in k_meta:
-            data_u = scipy.sparse.load_npz(join(k_path_u, str(kname)+'.npz'))
-            k_u.append(data_u.toarray()[0])
-            if os.path.isfile(join(k_path_u, str(kname)+'.npz')):
-                os.remove(join(k_path_u, str(kname)+'.npz'))
+        os.rmdir(k_path_u)        
+        continue
 
-            data_m = scipy.sparse.load_npz(join(k_path_m, str(kname)+'.npz'))
-            k_m.append(data_m.toarray()[0])
-            if os.path.isfile(join(k_path_m, str(kname)+'.npz')):
-                os.remove(join(k_path_m, str(kname)+'.npz'))
-        k_u = np.array(k_u)
-        k_m = np.array(k_m)
-        unique_mtx = sparse.csr_matrix(k_u)
-        multi_mtx = sparse.csr_matrix(k_m)
-        scipy.sparse.save_npz(join(k_path,"unique.npz"), unique_mtx)
-        scipy.sparse.save_npz(join(k_path,"multi.npz"), multi_mtx)
-        with open(join(k_path,"meta.npz"),'wb') as f:
-            pickle.dump(k_meta,f)
-        
-        shutil.rmtree(k_path_u)
-        shutil.rmtree(k_path_m)
-        os.remove(cur_path+'/count_coverage/'+sample+'/'+bc+'/count.txt')
+    
+    TE_index_list_unique = generate_unique_matric(sample,path_to_unique_bam, TE_ref_bed, sav_vec = True)
+    TE_index_list_multi = generate_multi_matric(sample, path_to_multi_bam, TE_ref_bed)
+    overlap = list(set(TE_index_list_unique) & set(TE_index_list_multi))
+    
+    ## remove unique reads coverage vector not in overlap list
+    for rname in os.listdir(cur_path+'/count_coverage/'+sample+'/unique_vec'):
+        if int(rname[:-4]) not in overlap:
+            r_path = cur_path+'/count_coverage/'+sample+'/unique_vec/'+str(rname)
+            if os.path.isfile(r_path):
+                os.remove(r_path)
 
-        counted += 1
-        if counted % 10 == 0 or counted == batch_size:
-            print("Finish batch " + str(batch) + ":" + str(counted) +"/"+ str(batch_size) + " for sample" + sample)
+    ## save full multi TE for prediction    
+    k_path = cur_path+'/count_coverage/'+sample
+    k_path_m = k_path + '/multi_vec'
+    k_m = []
+    k_meta = TE_index_list_multi
+    for kname in k_meta:
+        data_m = scipy.sparse.load_npz(join(k_path_m, str(kname)+'.npz'))
+        k_m.append(data_m.toarray()[0])
+    k_m = np.array(k_m)
+    multi_mtx = sparse.csr_matrix(k_m)
+    scipy.sparse.save_npz(join(k_path,"multi_full.npz"), multi_mtx)
+    with open(join(k_path,"meta_multi_full.npz"),'wb') as f:
+        pickle.dump(k_meta,f)
+
+    for rname in os.listdir(cur_path+'/count_coverage/'+sample+'/multi_vec'):
+        if int(rname[:-4]) not in overlap:
+            h_path = cur_path+'/count_coverage/'+sample+'/multi_vec/'+str(rname)
+            if os.path.isfile(h_path):
+                os.remove(h_path)        
+
+    ## save samples could use for training
+    k_path = cur_path+'/count_coverage/'+sample
+    k_path_u = k_path + '/unique_vec'
+    k_path_m = k_path + '/multi_vec'
+    k_u = []
+    k_m = []
+    k_meta = overlap
+    for kname in k_meta:
+        data_u = scipy.sparse.load_npz(join(k_path_u, str(kname)+'.npz'))
+        k_u.append(data_u.toarray()[0])
+        if os.path.isfile(join(k_path_u, str(kname)+'.npz')):
+            os.remove(join(k_path_u, str(kname)+'.npz'))
+
+        data_m = scipy.sparse.load_npz(join(k_path_m, str(kname)+'.npz'))
+        k_m.append(data_m.toarray()[0])
+        if os.path.isfile(join(k_path_m, str(kname)+'.npz')):
+            os.remove(join(k_path_m, str(kname)+'.npz'))
+    k_u = np.array(k_u)
+    k_m = np.array(k_m)
+    unique_mtx = sparse.csr_matrix(k_u)
+    multi_mtx = sparse.csr_matrix(k_m)
+    scipy.sparse.save_npz(join(k_path,"unique.npz"), unique_mtx)
+    scipy.sparse.save_npz(join(k_path,"multi.npz"), multi_mtx)
+    with open(join(k_path,"meta.npz"),'wb') as f:
+        pickle.dump(k_meta,f)
+    
+    shutil.rmtree(k_path_u)
+    shutil.rmtree(k_path_m)
+    os.remove(cur_path+'/count_coverage/'+sample+'/count.txt')
+
+    counted += 1
+    if counted % 10 == 0 or counted == batch_size:
+        print("Finish batch " + str(batch) + ":" + str(counted) +"/"+ str(batch_size) + " for sample" + sample)
