@@ -1,6 +1,6 @@
 # MATES
 A Deep Learning-Based Model for Quantifying Transposable Elements in Single-Cell Sequencing Data
-![](/MATES/figures/Model-figure.pdf "Model Overview")
+<img title="Model Overview" alt="Alt text" src="/MATES/figures/Model-figure.pdf">
 ## Step 0: Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
 
