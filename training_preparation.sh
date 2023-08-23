@@ -85,7 +85,7 @@ for split_file in ./file_tmp/*; do
 done
 
 ###### Smart-seq Mode ######
-if [ "$input_command" = "Smart_seq" ]; then
+if [ "$data_mode" = "Smart_seq" ]; then
     ####### Split bam files into unique reads bam files and multi reads bam files ########
     echo "Start splitting bam files into unique/multi reads sub-bam files ..."
     for ((i=0; i <= count; i++));
@@ -126,7 +126,7 @@ if [ "$input_command" = "Smart_seq" ]; then
     python MATES/generatePrediction.py $file_name $bin_size $proportion ./TE_nooverlap.csv
 
 ###### 10X Mode ######
-if [ "$input_command" = "10X" ]; then
+if [ "$data_mode" = "10X" ]; then
 ####### If the data is 10X, then split each sample by there barcodes ########
     ####### Split bam files into unique reads bam files and multi reads bam files ########
     echo "Start splitting bam files into unique/multi reads sub-bam files ..."

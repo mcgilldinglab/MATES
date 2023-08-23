@@ -54,20 +54,21 @@ bin_size = $((bin_size))
 proportion = $((proportion))
 threads_num = $((threads_num))
 
-##### Training the model #####
-python training_model.py $file_name $bin_size $proportion
-##### Make prediction #####
-python prediction.py $file_name $bin_size $proportion ./TE_nooverlap.csv
+if [ "$input_command" = "10X" ]; then
+    ##### Training the model #####
+    python training_model.py $file_name $bin_size $proportion $data_mode
+    ##### Make prediction #####
+    python prediction.py $file_name $bin_size $proportion ./TE_nooverlap.csv  $data_mode
 
-##### Sort out result matrix #####
-mkdir -p result_MTX
+    ##### Sort out result matrix #####
+    mkdir -p result_MTX
 
-for line in $(cat "$file_name"); do
-    mkdir -p result_MTX/${line}
-    mv Combination/${line}/TE_MTX.csv result_MTX/${line}/TE_MTX.csv
-    mv Unique_TE/${line}/Unique_All_MTX.csv result_MTX/${line}/Unique_TE_MTX.csv
-    mv prediction/${line}_Multi.csv result_MTX/${line}/Multi_TE_MTX.csv
-    rm -r Combination
-    rm -r Unique_TE
-    rm -r prediction
-    done
+    for line in $(cat "$file_name"); do
+        mkdir -p result_MTX/${line}
+        mv Combination/${line}/TE_MTX.csv result_MTX/${line}/TE_MTX.csv
+        mv Unique_TE/${line}/Unique_All_MTX.csv result_MTX/${line}/Unique_TE_MTX.csv
+        mv prediction/${line}_Multi.csv result_MTX/${line}/Multi_TE_MTX.csv
+        rm -r Combination
+        rm -r Unique_TE
+        rm -r prediction
+        done
