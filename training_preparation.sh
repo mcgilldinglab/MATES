@@ -120,7 +120,7 @@ if [ "$input_command" = "Smart_seq" ]; then
     python MATES/calculate_MU.py $file_name $bin_size $proportion ./TE_nooverlap.csv $data_mode
 
 ##### Prepare training sample #####
-    python MATES/generateTraining.py $file_name $bin_size $proportion
+    python MATES/generateTraining.py $file_name $bin_size $proportion $data_mode
 
 ##### Prepare prediction sample #####
     python MATES/generatePrediction.py $file_name $bin_size $proportion ./TE_nooverlap.csv
@@ -179,7 +179,7 @@ if [ "$input_command" = "10X" ]; then
     python MATES/calculate_MU.py $file_name $bin_size $proportion ./TE_nooverlap.csv $data_mode
 
 ##### Prepare training sample #####
-    python MATES/generateTraining.py $file_name $bin_size $proportion
+    python MATES/generateTraining.py $file_name $bin_size $proportion $data_mode
 
 ##### Prepare prediction sample #####
     python MATES/generatePrediction.py $file_name $bin_size $proportion ./TE_nooverlap.csv

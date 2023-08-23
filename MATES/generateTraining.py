@@ -10,26 +10,8 @@ import sys
 from os.path import join
 from tqdm import tqdm
 
-file_name = sys.argv[1]
-bin_size = int(sys.argv[2])
-prop = int (sys.argv[3])
-cur_path = os.getcwd()
-with open('./'+file_name) as file:
-    sample_list = file.readlines()
-for i in range(len(sample_list)):
-    sample_list[i] = sample_list[i][:-1]
-for sample in sample_list:
-    barcodes_file = cur_path + '/STAR_Solo/' + sample + '/'+sample+'_Solo.out'+ "/Gene/filtered/barcodes.tsv"
-    if Path(barcodes_file).is_file():
-        with open(barcodes_file, "r") as fh:
-            barcodes = [l.rstrip() for l in fh.readlines()]
-
-
-    path = cur_path+'/MU_Stats/'+sample+'/'
-    file = open(path + 'M&U_'+str(bin_size)+'_'+str(prop)+'%.pkl', 'rb')
-    cell_ana = pickle.load(file)
-    csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
-    stat = pd.read_csv(csv)
+def get_unique_sample(cell_ana, stat, data_mode, sample=None):
+    cur_path = os.getcwd()
     stat.columns = ['fam','count']
     selected_TE_fam = stat[stat['count']>50]['fam'].tolist()
     unique_vec_matrix = {}
@@ -37,13 +19,14 @@ for sample in sample_list:
     for fam in selected_TE_fam:
         unique_vec_matrix[fam]=[]
         unique_vec_meta[fam] =[]
-    path = join(cur_path+'/count_coverage',sample)
 
-    
+    if data_mode == 'Smart_seq':
+        path = cur_path + '/count_coverage'
+    elif data_mode == '10X':
+        path = join(cur_path+'/count_coverage',sample)
     for cb in cell_ana.keys():
         cb_path=join(path,cb)
         if os.path.isdir(cb_path):
-
             meta_path = join(cb_path, 'meta.npz')
             unique_path = join(cb_path,'unique.npz')
             if os.stat(unique_path).st_size != 0 and os.path.isfile(unique_path):
@@ -56,7 +39,6 @@ for sample in sample_list:
                     for idx in cell_ana[cb][TE_fam]:
                         read_num = uniq_count[uniq_count['TE_index'] == idx].TE_region_read_num.tolist()[0]
                         unique_vec_meta[TE_fam].append([cb,idx,read_num])
-            
     random.seed(0)
     unique_vec_meta_select = unique_vec_meta.copy()
     for te, vec in unique_vec_meta_select.items():
@@ -66,7 +48,10 @@ for sample in sample_list:
     unique_TE_matrix=[]
     fam_idx = 0
     for fam, metalist in unique_vec_meta_select.items():
-        path = join(cur_path + '/count_coverage',sample)
+        if data_mode == 'Smart_seq':
+            path = cur_path + '/count_coverage'
+        elif data_mode == '10X':
+            path = join(cur_path+'/count_coverage',sample)
         for tmp in metalist:
             cb_path = join(path,tmp[0])
             unique_path = join(cb_path,'unique.npz')
@@ -77,34 +62,19 @@ for sample in sample_list:
             unique_vec_matrix.append(sparse_vector)
             unique_TE_matrix.append(fam_idx)
         fam_idx+=1
+    return unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select
 
-    TE_train = np.array(unique_vec_matrix)
-    Batch_train = np.array(unique_TE_matrix)
-    p1= cur_path + '/MU_Stats/'+sample+'/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
-    scipy.sparse.save_npz((p1), sparse.csr_matrix(TE_train))
-    p2 = cur_path + '/MU_Stats/'+sample+'/Unique_BATCH_train_'+str(bin_size)+'_'+str(prop)+'.npz'
-    scipy.sparse.save_npz((p2), sparse.csr_matrix(Batch_train))
-    with open(cur_path + '/MU_Stats/'+sample+'/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
-        pickle.dump(unique_vec_meta_select, f)
-    print("Finish analyse training sample for unqiue read.")
-    
-    unique_vec_meta_Transform = {}
-    for cell in cell_ana.keys():
-        unique_vec_meta_Transform[cell] = {}
-        for fam in unique_vec_meta_select.keys():
-            unique_vec_meta_Transform[cell][fam] = []
-    for te, metalist in unique_vec_meta_select.items():
-        for tmp in metalist:
-            unique_vec_meta_Transform[tmp[0]][te].append(tmp[1])
-
+def get_multi_sample( cell_ana, data_mode, sample=None):
+    cur_path = os.getcwd()
     multi_vec_matrix = []
     multi_TE_matrix = []
     multi_region_info = []
     multi_cell_info = []
-    
-    path = join(cur_path + '/count_coverage',sample)
+    if data_mode == 'Smart_seq':
+        path = cur_path + '/count_coverage'
+    elif data_mode == '10X':
+        path = join(cur_path+'/count_coverage',sample)
     for cb in cell_ana.keys():
-
         cb_path=join(path,cb)
         if os.path.isdir(cb_path):
             multi_path = join(cb_path,'multi.npz')
@@ -129,20 +99,100 @@ for sample in sample_list:
                         multi_region_info.append(region_info[file])
                         multi_cell_info.append([cb,file,read_num])
                     fam_idx+=1
-            
     MLP_TE_train = np.array(multi_vec_matrix)
     MLP_Batch_train = np.array(multi_TE_matrix)
     MLP_meta_train = np.array(multi_cell_info)
     MLP_Region_train = np.array(multi_region_info)
+    return MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train
+
+file_name = sys.argv[1]
+bin_size = int(sys.argv[2])
+prop = int (sys.argv[3])
+data_mode = sys.argv[4]
+cur_path = os.getcwd()
+with open('./'+file_name) as file:
+    sample_list = file.readlines()
+for i in range(len(sample_list)):
+    sample_list[i] = sample_list[i][:-1]
+if data_mode == 'Smart_seq':
+    path = cur_path+'/MU_Stats/'
+    file = open(path + 'M&U_'+str(bin_size)+'_'+str(prop)+'%.pkl', 'rb')
+    cell_ana = pickle.load(file)
+    csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
+    stat = pd.read_csv(csv)
+
+    unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat)
+    TE_train = np.array(unique_vec_matrix)
+    Batch_train = np.array(unique_TE_matrix)
+    p1= cur_path + '/MU_Stats/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+    scipy.sparse.save_npz((p1), sparse.csr_matrix(TE_train))
+    p2 = cur_path + '/MU_Stats/Unique_BATCH_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+    scipy.sparse.save_npz((p2), sparse.csr_matrix(Batch_train))
+    with open(cur_path + '/MU_Stats/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
+        pickle.dump(unique_vec_meta_select, f)
+    print("Finish analyse training sample for unqiue read TE.")
     
-    p5 = cur_path + '/MU_Stats/'+sample+'/Multi_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+    unique_vec_meta_Transform = {}
+    for cell in cell_ana.keys():
+        unique_vec_meta_Transform[cell] = {}
+        for fam in unique_vec_meta_select.keys():
+            unique_vec_meta_Transform[cell][fam] = []
+    for te, metalist in unique_vec_meta_select.items():
+        for tmp in metalist:
+            unique_vec_meta_Transform[tmp[0]][te].append(tmp[1])
+
+    MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train = get_multi_sample(cell_ana,data_mode)
+    
+    p5 = cur_path + '/MU_Stats/Multi_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
     scipy.sparse.save_npz((p5), sparse.csr_matrix(MLP_TE_train))
-    p6 = cur_path + '/MU_Stats/'+sample+'/Multi_Batch_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+    p6 = cur_path + '/MU_Stats/Multi_Batch_train_'+str(bin_size)+'_'+str(prop)+'.npz'
     scipy.sparse.save_npz((p6), sparse.csr_matrix(MLP_Batch_train))
-    p7 = cur_path + '/MU_Stats/'+sample+'/Multi_Region_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+    p7 = cur_path + '/MU_Stats/Multi_Region_train_'+str(bin_size)+'_'+str(prop)+'.npz'
     scipy.sparse.save_npz(p7, sparse.csr_matrix(MLP_Region_train))
 
-    with open(cur_path + '/MU_Stats/'+sample+'/Multi_meta_train_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
+    with open(cur_path + '/MU_Stats/Multi_meta_train_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
         pickle.dump(MLP_meta_train, f)
-    print("Finish analyse training sample for multi read.")
-    print("Finish Sample" + sample)
+    print("Finish analyse training sample for multi read TE.")
+    print("Finish generating training sample.")
+
+elif data_mode == '10X':
+    for sample in sample_list:
+        path = cur_path+'/MU_Stats/'+sample+'/'
+        file = open(path + 'M&U_'+str(bin_size)+'_'+str(prop)+'%.pkl', 'rb')
+        cell_ana = pickle.load(file)
+        csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
+        stat = pd.read_csv(csv)
+
+        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode,sample)
+        TE_train = np.array(unique_vec_matrix)
+        Batch_train = np.array(unique_TE_matrix)
+        p1= cur_path + '/MU_Stats/'+sample+'/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz((p1), sparse.csr_matrix(TE_train))
+        p2 = cur_path + '/MU_Stats/'+sample+'/Unique_BATCH_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz((p2), sparse.csr_matrix(Batch_train))
+        with open(cur_path + '/MU_Stats/'+sample+'/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
+            pickle.dump(unique_vec_meta_select, f)
+        print("Finish analyse training sample for unqiue read TE in "+sample+".")
+        
+        unique_vec_meta_Transform = {}
+        for cell in cell_ana.keys():
+            unique_vec_meta_Transform[cell] = {}
+            for fam in unique_vec_meta_select.keys():
+                unique_vec_meta_Transform[cell][fam] = []
+        for te, metalist in unique_vec_meta_select.items():
+            for tmp in metalist:
+                unique_vec_meta_Transform[tmp[0]][te].append(tmp[1])
+
+        MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train = get_multi_sample(cell_ana, data_mode,sample)
+        
+        p5 = cur_path + '/MU_Stats/'+sample+'/Multi_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz((p5), sparse.csr_matrix(MLP_TE_train))
+        p6 = cur_path + '/MU_Stats/'+sample+'/Multi_Batch_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz((p6), sparse.csr_matrix(MLP_Batch_train))
+        p7 = cur_path + '/MU_Stats/'+sample+'/Multi_Region_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz(p7, sparse.csr_matrix(MLP_Region_train))
+
+        with open(cur_path + '/MU_Stats/'+sample+'/Multi_meta_train_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
+            pickle.dump(MLP_meta_train, f)
+        print("Finish analyse training sample for multi read TE in "+sample+".")
+        print("Finish Sample" + sample)
