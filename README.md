@@ -58,7 +58,15 @@ chr1,transcript,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
 ## Step 2: Training Preparation
 The follwing procedure not require GPU usage.
 ```sh
-sh process_bam_file.sh -t threads_num -f file_name -p path_to_bam -m data_mode
+sh process_bam_file.sh -t threads_num -f file_name -p path_to_bam --data_mode data_mode --bin_size bin_size --proportion proportion
+
+##Usage
+# -t Threads number
+# -f File contains sample name
+# -p Path to STAR/STAR_Solo aligned bam folder
+# --data_mode 10X or Smart_seq
+# --bin_size Bin size for identifying U/M region
+# --proportion Proportion of dominating U/M reads in region
 ```
 
 ## Step 3: Training and Prediction
