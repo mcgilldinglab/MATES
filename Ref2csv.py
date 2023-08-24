@@ -5,6 +5,8 @@ import pyranges as pr
 
 species = sys.argv[1]
 if species == 'Mouse':
+    os.system("wget https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz")
+    os.system("wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz")
     os.system("gzip -d mm10.fa.out.gz")
     os.system("gzip -d gencode.vM10.annotation.gtf.gz")
     with open('mm10.fa.out', 'r') as infile:
@@ -42,6 +44,8 @@ if species == 'Mouse':
     
 
 elif species == 'Human':
+    os.system("wget https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz")
+    os.system("wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz")
     os.system("gzip -d hg38.fa.out.gz")
     os.system("gzip -d gencode.v40.primary_assembly.annotation.gtf.gz")
     with open('hg38.fa.out', 'r') as infile:

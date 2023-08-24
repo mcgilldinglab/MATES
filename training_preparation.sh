@@ -7,10 +7,11 @@ proportion = "80"
 helpFunction()
 {
    echo ""
-   echo "Usage: $0 -t threads_num -f file_name -p path_to_bam --data_mode data_mode --bin_size bin_size --proportion proportion"
+   echo "Usage: $0 -t threads_num -f file_name -p path_to_bam --TE_mode TE_mode --data_mode data_mode --bin_size bin_size --proportion proportion"
    echo -e "\t-t Threads number"
    echo -e "\t-f File contains sample name"
    echo -e "\t-p Path to STAR/STAR_Solo aligned bam folder"
+   echo -e "\t--TE_mode exlusive or inclusive, represents whether keep the TE instances with gene, the default will be exclusive"
    echo -e "\t--data_mode 10X or Smart-seq"
    echo -e "\t--bin_size Bin size for identifying U/M region"
    echo -e "\t--proportion Proportion of dominating U/M reads in region"
@@ -46,13 +47,24 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Print helpFunction in case parameters are empty
-if [ -z "$threads_num" ] || [ -z "$file_name" ] || [ -z "$path_to_bam" ] || [ -z "$data_mode" ]
+if [ -z "$threads_num" ] || [ -z "$file_name" ] || [ -z "$path_to_bam" ] || [ -z "$data_mode" ];
 # || [ -z "$path_to_bam" ]
 then
    echo "Some required parameters are empty";
    helpFunction
 fi
 
+if [ -z "$TE_mode" ];
+then
+    TE_mode = exclusive
+fi
+
+if [[ "$string1" == "exclusiv" ]];
+then
+    TE_ref_path = './TE_nooverlap.csv'
+else 
+    TE_ref_path = './TE_Full.csv'
+fi
 
 bin_size = $((bin_size))
 proportion = $((proportion))
@@ -102,14 +114,14 @@ if [ "$data_mode" = "Smart_seq" ]; then
     sample_per_batch=$(echo "scale=0; ($result + 0.5)/1" | bc)
 
     for ((i=0; i < file_batch; i++));do 
-        python MATES/count_coverage_Smartseq.py $file_name $i $sample_per_batch &
+        python MATES/count_coverage_Smartseq.py $file_name $i $sample_per_batch $TE_ref_path &
         done
         wait
 
 ##### Quant Unique TE #####
     mkdir Unique_TE
     for ((i=0; i < file_batch; i++));do     
-        python MATES/quant_unique_TE.py $file_name $i $sample_per_batch ./TE_nooverlap.csv $data_mode &
+        python MATES/quant_unique_TE.py $file_name $i $sample_per_batch $TE_ref_path $data_mode &
         done
         wait
     
@@ -117,13 +129,13 @@ if [ "$data_mode" = "Smart_seq" ]; then
 
 ##### Calculate U&M region information #####
     mkdir MU_Stats
-    python MATES/calculate_MU.py $file_name $bin_size $proportion ./TE_nooverlap.csv $data_mode
+    python MATES/calculate_MU.py $file_name $bin_size $proportion $TE_ref_path $data_mode
 
 ##### Prepare training sample #####
     python MATES/generateTraining.py $file_name $bin_size $proportion $data_mode
 
 ##### Prepare prediction sample #####
-    python MATES/generatePrediction.py $file_name $bin_size $proportion ./TE_nooverlap.csv
+    python MATES/generatePrediction.py $file_name $bin_size $proportion $TE_ref_path
 
 ###### 10X Mode ######
 if [ "$data_mode" = "10X" ]; then
@@ -162,13 +174,13 @@ if [ "$data_mode" = "10X" ]; then
     sample_per_batch=$(echo "scale=0; ($result + 0.5)/1" | bc)
 
     for ((i=0; i < file_batch; i++));do 
-        python MATES/count_coverage_10X.py $file_name $i $sample_per_batch &
+        python MATES/count_coverage_10X.py $file_name $i $sample_per_batch $TE_ref_path &
         done
         wait
 ##### Quant Unique TE #####
     mkdir Unique_TE
     for ((i=0; i < file_batch; i++));do     
-        python MATES/quant_unique_TE.py $file_name $i $sample_per_batch ./TE_nooverlap.csv $data_mode  &
+        python MATES/quant_unique_TE.py $file_name $i $sample_per_batch $TE_ref_path $data_mode  &
         done
         wait
     
@@ -176,12 +188,12 @@ if [ "$data_mode" = "10X" ]; then
 
 ##### Calculate U&M region information #####
     mkdir MU_Stats
-    python MATES/calculate_MU.py $file_name $bin_size $proportion ./TE_nooverlap.csv $data_mode
+    python MATES/calculate_MU.py $file_name $bin_size $proportion $TE_ref_path $data_mode
 
 ##### Prepare training sample #####
     python MATES/generateTraining.py $file_name $bin_size $proportion $data_mode
 
 ##### Prepare prediction sample #####
-    python MATES/generatePrediction.py $file_name $bin_size $proportion ./TE_nooverlap.csv
+    python MATES/generatePrediction.py $file_name $bin_size $proportion $TE_ref_path
 fi
 

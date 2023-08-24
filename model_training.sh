@@ -6,8 +6,7 @@ proportion = "80"
 helpFunction()
 {
    echo ""
-   echo "Usage: $0 -t threads_num -f file_name --data_mode data_mode --bin_size bin_size --proportion proportion"
-   echo -e "\t-t Threads number"
+   echo "Usage: $0 -f file_name --data_mode data_mode --bin_size bin_size --proportion proportion"
    echo -e "\t-f File contains sample name"
 #    echo -e "\t-p Path to STAR/STAR_Solo aligned bam folder"
    echo -e "\t--data_mode 10X or Smart_seq"
@@ -42,8 +41,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Print helpFunction in case parameters are empty
-if [ -z "$threads_num" ] || [ -z "$file_name" ] || [ -z "$data_mode" ]
-# || [ -z "$path_to_bam" ]
+if [ -z "$file_name" ] || [ -z "$data_mode" ]
 then
    echo "Some required parameters are empty";
    helpFunction
@@ -51,7 +49,6 @@ fi
 
 bin_size = $((bin_size))
 proportion = $((proportion))
-threads_num = $((threads_num))
 ##### Training the model #####
 # file_name = sys.argv[1]
 # BIN_SIZE = sys.argv[2]

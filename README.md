@@ -4,8 +4,12 @@ A Deep Learning-Based Model for Quantifying Transposable Elements in Single-Cell
 ## Overview
 <img title="Model Overview" alt="Alt text" src="/MATES/figures/Model-figure-01.png">
 
+## Installation
+### Prerequisites
+### Installing MATES
 
-## Step 0: Alignment
+## Usage
+### Step 0: Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
 
 - A sample alignment command line for **10X scRNA/scATAC** Data:
@@ -27,20 +31,14 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
         --readFilesIn sample/sample_1.fastq.gz sample/sample_2.fastq.gz \
         --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts
 ```
-## Step 1: Modifying Transposon Element(TE) Reference
+### Step 1: Building Transposon Element(TE) Reference
 The default option of our tool/procedure involves the removal of all transposable element (TE) regions that share overlapping base pairs with gene references. This step is taken to prevent any potential information leakage. The TE reference data is sourced from repeatmasker and the Gene reference data is sourced from ebi.
 
 To build the reference:
 ```sh
 ## for human data
-wget https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz 
-wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz
-python Ref2csv.py Human 
 python build_reference.py Human 
 ## for mouse data
-wget https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz
-wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz
-python Ref2csv.py Mouse 
 python build_reference.py Mouse 
 ```
 If you have your own TE/Gene reference, you can only run the last command, make sure they are at the csv format with following columns:
@@ -59,22 +57,26 @@ chr1,gene,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
 chr1,transcript,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
 ```
 
-## Step 2: Training Preparation
+### Step 2: Training Preparation
+#### For scRNA data and scATAC data
 The follwing procedure not require GPU usage.
 ```sh
-sh training_preparation.sh -t threads_num -f file_name -p path_to_bam --data_mode data_mode --bin_size bin_size --proportion proportion
+sh training_preparation.sh -t threads_num -f file_name -p path_to_bam --TE_mode TE_mode --data_mode data_mode --bin_size bin_size --proportion proportion
 
 ##Usage
 # -t Threads number
 # -f File contains sample name
 # -p Path to STAR/STAR_Solo aligned bam folder
+# --TE_mode exlusive or inclusive, represents whether keep the TE instances with gene, the default will be exclusive
 # --data_mode 10X or Smart_seq
 # --bin_size Bin size for identifying U/M region
 # --proportion Proportion of dominating U/M reads in region
 ```
+#### For Multi-omics Data
 
-## Step 3: Training and Prediction
+### Step 3: Training and Prediction
 This step requires GPU availablity, after running the below command, will provide the resulted TE matrices inclusing unique TE matrix, multi TE matrix and combined final matrix.
+#### For scRNA data and scATAC data
 ``` sh
 sh model_training.sh -f file_name --data_mode data_mode --bin_size bin_size --proportion proportion
 
@@ -84,7 +86,8 @@ sh model_training.sh -f file_name --data_mode data_mode --bin_size bin_size --pr
 # --bin_size Bin size for identifying U/M region
 # --proportion Proportion of dominating U/M reads in region
 ```
+#### For Multi-omics Data
 
-## Step 4: Downstrem Analysis
+### Step 4: Downstrem Analysis
 
-
+ ## Example

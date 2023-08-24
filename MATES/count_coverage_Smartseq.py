@@ -205,6 +205,7 @@ def generate_multi_matric(sample_name, path_to_bam, TE_ref_bed):
 file_name = sys.argv[1]
 batch = int(sys.argv[2])
 batch_size = int(sys.argv[3])
+TE_ref_path = sys.argv[4]
 # def build_coverage_vector(file_name, batch, batch_size) :
 with open('./'+file_name) as file:
     sample_list = file.readlines()
@@ -221,9 +222,9 @@ if (batch+1)*batch_size > len(sample_list):
 else:
     end_idx = (batch+1)*batch_size
 
-TEs=pd.read_csv('TE_nooverlap.csv',header=None)
+TEs=pd.read_csv(TE_ref_path,header=None)
 TEs.columns = ['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']
-TE_ref_bed = pybedtools.example_bedtool(cur_path+'/TE_nooverlap.bed')
+TE_ref_bed = pybedtools.example_bedtool(cur_path+'/'+TE_ref_path[:-4] + '.bed')
 
 for sample in sample_list[start_idx: end_idx]:
     if not os.path.exists(join(cur_path,'count_coverage/'+sample)):

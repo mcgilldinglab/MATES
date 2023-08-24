@@ -13,9 +13,6 @@ from pathlib import Path
 import pysam
 import pybedtools
 
-
-
-
 def count_region_read(aligned_file, chromosome, start, end):    
     read_name = []
     for pileupcolumn in aligned_file.pileup(chromosome,start,end,truncate =True):
@@ -216,6 +213,9 @@ def generate_multi_matric(samp_bc, path_to_bam, TE_ref_bed):
 file_name = sys.argv[1]
 batch = int(sys.argv[2])
 batch_size = int(sys.argv[3])
+TE_ref_path = sys.argv[4]
+
+
 # def build_coverage_vector(file_name, batch, batch_size) :
 with open('./'+file_name) as file:
     sample_list = file.readlines()
@@ -233,10 +233,10 @@ for sample in sample_list:
     multi_path = join(cur_path, 'multi_read/'+sample)
     multi_path = join(multi_path, 'by_barcode')
 
-    TEs=pd.read_csv('TE_nooverlap.csv',header=None)
+    TEs=pd.read_csv(TE_ref_path,header=None)
     TEs.columns = ['chromosome','start','end','TE_Name', 'index','strand', 'TE_fam','length']
     
-    TE_ref_bed = pybedtools.example_bedtool(cur_path+'/TE_nooverlap.bed')
+    TE_ref_bed = pybedtools.example_bedtool(cur_path+'/'+TE_ref_path[:-4] + '.bed')
 
     barcodes_file = cur_path + '/STAR_Solo/' + sample + '/'+sample+'_Solo.out'+ "/Gene/filtered/barcodes.tsv"
     if Path(barcodes_file).is_file():
