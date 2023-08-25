@@ -154,18 +154,9 @@ def make_prediction(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_
         tmp= tmp [['cell', 'Calculated_Multimapping_reads', 'group']]
         tmp_2 = tmp.groupby(['cell','group']).sum()
         df_empty = pd.DataFrame(columns = tmp.cell.unique().tolist(), index=tmp['group'].unique().tolist())
-        for key, val in tmp_2.iteritems():
-            for key2, val2 in val.iteritems():
+        for key, val in tmp_2.items():
+            for key2, val2 in val.items():
                 df_empty.loc[key2[1], key2[0]] = int(val2)
         df_empty = df_empty.fillna(0)
         df_empty.drop_duplicates().to_csv("prediction/"+sample+'/Multi_MTX.csv')
-        print('Finish quantify Multi TE, Combinning with unique TE...')
-
-        df_unique = pd.read_csv('Unique_TE/'+sample+'/Unique_All_MTX.csv', index_col = 0)
-        df_unique = df_unique.fillna(0)
-        df_full = pd.concat([df_unique,df_empty], ignore_index=False)
-        df_full = df_full.groupby(df_full.index).sum()
-        if not os.path.isdir('Combination/'+sample):
-            os.mkdir('Combination/'+sample)
-        df_full.drop_duplicates().to_csv('Combination/'+sample+'/TE_MTX.csv')
-        print("Finish Predict", sample)
+        print('Finish quantify Multi TE')

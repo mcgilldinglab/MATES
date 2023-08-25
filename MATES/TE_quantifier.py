@@ -30,7 +30,7 @@ def unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path
         print("Combining batchly quntified Unique TE MTX...")
         unique_file_list = os.listdir('Unique_TE')
         Unique_TE = pd.read_csv('Unique_TE/' + unique_file_list[0], index_col = 0)
-        
+
         i = 1
         while len(unique_file_list[1:]) > 0:
             Unique_TE_tmp = pd.read_csv('Unique_TE/' + unique_file_list[i], index_col = 0)
@@ -54,6 +54,7 @@ def unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path
             result = sample_count / file_batch
             sample_per_batch = int(result + 0.5)
             processes = []
+            print(threads_num)
             for i in range(threads_num):
                 command = f"python MATES/scripts/quant_unique_TE.py {sample} {i} {sample_per_batch} {TE_ref_path} {data_mode} {barcodes_paths[idx]}"
                 process = subprocess.Popen(command, shell=True)
@@ -82,6 +83,16 @@ def unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path
 ##### Quant All TE #####
 def finalize_TE_MTX(data_mode, file_name=None):
     if data_mode == "Smart_seq":
+        print("Start create TE_MTX...")
+        df_empty = pd.read_csv('prediction/Multi_MTX.csv')
+        df_unique = pd.read_csv('Unique_TE/Unique_All_MTX.csv', index_col = 0)
+        df_unique = df_unique.fillna(0)
+        df_full = pd.concat([df_unique,df_empty], ignore_index=False)
+        df_full = df_full.groupby(df_full.index).sum()
+        if not os.path.isdir('Combination'):
+            os.mkdir('Combination')
+        df_full.drop_duplicates().to_csv('Combination/TE_MTX.csv')
+        print("Finish create TE_MTX.")
         os.makedirs("result_MTX", exist_ok=True)
         os.rename("Combination/TE_MTX.csv", "result_MTX/TE_MTX.csv")
         os.rename("Unique_TE/Unique_All_MTX.csv", "result_MTX/Unique_TE_MTX.csv")
@@ -97,6 +108,16 @@ def finalize_TE_MTX(data_mode, file_name=None):
         with open(file_name, "r") as f:
             for line in f:
                 line = line.strip()
+                print("Start create TE_MTX for ", line, "...")
+                df_empty = pd.read_csv("prediction/"+line+'/Multi_MTX.csv')
+                df_unique = pd.read_csv('Unique_TE/'+line+'/Unique_All_MTX.csv', index_col = 0)
+                df_unique = df_unique.fillna(0)
+                df_full = pd.concat([df_unique,df_empty], ignore_index=False)
+                df_full = df_full.groupby(df_full.index).sum()
+                if not os.path.isdir('Combination/'+line):
+                    os.mkdir('Combination/'+line)
+                df_full.drop_duplicates().to_csv('Combination/'+line+'/TE_MTX.csv')
+                print("Finish create TE_MTX for ", line)
                 os.makedirs(f"result_MTX/{line}", exist_ok=True)
                 os.rename(f"Combination/{line}/TE_MTX.csv", f"result_MTX/{line}/TE_MTX.csv")
                 os.rename(f"Unique_TE/{line}/Unique_All_MTX.csv", f"result_MTX/{line}/Unique_TE_MTX.csv")
