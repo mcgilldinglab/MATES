@@ -18,8 +18,8 @@ def train(data_mode, file_name, bin_size = 5, proportion = 80, BATCH_SIZE= 4096,
         MATES_train(data_mode, file_name, bin_size, proportion, BATCH_SIZE= 4096, 
                     AE_EPOCHS = 200, MLP_EPOCHS = 200, MLP_LR = 1e-6, USE_GPU= True)
 
-def prediction(TE_mode, data_mode, file_name, bin_size, proportion, AE_trained_epochs, MLP_trained_epochs, USE_GPU= True):
-    if TE_mode == "exclusiv":
+def prediction(TE_mode, data_mode, file_name, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU= True):
+    if TE_mode == "exclusive":
         TE_ref_path = './TE_nooverlap.csv'
     else: 
         TE_ref_path = './TE_Full.csv'
@@ -28,7 +28,8 @@ def prediction(TE_mode, data_mode, file_name, bin_size, proportion, AE_trained_e
         exit(1)
     
     if data_mode == "10X":
-        sample_name = open(file_name).read().strip()
+        with open(file_name) as sample_file:
+            sample_name = [line.rstrip('\n') for line in sample_file]
         for idx, sample in enumerate(sample_name):
             make_prediction(data_mode, bin_size, proportion, TE_ref_path, AE_trained_epochs, MLP_trained_epochs, sample, USE_GPU)
     elif data_mode == 'Smart_seq':
