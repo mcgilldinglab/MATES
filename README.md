@@ -45,7 +45,7 @@ STAR --soloType CB_UMI_Simple --soloCBwhitelist barcode_whitelist \
 > The barcode whitelist can be found at **barcode_whitelist** folder, the original data can be obtained from  https://kb.10xgenomics.com/hc/en-us/articles/115004506263-What-is-a-barcode-whitelist- \
 > The filtered cell barcodes file provide by STAR-Solo will be at **STAR_Solo/sample_name/sample_name.out/Gene/filtered/barcodes.tsv**, if you have your own filtered barcodes file, you can simply replace it at the same location.
 
-- A sample alignment command line for **Smaert-seq2 scRNA** Data:
+- A sample alignment command line for **Smart-seq2 scRNA** Data:
 ```sh
 STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
         --outFileNamePrefix STAR_Solo/sample/sample_ \
