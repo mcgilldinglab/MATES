@@ -163,32 +163,32 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
 ### Step 1: Processing Bam Files
 ```python
 import MATES
-bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, path_to_bam, bc_path_file=None)
+MATES.bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, path_to_bam, bc_path_file=None)
 ```
 ### Step 2: Build Coverage Vectors
 ```python
-bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None)
+MATES.bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None)
 ```
 
 ### Step 3: Generate Training/Predicting Samples
 ```python
-data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
+MATES.data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
 
-data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
+MATES.data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
 
-data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
+MATES.data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
 ```
 ### Step 4: Training MATES Model and Make Prediction of α
 ```python
-MATES_model.train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
+MATES.MATES_model.train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
 
-MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
+MATES.MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
 ```
 ### Step 5: Quantify TE Expression Matrix
 ```python
-TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
+MATES.TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
 
-TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
+MATES.TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 ```
 
 ## Tutorial:
