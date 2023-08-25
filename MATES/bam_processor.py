@@ -1,9 +1,8 @@
-
 import subprocess
 import os
 import math
 
-def split_bam_files(data_mode, threads_num, file_name, path_to_bam):
+def split_bam_files(data_mode, threads_num, file_name, path_to_bam, path_to_bc=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
         print('Invalid data format.')
         exit(1)
@@ -11,9 +10,9 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam):
     sample_count = sum(1 for line in open(file_name))
     file_batch = threads_num
     batch_size = math.ceil(sample_count / file_batch)
-
     # Split the file into batches
     os.makedirs("./file_tmp", exist_ok=True)
+    count = 0
     with open(file_name, "r") as input_file:
         for i, line in enumerate(input_file):
             if i % batch_size == 0:
@@ -24,14 +23,15 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam):
             count += 1
 
     # Rename batch files
-    count = 0
     for i, batch_file in enumerate(os.listdir("./file_tmp")):
         new_name = f"./file_tmp/{i}"
         os.rename(f"./file_tmp/{batch_file}", new_name)
 
     print("Start splitting bam files into unique/multi reads sub-bam files ...")
+    os.makedirs("./unique_read", exist_ok=True)
+    os.makedirs("./multi_read", exist_ok=True)
     processes = []
-    for i in range(count + 1):
+    for i in range(count):
         command = f"sh scripts/split_u_m.sh ./file_tmp/{i} {path_to_bam}"
         process = subprocess.Popen(command, shell=True)
         processes.append(process)
@@ -40,10 +40,13 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam):
     print("Finish splitting bam files into unique reads and multi reads sub-bam files.")
 
     if data_mode == "10X":
+        if path_to_bc == None:
+            print("Please provide barcodes file for 10X data!")
+            exit(1)
         print("Start splitting multi sub-bam based on cell barcodes...")
         processes = []
         for i in range(count + 1):
-            command = f"sh scripts/split_bc_m.sh ./file_tmp/{i} {path_to_bam}"
+            command = f"sh scripts/split_bc_m.sh ./file_tmp/{i} {path_to_bc}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
 
@@ -52,7 +55,7 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam):
 
         processes = []
         for i in range(count + 1):
-            command = f"sh scripts/split_bc_u.sh ./file_tmp/{i} {path_to_bam}"
+            command = f"sh scripts/split_bc_u.sh ./file_tmp/{i} {path_to_bc}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
 
@@ -63,7 +66,6 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam):
 
 
     subprocess.run(["rm", "-r", "./file_tmp"], check=True)
-
     ## Call the function to split bam files
     #split_bam_files(data_mode, threads_num, file_name, path_to_bam)
 
