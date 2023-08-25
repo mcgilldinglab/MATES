@@ -31,7 +31,14 @@ Installation should take only a few minutes. Verify that MATES is correctly inst
 ## Links
 Interactive MATES web server: <a>https://mates.cellcycle.org</a>.
 ## Usage
-The MATES contains four mainn modules.
+The MATES contains four main modules.
+```python
+import MATES
+from MATES import bam_processor
+from MATES import TE_quantifier
+from MATES import data_processor
+from MATES import MATES_model
+```
 * bam_processor
 ```python
 bam_processor.split_bam_files(data_mode, threads_num, file_name, path_to_bam, path_to_bc=None)
