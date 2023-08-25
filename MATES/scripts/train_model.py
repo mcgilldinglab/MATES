@@ -150,7 +150,7 @@ def get_AE_embedding(data_mode, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FA
                 optimizer.step()
                 if step % 100 == 0:
                     AENet.eval()
-                if (epoch == EPOCHS-1):
+                if (epoch == 0):
                     Meta_Data[0] = Meta_Data[0]+(list(metainfo[0]))
                     Meta_Data[1] = Meta_Data[1]+(list(metainfo[1]))
                     Meta_Data[2] = Meta_Data[2]+(list(metainfo[2]))
@@ -176,14 +176,7 @@ def get_MLP_input(BATCH_SIZE, Meta_Data, hidden_info, Batch_Info, Region_Info):
     print(len(MLP_TE_trained))
     MLP_trained_loader = DataLoader(MLP_trained_data, BATCH_SIZE, shuffle = True, drop_last=True)
 
-    # embeddings = torch.Tensor(BATCH_SIZE,1*128)
-    # embeddings = Variable(embeddings)
-    # MLP_BATCH_data_2 = torch.Tensor(BATCH_SIZE,1*1)
-    # MLP_BATCH_data_2 = Variable(MLP_BATCH_data_2)
-    # MLP_Region_data_2 = torch.Tensor(BATCH_SIZE,1*5)
-    # MLP_Region_data_2 = Variable(MLP_Region_data_2)
-    # MLP_meta_data_2 = torch.Tensor(BATCH_SIZE,1*2)
-    # MLP_meta_data_2 = Variable(MLP_meta_data_2)
+
 
     return MLP_trained_loader
 
@@ -194,9 +187,9 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
     elif data_mode == 'Smart_seq':
         path_dir = join(os.getcwd(), 'training_'+str(bin_size) + '_' + str(prop))
     MLP = MultiLayerPerceptron(TE_FAM_NUMBER,128)   
-    PATH = join(path_dir,'MLP/MLP_state.pth')
-    torch.save(MLP.state_dict(), PATH)
-    MLP = torch.load(PATH)
+    # PATH = join(path_dir,'MLP/MLP_state.pth')
+    # torch.save(MLP.state_dict(), PATH)
+    # MLP = torch.load(PATH)
                 
     MLP_log = open(join(path_dir,'MLP_train_loss.txt'), 'w')
     ##load to device
@@ -205,7 +198,14 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
     #     embeddings = embeddings.to(device)
     #     MLP_BATCH_data_2 = MLP_BATCH_data_2.to(device)
     #     MLP_Region_data_2= MLP_Region_data_2.to(device)
-
+    embeddings = torch.Tensor(BATCH_SIZE,1*128)
+    embeddings = Variable(embeddings)
+    MLP_BATCH_data_2 = torch.Tensor(BATCH_SIZE,1*1)
+    MLP_BATCH_data_2 = Variable(MLP_BATCH_data_2)
+    MLP_Region_data_2 = torch.Tensor(BATCH_SIZE,1*5)
+    MLP_Region_data_2 = Variable(MLP_Region_data_2)
+    MLP_meta_data_2 = torch.Tensor(BATCH_SIZE,1*2)
+    MLP_meta_data_2 = Variable(MLP_meta_data_2)
     MLP = MLP.to(device)
     embeddings = embeddings.to(device)
     MLP_BATCH_data_2 = MLP_BATCH_data_2.to(device)
@@ -231,10 +231,10 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
                 MLP_Region_data_2.data.copy_(TE_region)
                 
                 alpha = MLP(embeddings, MLP_BATCH_data_2, BATCH_SIZE)
-                
-                MLP_Loss = criterion(alpha, MLP_Region_data_2, BATCH_SIZE, bin_size)
+
+                Loss = criterion(alpha, MLP_Region_data_2, BATCH_SIZE,)
                 MLP_optimizer.zero_grad()
-                MLP_Loss.mean().backward()
+                Loss.mean().backward()
                 MLP_optimizer.step()
                 if epoch+1 == EPOCHS:
                     Meta_Data[0] = Meta_Data[0]+(list(metainfo[0]))
@@ -243,7 +243,7 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
                     Batch_Info = np.append(Batch_Info,(Batch_info.cpu().detach().numpy().reshape(1,BATCH_SIZE)))
                     Region_Info = Region_Info+(MLP_Region_data_2.cpu().detach().numpy().tolist())
                     problist = np.append(problist, alpha.cpu().detach().numpy().reshape(BATCH_SIZE))
-                MLP_Loss_val = np.append(MLP_Loss_val,MLP_Loss.cpu().detach())
+                MLP_Loss_val = np.append(MLP_Loss_val,Loss.cpu().detach())
             MLP_Loss_list.append(np.mean(MLP_Loss_val))
             endtime = datetime.datetime.now()
             if (epoch+1) % 10 == 0:
