@@ -74,7 +74,7 @@ def count_coverage_vec(TE_mode, data_mode, threads_num, file_name, barcodes_file
     if data_mode != "10X" and data_mode != "Smart_seq":
         print('Invalid data format.')
         exit(1)
-    if TE_mode == "exclusiv":
+    if TE_mode == "exclusive":
         TE_ref_path = './TE_nooverlap.csv'
     else: 
         TE_ref_path = './TE_Full.csv'
@@ -96,8 +96,14 @@ def count_coverage_vec(TE_mode, data_mode, threads_num, file_name, barcodes_file
             process.wait()
 
     elif data_mode == "10X":
-        sample_name = open(file_name).read().strip()
-        barcodes_paths = open(barcodes_file_path_list).read().strip()
+        with open(file_name) as sample_file:
+            sample_name = [line.rstrip('\n') for line in sample_file]
+        with open(barcodes_file_path_list) as bc_file:
+            barcodes_paths = [line.rstrip('\n') for line in bc_file]
+        # sample_name = open(file_name).read().strip()
+        # barcodes_paths = open(barcodes_file_path_list).read().strip()
+        print(sample_name)
+        print(barcodes_paths)
         for idx, sample in enumerate(sample_name):
             sample_count = sum(1 for line in open(barcodes_paths[idx])) + 1
             file_batch = threads_num
@@ -107,7 +113,7 @@ def count_coverage_vec(TE_mode, data_mode, threads_num, file_name, barcodes_file
 
             processes = []
             for i in range(file_batch):
-                command = f"python scripts/count_coverage_10X.py {sample} {i} {sample_per_batch} {barcodes_paths[idx]} {TE_ref_path}"
+                command = f"python MATES/scripts/count_coverage_10X.py {sample} {i} {sample_per_batch} {barcodes_paths[idx]} {TE_ref_path}"
                 process = subprocess.Popen(command, shell=True)
                 processes.append(process)
 
