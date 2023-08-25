@@ -1,15 +1,17 @@
 #!/bin/bash
-cat $1.txt | while read line
+if [ -f "$1" ] && [ -f "$2" ]; then
+    for line in `cat "$1"`
     do
     echo "Start Processing ${line}" >> ./unique_read/split_barcode.log
     mkdir ./unique_read/${line}
     mkdir ./unique_read/${line}/by_barcode
-    python scripts/split_bam_by_barcode.py ./unique_read/${line}_uniqueread.bam \
-        STAR_Solo/${line}/${line}_Solo.out/Gene/filtered/barcodes.tsv ./unique_read/${line}/by_barcode/ >> ./multi_read/${line}/${line}_multi_splitting.log
+    python scripts/split_bam_by_bc.py ./unique_read/${line}_uniqueread.bam \
+        "$2" ./unique_read/${line}/by_barcode/ >> ./unique_read/${line}/${line}_unique_splitting.log
     echo "End Processing ${line}" >> ./unique_read/split_barcode.log
     done
+fi
 
-cat $1.txt | while read line
+for line in `cat "$1"`
     do
     echo "Start Indexing Unique Bam in ${line}" >> ./unique_read/split_barcode.log
     for file in ./unique_read/${line}/by_barcode/*.bam
@@ -18,4 +20,4 @@ cat $1.txt | while read line
         samtools index ${file}
         done
     echo "End Indexing Unique Bam in ${line}" >> ./unique_read/split_barcode.log
-        done
+    done
