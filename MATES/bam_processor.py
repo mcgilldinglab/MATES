@@ -45,7 +45,7 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam, path_to_bc=N
             exit(1)
         print("Start splitting multi sub-bam based on cell barcodes...")
         processes = []
-        for i in range(count + 1):
+        for i in range(count):
             command = f"sh scripts/split_bc_m.sh ./file_tmp/{i} {path_to_bc}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
@@ -54,7 +54,7 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam, path_to_bc=N
             process.wait()
 
         processes = []
-        for i in range(count + 1):
+        for i in range(count):
             command = f"sh scripts/split_bc_u.sh ./file_tmp/{i} {path_to_bc}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)

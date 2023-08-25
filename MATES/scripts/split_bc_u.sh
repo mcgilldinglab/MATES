@@ -14,7 +14,7 @@ fi
 for line in `cat "$1"`
     do
     echo "Start Indexing Unique Bam in ${line}" >> ./unique_read/split_barcode.log
-    for file in ./unique_read/${line}/by_barcode/*.bam
+    for file in ./unique_read/${line}/by_barcode/*.bam;
         do
         samtools sort ${file} -o ${file}
         samtools index ${file}

@@ -54,7 +54,7 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
 ### Training MATES on 10x scRNA-seq dataset
 <!-- ### Training MATES on Smart-seq2 scRNA dataset -->
 ### Training MATES on 10x scATAC-seq dataset
-* [MATES downstream analysis of 10X scATAC data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scATAC/scATAC_Peak_TE_analysis.ipynb)
+* [MATES downstream analysis on 10X scATAC data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scATAC/scATAC_Peak_TE_analysis.ipynb)
 <!-- ### Step 1: Building Transposon Element(TE) Reference
 The default option of our tool/procedure involves the removal of all transposable element (TE) regions that share overlapping base pairs with gene references. This step is taken to prevent any potential information leakage. The TE reference data is sourced from repeatmasker and the Gene reference data is sourced from ebi.
 
