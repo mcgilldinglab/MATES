@@ -44,36 +44,102 @@ from MATES import MATES_model
 ```python
 bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, path_to_bam, bc_path_file=None)
 # Parameters
-## data_mode : str 10X or Smart_seq
-## threads_num : int
-## sample_list_file : str path to file conatins sample names
-## path_to_bam : str path to bam file
-## bc_path_file(optional) : str path to file contains matching barcodes list address of sample in sample list
+## data_mode : <str> 10X or Smart_seq
+## threads_num : <int>
+## sample_list_file : <str> path to file conatins sample names
+## path_to_bam : <str> path to bam file
+## bc_path_file(optional) : <str> path to file contains matching barcodes list address of sample in sample list
 ```
 ```python
-bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, file_name, barcodes_file_path_list=None)
+bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None)
+# Parameters
+## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
+## data_mode : <str> 10X or Smart_seq
+## threads_num : <int>
+## sample_list_file : <str> path to file conatins sample names
+## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
 
 * **TE_quantifier**
 	TE_quantifier module facilitates the quantification of TE expression from unique mapping reads and organizes the generation of finalized TE matrix output files.
 ```python
-TE_quantifier.unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path_list=None)
-TE_quantifier.finalize_TE_MTX(data_mode, file_name=None)
+TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
+# 
+# Parameters
+## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample names
+## threads_num : <int>
+## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
+```
+```python
+TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file(optional) : <str> only needed for 10X data, path to file conatins sample names
 ```
 * **data_processor**
 	The data_processor module assists in computing Unique and Multi Regions, generating training samples, and summarizing the expression of multi-mapping reads for prediction.
 ```python
-data_processor.calculate_UM_region(TE_mode, data_mode, file_name, bin_size, proportion, barcodes_file_path_list=None)
-data_processor.generate_training_sample(data_mode, file_name, bin_size, proportion)
-data_processor.generate_prediction_sample(file_name, bin_size, proportion, barcodes_file_path_list=None)
+data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
+# 
+# Parameters
+## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample names
+## bin_size : <int> size of U/M Region, default = 5
+## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
+```
+```python
+data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
+# 
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample names
+## bin_size : <int> size of U/M Region, default = 5
+## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+```
+```python
+data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
+# 
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample names
+## bin_size : <int> size of U/M Region, default = 5
+## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
 
 * **MATES_model**
-	The MATES_model module serves as the core of the MATES framework, encompassing both training and prediction functions. It is responsible for training a neural network model to accurately predict multi-mapping rates of transposable element (TE) instances based on their read coverage vectors. 
+	The MATES_model module serves as the core of the MATES framework, encompassing both training and prediction functions. It is responsible for training a neural network model to accurately predict multi-mapping rates of transposable element (TE) instances based on their read coverage vectors.
+
 ```python
-MATES_model.train(data_mode, file_name, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
-MATES_model.generate_training_sample(data_mode, file_name, bin_size, proportion)
-MATES_model.prediction(TE_mode, data_mode, file_name, bin_size, proportion, AE_trained_epochs, MLP_trained_epochs, USE_GPU= True)
+MATES_model.train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample names
+## bin_size : <int> size of U/M Region, default = 5
+## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+## BATCH_SIZE : <int> default = 4096
+## AE_LR : <int> learning rate of AutoEncoder, default = 1e-4
+## MLP_LR : <int> learning rate of MLP, default = 1e-6
+## AE_EPOCHS : <int> training epochs for AutoEncoder, default = 200
+## MLP_EPOCHS : <int> training epochs for MLP, default = 200
+## USE_GPU : <bool> whether use GU to train the model, default = True
+```
+
+```python
+MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
+# Parameters
+## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample names
+## bin_size : <int> size of U/M Region, default = 5
+## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+## AE_EPOCHS : <int> training epochs for AutoEncoder, default = 200
+## MLP_EPOCHS : <int> training epochs for MLP, default = 200
+## USE_GPU : <bool> whether use GU to train the model, default = Truet
 ```
 ### Step 0: Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
