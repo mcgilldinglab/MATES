@@ -63,7 +63,6 @@ bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_fi
 	The data_processor module assists in computing Unique and Multi Regions, generating training samples, and summarizing the expression of multi-mapping reads for prediction.
 ```python
 data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
-# 
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
@@ -74,7 +73,6 @@ data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_siz
 ```
 ```python
 data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
-# 
 # Parameters
 ## data_mode : <str> 10X or Smart_seq
 ## sample_list_file : <str> path to file conatins sample names
@@ -83,7 +81,6 @@ data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, p
 ```
 ```python
 data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
-# 
 # Parameters
 ## data_mode : <str> 10X or Smart_seq
 ## sample_list_file : <str> path to file conatins sample names
@@ -124,7 +121,6 @@ MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, propo
 	TE_quantifier module facilitates the quantification of TE expression from unique mapping reads and organizes the generation of finalized TE matrix output files.
 ```python
 TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
-# 
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
