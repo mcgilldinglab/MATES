@@ -39,25 +39,29 @@ from MATES import TE_quantifier
 from MATES import data_processor
 from MATES import MATES_model
 ```
-* bam_processor
+* **bam_processor**
+	The bam_processor module efficiently manages input BAM files by partitioning them into sub-BAM files for individual cells, distinguishing unique mapping from multi mapping reads. It also constructs TE-specific coverage vectors, shedding light on read distributions around TE instances at the single-cell level, enabling accurate TE quantification and comprehensive cellular characterization.
 ```python
 bam_processor.split_bam_files(data_mode, threads_num, file_name, path_to_bam, path_to_bc=None)
 bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, file_name, barcodes_file_path_list=None)
 ```
 
-* TE_quantifier
+* **TE_quantifier**
+	TE_quantifier module facilitates the quantification of TE expression from unique mapping reads and organizes the generation of finalized TE matrix output files.
 ```python
 TE_quantifier.unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path_list=None)
 TE_quantifier.finalize_TE_MTX(data_mode, file_name=None)
 ```
-* data_processor
+* **data_processor**
+	The data_processor module assists in computing Unique and Multi Regions, generating training samples, and summarizing the expression of multi-mapping reads for prediction.
 ```python
 data_processor.calculate_UM_region(TE_mode, data_mode, file_name, bin_size, proportion, barcodes_file_path_list=None)
 data_processor.generate_training_sample(data_mode, file_name, bin_size, proportion)
 data_processor.generate_prediction_sample(file_name, bin_size, proportion, barcodes_file_path_list=None)
 ```
 
-* MATES_model
+* **MATES_model**
+	The MATES_model module serves as the core of the MATES framework, encompassing both training and prediction functions. It is responsible for training a neural network model to accurately predict multi-mapping rates of transposable element (TE) instances based on their read coverage vectors. 
 ```python
 MATES_model.train(data_mode, file_name, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
 MATES_model.generate_training_sample(data_mode, file_name, bin_size, proportion)
