@@ -26,6 +26,9 @@ To install MATES, you can run the following command:
 git clone https://github.com/mcgilldinglab/MATES.git
 pip3 install MATES==0.1
 ```
+
+## Links
+Interactive MATES web server: <a>https://mates.cellcycle.org</a>.
 ## Usage
 ### Step 0: Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
