@@ -44,15 +44,15 @@ from MATES import MATES_model
 ```python
 bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, path_to_bam, bc_path_file=None)
 ```
->Parameters
->data_mode: str 
->	10X or Smart_seq
->threads_num: int
->sample_list_file : str 
->	path to file conatins sample names
->path_to_bam: str 
->	path to bam file
->bc_path_file(optional): str 
+>Parameters\n
+>data_mode: str \n
+>	10X or Smart_seq\n
+>threads_num: int\n
+>sample_list_file : str \n
+>	path to file conatins sample names\n
+>path_to_bam: str \n
+>	path to bam file\n
+>bc_path_file(optional): str \n
 >	path to file contains matching barcodes list address of sample in sample list
 ```python
 bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, file_name, barcodes_file_path_list=None)
