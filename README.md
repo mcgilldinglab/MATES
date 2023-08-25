@@ -35,9 +35,9 @@ The MATES contains four main modules.
 ```python
 import MATES
 from MATES import bam_processor
-from MATES import TE_quantifier
 from MATES import data_processor
 from MATES import MATES_model
+from MATES import TE_quantifier
 ```
 * **bam_processor**
 	The bam_processor module efficiently manages input BAM files by partitioning them into sub-BAM files for individual cells, distinguishing unique mapping from multi mapping reads. It also constructs TE-specific coverage vectors, shedding light on read distributions around TE instances at the single-cell level, enabling accurate TE quantification and comprehensive cellular characterization.
@@ -58,25 +58,6 @@ bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_fi
 ## threads_num : <int>
 ## sample_list_file : <str> path to file conatins sample names
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
-```
-
-* **TE_quantifier**
-	TE_quantifier module facilitates the quantification of TE expression from unique mapping reads and organizes the generation of finalized TE matrix output files.
-```python
-TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
-# 
-# Parameters
-## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
-## data_mode : <str> 10X or Smart_seq
-## sample_list_file : <str> path to file conatins sample names
-## threads_num : <int>
-## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
-```
-```python
-TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
-# Parameters
-## data_mode : <str> 10X or Smart_seq
-## sample_list_file(optional) : <str> only needed for 10X data, path to file conatins sample names
 ```
 * **data_processor**
 	The data_processor module assists in computing Unique and Multi Regions, generating training samples, and summarizing the expression of multi-mapping reads for prediction.
@@ -110,7 +91,6 @@ data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, 
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
-
 * **MATES_model**
 	The MATES_model module serves as the core of the MATES framework, encompassing both training and prediction functions. It is responsible for training a neural network model to accurately predict multi-mapping rates of transposable element (TE) instances based on their read coverage vectors.
 
@@ -128,7 +108,6 @@ MATES_model.train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BA
 ## MLP_EPOCHS : <int> training epochs for MLP, default = 200
 ## USE_GPU : <bool> whether use GU to train the model, default = True
 ```
-
 ```python
 MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
 # Parameters
@@ -140,6 +119,24 @@ MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, propo
 ## AE_EPOCHS : <int> training epochs for AutoEncoder, default = 200
 ## MLP_EPOCHS : <int> training epochs for MLP, default = 200
 ## USE_GPU : <bool> whether use GU to train the model, default = Truet
+```
+* **TE_quantifier**
+	TE_quantifier module facilitates the quantification of TE expression from unique mapping reads and organizes the generation of finalized TE matrix output files.
+```python
+TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
+# 
+# Parameters
+## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample names
+## threads_num : <int>
+## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
+```
+```python
+TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file(optional) : <str> only needed for 10X data, path to file conatins sample names
 ```
 ### Step 0: Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
@@ -162,6 +159,36 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
         --outFileNamePrefix STAR_Solo/sample/sample_ \
         --readFilesIn sample/sample_1.fastq.gz sample/sample_2.fastq.gz \
         --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts
+```
+### Step 1: Processing Bam Files
+```python
+import MATES
+bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, path_to_bam, bc_path_file=None)
+```
+### Step 2: Build Coverage Vectors
+```python
+bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None)
+```
+
+### Step 3: Generate Training/Predicting Samples
+```python
+data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
+
+data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
+
+data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
+```
+### Step 4: Training MATES Model and Make Prediction of α
+```python
+MATES_model.train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
+
+MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
+```
+### Step 5: Quantify TE Expression Matrix
+```python
+TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
+
+TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 ```
 
 ## Tutorial:
