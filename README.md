@@ -22,8 +22,8 @@ pip3 install -r requirements.txt
 ### Installing MATES
 To install MATES, you can run the following command:
 ```sh
-    git clone https://github.com/mcgilldinglab/MATES.git
-    pip3 install MATES==0.1
+git clone https://github.com/mcgilldinglab/MATES.git
+pip3 install MATES==0.1
 ```
 ## Usage
 ### Step 0: Alignment
