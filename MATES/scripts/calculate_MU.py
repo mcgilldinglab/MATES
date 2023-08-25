@@ -4,16 +4,9 @@ import os
 import scipy
 import scipy.sparse
 import pickle
-import sys
 from tqdm import tqdm
 from pathlib import Path
 from os.path import join
-
-file_name = sys.argv[1]
-BIN_SIZE = int(sys.argv[2])
-PROPORTION = int(sys.argv[3])
-path_to_TE_ref = sys.argv[4]
-data_mode = sys.argv[5]
 
 def find_nearest_values(lst, num):
     lst.sort()
@@ -33,7 +26,7 @@ def find_nearest_values(lst, num):
     else:
         return [lst[-2], lst[-1]]
 
-def calculate_M_U_Smart_seq(sample_list, TE_ref):
+def calculate_M_U_Smart_seq(sample_list, TE_ref, BIN_SIZE, PROPORTION):
     cur_path = os.getcwd()
     vec_count = {}
     for fam in TE_ref.TE_fam.unique():
@@ -101,14 +94,14 @@ def calculate_M_U_Smart_seq(sample_list, TE_ref):
                         pickle.dump(sample_dict, f)
                     for key in sample_dict.keys():
                         TE_fam = TE_ref[TE_ref['index']==float(key)]['TE_fam'].tolist()[0]
-                        if cb not in vec_count[TE_fam].keys():
-                            vec_count[TE_fam][cb]=[]
-                        vec_count[TE_fam][cb].append(key)
+                        if sample not in vec_count[TE_fam].keys():
+                            vec_count[TE_fam][sample]=[]
+                        vec_count[TE_fam][sample].append(key)
             pbar.update(1)
     return vec_count
 
 
-def calculate_M_U_10X(sample, TE_ref, barcodes):
+def calculate_M_U_10X(sample, TE_ref, barcodes, BIN_SIZE, PROPORTION):
     cur_path = os.getcwd()
     vec_count = {}
     for fam in TE_ref.TE_fam.unique():
@@ -186,69 +179,67 @@ def calculate_M_U_10X(sample, TE_ref, barcodes):
                 pbar.update(1)
     return vec_count
 
-cur_path = os.getcwd()
-if not os.path.exists(cur_path + '/MU_Stats'):
-        os.mkdir(cur_path + '/MU_Stats')
 
-with open('./'+file_name) as file:
-    sample_list = file.readlines()
-
-for i in range(len(sample_list)):
-    sample_list[i] = sample_list[i][:-1]
-
+def calculate_MU(data_mode, file_name, BIN_SIZE, PROPORTION, path_to_TE_ref, barcodes_file=None):
+    cur_path = os.getcwd()
+    if not os.path.exists(cur_path + '/MU_Stats'):
+            os.mkdir(cur_path + '/MU_Stats')
 
     TEs = pd.read_csv(path_to_TE_ref, header=None)
     TEs.columns = ['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand', 'TE_fam', 'length']
     TE_ref = TEs
 
-if data_mode == 'Smart_seq':
-    vec_count = calculate_M_U_Smart_seq(sample_list, TE_ref)
-    print('Finish calculating U/M region for each cell, finalizing...')
+    if data_mode == 'Smart_seq':
+        with open('./'+file_name) as file:
+            sample_list = file.readlines()
+        for i in range(len(sample_list)):
+            sample_list[i] = sample_list[i][:-1]
+        vec_count = calculate_M_U_Smart_seq(sample_list, TE_ref, BIN_SIZE, PROPORTION)
+        print('Finish calculating U/M region for each cell, finalizing...')
 
-    count_dict = {}
-    for key in vec_count.keys():
-        count = 0
-        for val in vec_count[key]:
-            count += len(vec_count[key][val])
-        count_dict[key] = count
-        count_dict_copy = count_dict.copy()
-    for key in list(count_dict.keys()):
-        if key[-1]=='?' or key=='Unknown':
-            del count_dict_copy[key]
-    count_df = pd.DataFrame.from_dict(count_dict_copy,orient='index')
-    count_df.columns = ['count']
-    count_df = count_df.sort_values(by = ['count'], ascending = False)
+        count_dict = {}
+        for key in vec_count.keys():
+            count = 0
+            for val in vec_count[key]:
+                count += len(vec_count[key][val])
+            count_dict[key] = count
+            count_dict_copy = count_dict.copy()
+        for key in list(count_dict.keys()):
+            if key[-1]=='?' or key=='Unknown':
+                del count_dict_copy[key]
+        count_df = pd.DataFrame.from_dict(count_dict_copy,orient='index')
+        count_df.columns = ['count']
+        count_df = count_df.sort_values(by = ['count'], ascending = False)
 
-    cur_path = os.getcwd()
-    count_df.to_csv(cur_path +'/MU_Stats/'+str(BIN_SIZE)+'_'+ str(PROPORTION)+'_stat.csv')
+        cur_path = os.getcwd()
+        count_df.to_csv(cur_path +'/MU_Stats/'+str(BIN_SIZE)+'_'+ str(PROPORTION)+'_stat.csv')
 
-    vec_count_modif = vec_count.copy()
-    for key in list(vec_count.keys()):
-        if key[-1]=='?' or key=='Unknown':
-            del vec_count_modif[key]
-            continue
-        if count_dict[key]<= 50:
-            del vec_count_modif[key]
-            continue
-    vec_by_cell={}
-    for cb in sample_list:
-        vec_by_cell[cb]={}
-        for TE_fam in vec_count_modif.keys():
-            vec_by_cell[cb][TE_fam] = []
-    for TE_fam, cell in vec_count_modif.items():
-        for cb in cell.keys():
-            vec_by_cell[cb][TE_fam].extend(cell[cb])
-    with open(cur_path + '/MU_Stats/M&U_'+ str(BIN_SIZE)+'_'+ str(PROPORTION)+'%.pkl', 'wb') as f:
-        pickle.dump(vec_by_cell, f)
-    print("Finish finalizing U/M region information.")
+        vec_count_modif = vec_count.copy()
+        for key in list(vec_count.keys()):
+            if key[-1]=='?' or key=='Unknown':
+                del vec_count_modif[key]
+                continue
+            if count_dict[key]<= 50:
+                del vec_count_modif[key]
+                continue
+        vec_by_cell={}
+        for cb in sample_list:
+            vec_by_cell[cb]={}
+            for TE_fam in vec_count_modif.keys():
+                vec_by_cell[cb][TE_fam] = []
+        for TE_fam, cell in vec_count_modif.items():
+            for cb in cell.keys():
+                vec_by_cell[cb][TE_fam].extend(cell[cb])
+        with open(cur_path + '/MU_Stats/M&U_'+ str(BIN_SIZE)+'_'+ str(PROPORTION)+'%.pkl', 'wb') as f:
+            pickle.dump(vec_by_cell, f)
+        print("Finish finalizing U/M region information.")
 
-elif data_mode == '10X':
-    for sample in sample_list:
-        barcodes_file = cur_path + '/STAR_Solo/' + sample + '/'+sample+'_Solo.out'+ "/Gene/filtered/barcodes.tsv"
+    elif data_mode == '10X':
+        sample=file_name
         if Path(barcodes_file).is_file():
             with open(barcodes_file, "r") as fh:
                 barcodes = [l.rstrip() for l in fh.readlines()]
-        vec_count = calculate_M_U_10X(sample, TE_ref, barcodes)
+        vec_count = calculate_M_U_10X(sample, TE_ref, barcodes, BIN_SIZE, PROPORTION)
         print('Finish calculating U/M region for cells in '+ sample +', finalizing...')
         count_dict = {}
         for key in vec_count.keys():

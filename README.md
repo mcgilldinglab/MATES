@@ -2,12 +2,30 @@
 A Deep Learning-Based Model for Quantifying Transposable Elements in Single-Cell Sequencing Data
 
 ## Overview
-<img title="Model Overview" alt="Alt text" src="/MATES/figures/Model-figure-01.png">
+<img title="Model Overview" alt="Alt text" src="/figures/Model-figure-01.png">
 
 ## Installation
 ### Prerequisites
-### Installing MATES
+samtools == 1.17
+```sh
+conda install -c bioconda samtools
+```
+bedtools == 2.31.0
+```sh
+conda install -c bioconda bedtools
+```
+For other dependencies you san simply run:
+```sh
+pip3 install -r requirements.txt 
+```
 
+### Installing MATES
+To install MATES, you can run the following command:
+```sh
+	
+    git clone https://github.com/mcgilldinglab/MATES.git
+    pip3 install MATES==0.1
+```
 ## Usage
 ### Step 0: Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
@@ -31,7 +49,13 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
         --readFilesIn sample/sample_1.fastq.gz sample/sample_2.fastq.gz \
         --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts
 ```
-### Step 1: Building Transposon Element(TE) Reference
+
+## Tutorial:
+### Training MATES on 10x scRNA-seq dataset
+<!-- ### Training MATES on Smart-seq2 scRNA dataset -->
+### Training MATES on 10x scATAC-seq dataset
+
+<!-- ### Step 1: Building Transposon Element(TE) Reference
 The default option of our tool/procedure involves the removal of all transposable element (TE) regions that share overlapping base pairs with gene references. This step is taken to prevent any potential information leakage. The TE reference data is sourced from repeatmasker and the Gene reference data is sourced from ebi.
 
 To build the reference:
@@ -55,9 +79,9 @@ cat mm_Genes.csv | head -n 3
 Chromosome,Feature,Start,End,Strand,gene_id,gene_name
 chr1,gene,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
 chr1,transcript,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
-```
+``` -->
 
-### Step 2: Training Preparation
+<!-- ### Step 2: Training Preparation
 #### For scRNA data and scATAC data
 The follwing procedure not require GPU usage.
 ```sh
@@ -75,7 +99,7 @@ sh training_preparation.sh -t threads_num -f file_name -p path_to_bam --TE_mode 
 #### For Multi-omics Data
 
 ### Step 3: Training and Prediction
-This step requires GPU availablity, after running the below command, will provide the resulted TE matrices inclusing unique TE matrix, multi TE matrix and combined final matrix.
+This step **requires GPU availablity**, after running the below command, will provide the resulted TE matrices inclusing unique TE matrix, multi TE matrix and combined final matrix.
 #### For scRNA data and scATAC data
 ``` sh
 sh model_training.sh -f file_name --data_mode data_mode --bin_size bin_size --proportion proportion
@@ -88,6 +112,5 @@ sh model_training.sh -f file_name --data_mode data_mode --bin_size bin_size --pr
 ```
 #### For Multi-omics Data
 
-### Step 4: Downstrem Analysis
+### Step 4: Downstrem Analysis -->
 
- ## Example

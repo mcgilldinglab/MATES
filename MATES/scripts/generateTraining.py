@@ -64,7 +64,7 @@ def get_unique_sample(cell_ana, stat, data_mode, sample=None):
         fam_idx+=1
     return unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select
 
-def get_multi_sample( cell_ana, data_mode, sample=None):
+def get_multi_sample(cell_ana, data_mode, unique_vec_meta_Transform, bin_size, prop, sample=None):
     cur_path = os.getcwd()
     multi_vec_matrix = []
     multi_TE_matrix = []
@@ -105,65 +105,65 @@ def get_multi_sample( cell_ana, data_mode, sample=None):
     MLP_Region_train = np.array(multi_region_info)
     return MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train
 
-file_name = sys.argv[1]
-bin_size = int(sys.argv[2])
-prop = int (sys.argv[3])
-data_mode = sys.argv[4]
-cur_path = os.getcwd()
-with open('./'+file_name) as file:
-    sample_list = file.readlines()
-for i in range(len(sample_list)):
-    sample_list[i] = sample_list[i][:-1]
-if data_mode == 'Smart_seq':
-    path = cur_path+'/MU_Stats/'
-    file = open(path + 'M&U_'+str(bin_size)+'_'+str(prop)+'%.pkl', 'rb')
-    cell_ana = pickle.load(file)
-    csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
-    stat = pd.read_csv(csv)
-
-    unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat)
-    TE_train = np.array(unique_vec_matrix)
-    Batch_train = np.array(unique_TE_matrix)
-    p1= cur_path + '/MU_Stats/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
-    scipy.sparse.save_npz((p1), sparse.csr_matrix(TE_train))
-    p2 = cur_path + '/MU_Stats/Unique_BATCH_train_'+str(bin_size)+'_'+str(prop)+'.npz'
-    scipy.sparse.save_npz((p2), sparse.csr_matrix(Batch_train))
-    with open(cur_path + '/MU_Stats/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
-        pickle.dump(unique_vec_meta_select, f)
-    print("Finish analyse training sample for unqiue read TE.")
-    
-    unique_vec_meta_Transform = {}
-    for cell in cell_ana.keys():
-        unique_vec_meta_Transform[cell] = {}
-        for fam in unique_vec_meta_select.keys():
-            unique_vec_meta_Transform[cell][fam] = []
-    for te, metalist in unique_vec_meta_select.items():
-        for tmp in metalist:
-            unique_vec_meta_Transform[tmp[0]][te].append(tmp[1])
-
-    MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train = get_multi_sample(cell_ana,data_mode)
-    
-    p5 = cur_path + '/MU_Stats/Multi_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
-    scipy.sparse.save_npz((p5), sparse.csr_matrix(MLP_TE_train))
-    p6 = cur_path + '/MU_Stats/Multi_Batch_train_'+str(bin_size)+'_'+str(prop)+'.npz'
-    scipy.sparse.save_npz((p6), sparse.csr_matrix(MLP_Batch_train))
-    p7 = cur_path + '/MU_Stats/Multi_Region_train_'+str(bin_size)+'_'+str(prop)+'.npz'
-    scipy.sparse.save_npz(p7, sparse.csr_matrix(MLP_Region_train))
-
-    with open(cur_path + '/MU_Stats/Multi_meta_train_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
-        pickle.dump(MLP_meta_train, f)
-    print("Finish analyse training sample for multi read TE.")
-    print("Finish generating training sample.")
-
-elif data_mode == '10X':
-    for sample in sample_list:
-        path = cur_path+'/MU_Stats/'+sample+'/'
+def generate_Training(data_mode, file_name, bin_size, prop):
+    cur_path = os.getcwd()
+    with open('./'+file_name) as file:
+        sample_list = file.readlines()
+    for i in range(len(sample_list)):
+        sample_list[i] = sample_list[i][:-1]
+    if data_mode == 'Smart_seq':
+        path = cur_path+'/MU_Stats/'
         file = open(path + 'M&U_'+str(bin_size)+'_'+str(prop)+'%.pkl', 'rb')
         cell_ana = pickle.load(file)
         csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
         stat = pd.read_csv(csv)
 
-        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode,sample)
+        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat)
+        TE_train = np.array(unique_vec_matrix)
+        Batch_train = np.array(unique_TE_matrix)
+        p1= cur_path + '/MU_Stats/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz((p1), sparse.csr_matrix(TE_train))
+        p2 = cur_path + '/MU_Stats/Unique_BATCH_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz((p2), sparse.csr_matrix(Batch_train))
+        with open(cur_path + '/MU_Stats/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
+            pickle.dump(unique_vec_meta_select, f)
+        print("Finish analyse training sample for unqiue read TE.")
+        
+        unique_vec_meta_Transform = {}
+        for cell in cell_ana.keys():
+            unique_vec_meta_Transform[cell] = {}
+            for fam in unique_vec_meta_select.keys():
+                unique_vec_meta_Transform[cell][fam] = []
+        for te, metalist in unique_vec_meta_select.items():
+            for tmp in metalist:
+                unique_vec_meta_Transform[tmp[0]][te].append(tmp[1])
+
+        MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train = get_multi_sample(cell_ana, data_mode, 
+                                                                                           unique_vec_meta_Transform, 
+                                                                                           bin_size, prop)
+        
+        p5 = cur_path + '/MU_Stats/Multi_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz((p5), sparse.csr_matrix(MLP_TE_train))
+        p6 = cur_path + '/MU_Stats/Multi_Batch_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz((p6), sparse.csr_matrix(MLP_Batch_train))
+        p7 = cur_path + '/MU_Stats/Multi_Region_train_'+str(bin_size)+'_'+str(prop)+'.npz'
+        scipy.sparse.save_npz(p7, sparse.csr_matrix(MLP_Region_train))
+
+        with open(cur_path + '/MU_Stats/Multi_meta_train_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
+            pickle.dump(MLP_meta_train, f)
+        print("Finish analyse training sample for multi read TE.")
+        print("Finish generating training sample.")
+
+    elif data_mode == '10X':
+        sample=file_name
+        path = cur_path+'/MU_Stats/'+sample+'/'
+        file = open(path + 'M&U_'+str(bin_size)+'_'+str(prop)+'%.pkl', 'rb')
+        cell_ana = pickle.load(file)
+        csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
+        stat = pd.read_csv(csv)
+        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode,
+                                                                                        unique_vec_meta_Transform, 
+                                                                                           bin_size, prop, sample)
         TE_train = np.array(unique_vec_matrix)
         Batch_train = np.array(unique_TE_matrix)
         p1= cur_path + '/MU_Stats/'+sample+'/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
