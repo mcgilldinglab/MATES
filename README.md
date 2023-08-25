@@ -26,10 +26,41 @@ To install MATES, you can run the following command:
 git clone https://github.com/mcgilldinglab/MATES.git
 pip3 install MATES==0.1
 ```
-
+Installation should take only a few minutes. Verify that MATES is correctly installed by running in python:
+    import MATES
 ## Links
 Interactive MATES web server: <a>https://mates.cellcycle.org</a>.
 ## Usage
+The MATES contains four mainn modules.
+* bam_processor
+```python
+bam_processor.split_bam_files(data_mode, threads_num, file_name, path_to_bam, path_to_bc=None)
+
+bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, file_name, barcodes_file_path_list=None)
+```
+
+* TE_quantifier
+```python
+TE_quantifier.unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path_list=None)
+
+TE_quantifier.finalize_TE_MTX(data_mode, file_name=None)
+```
+* data_processor
+```python
+data_processor.calculate_UM_region(TE_mode, data_mode, file_name, bin_size, proportion, barcodes_file_path_list=None)
+
+data_processor.generate_training_sample(data_mode, file_name, bin_size, proportion)
+
+data_processor.generate_prediction_sample(file_name, bin_size, proportion, barcodes_file_path_list=None)
+```
+* MATES_model
+```python
+MATES_model.train(data_mode, file_name, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
+
+MATES_model.generate_training_sample(data_mode, file_name, bin_size, proportion)
+
+MATES_model.prediction(TE_mode, data_mode, file_name, bin_size, proportion, AE_trained_epochs, MLP_trained_epochs, USE_GPU= True)
+```
 ### Step 0: Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
 
