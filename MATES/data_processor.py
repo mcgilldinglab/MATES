@@ -1,6 +1,6 @@
 import os
-from calculate_MU import calculate_MU
-from generateTraining import generate_Training
+from scripts.calculate_MU import calculate_MU
+from scripts.generateTraining import generate_Training
 
 
 def calculate_UM_region(TE_mode, data_mode, file_name, bin_size, proportion, barcodes_file_path_list=None):
