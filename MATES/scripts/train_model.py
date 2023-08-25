@@ -19,10 +19,10 @@ from tqdm import tqdm
 def pretrain_AE(EPOCHS, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER,
                 TE_train, Batch_train, data_mode, sample=None):
     if data_mode == '10X':
-        path_dir = join(os.getcwd(), 'training_'+bin_size + '_' + prop)    
+        path_dir = join(os.getcwd(), 'training_'+ str(bin_size) + '_' + str(prop))    
         path_dir = join(path_dir, sample)  
     elif data_mode == 'Smart_seq':
-        path_dir = join(os.getcwd(), 'training_'+bin_size + '_' + prop)
+        path_dir = join(os.getcwd(), 'training_'+ str(bin_size) + '_' + str(prop))
     AENet = AutoEncoder(2001, 128, TE_FAM_NUMBER)
     ##optimizer  & loss
     optimizer = torch.optim.Adam(AENet.parameters(), lr=AE_LR)
@@ -87,16 +87,16 @@ def pretrain_AE(EPOCHS, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER
             pbar.update(1)
     AE_log.close()
 
-## AE get embeddings
-def get_AE_embedding(bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER,
-                     MLP_TE_train, MLP_Batch_train, MLP_Region_train, MLP_meta_train, data_mode, EPOCHS, sample=None):
+## AE get embeddings                                                                 
+def get_AE_embedding(data_mode, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER,
+                     MLP_TE_train, MLP_Batch_train, MLP_Region_train, MLP_meta_train, EPOCHS, sample=None):
     if data_mode == '10X':
-        path_dir = join(os.getcwd(), 'training_'+bin_size + '_' + prop)    
+        path_dir = join(os.getcwd(), 'training_'+ str(bin_size) + '_' + str(prop))    
         path_dir = join(path_dir, sample)  
     elif data_mode == 'Smart_seq':
-        path_dir = join(os.getcwd(), 'training_'+bin_size + '_' + prop)
+        path_dir = join(os.getcwd(), 'training_'+ str(bin_size) + '_' + str(prop))
     AENet = AutoEncoder(2001, 128, TE_FAM_NUMBER)
-    AENet = torch.load(join(path_dir, 'AE_pretrain/AE_'+EPOCHS+'_pretrained.pt'))
+    AENet = torch.load(join(path_dir, 'AE_pretrain/AE_'+str(EPOCHS)+'_pretrained.pt'))
              
     MLP_meta_train_tmp = MLP_meta_train.tolist()
     MLP_train_data = []
@@ -121,7 +121,7 @@ def get_AE_embedding(bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER,
     #     MLP_BATCH_data = MLP_BATCH_data.to(device)
     #     MLP_Region_data = MLP_Region_data.to(device)
 
-    Net.to(device)
+    AENet.to(device)
     MLP_TE_data = MLP_TE_data.to(device)
     MLP_BATCH_data = MLP_BATCH_data.to(device)
     MLP_Region_data = MLP_Region_data.to(device)
@@ -169,12 +169,11 @@ def get_MLP_input(BATCH_SIZE, Meta_Data, hidden_info, Batch_Info, Region_Info):
     MLP_TE_trained = hidden_info.toarray()
     MLP_Batch_trained = Batch_Info
     MLP_Region_trained = np.array(Region_Info)
-    MLP_meta_trained = MLP_meta_data_tmp
-    MLP_LR = 1e-6        
+    MLP_meta_trained = MLP_meta_data_tmp       
     MLP_trained_data = []
     for i in range(len(MLP_TE_trained)):
         MLP_trained_data.append([MLP_TE_trained[i],  MLP_Batch_trained[i], MLP_Region_trained[i],MLP_meta_trained[i]])
-
+    print(len(MLP_TE_trained))
     MLP_trained_loader = DataLoader(MLP_trained_data, BATCH_SIZE, shuffle = True, drop_last=True)
 
     # embeddings = torch.Tensor(BATCH_SIZE,1*128)
@@ -190,10 +189,10 @@ def get_MLP_input(BATCH_SIZE, Meta_Data, hidden_info, Batch_Info, Region_Info):
 
 def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_LR, MLP_trained_loader, data_mode, sample=None):
     if data_mode == '10X':
-        path_dir = join(os.getcwd(), 'training_'+bin_size + '_' + prop)    
+        path_dir = join(os.getcwd(), 'training_'+str(bin_size) + '_' + str(prop))    
         path_dir = join(path_dir, sample)  
     elif data_mode == 'Smart_seq':
-        path_dir = join(os.getcwd(), 'training_'+bin_size + '_' + prop)
+        path_dir = join(os.getcwd(), 'training_'+str(bin_size) + '_' + str(prop))
     MLP = MultiLayerPerceptron(TE_FAM_NUMBER,128)   
     PATH = join(path_dir,'MLP/MLP_state.pth')
     torch.save(MLP.state_dict(), PATH)
@@ -248,17 +247,19 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
             MLP_Loss_list.append(np.mean(MLP_Loss_val))
             endtime = datetime.datetime.now()
             if (epoch+1) % 10 == 0:
-                p = join(path_dir,'MLP/MLP_'+str(epoch+1)+'_250.pt')
+                p = join(path_dir,'MLP/MLP_'+str(epoch+1)+'_'+str(EPOCHS)+'.pt')
                 torch.save(MLP,p)
             print("epoch : {}/{}, loss = {:.6f}, takes : {} seconds".format(epoch + 1, EPOCHS, np.mean(MLP_Loss_val), endtime-starttime), file = MLP_log)
             pbar.update(1)
     MLP_log.close()
     
 
-def MATES_train(data_mode, file_name, BIN_SIZE, PROP, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, 
+def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, 
                  AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= torch.cuda.is_available()):
     cur_path = os.getcwd()
     torch.manual_seed(3407)
+    BIN_SIZE = str(bin_size)
+    PROP = str(prop)
     if USE_GPU:
         DEVICE = torch.device('cuda:0')
         torch.cuda.empty_cache()
@@ -295,16 +296,15 @@ def MATES_train(data_mode, file_name, BIN_SIZE, PROP, BATCH_SIZE= 4096, AE_LR = 
             MLP_meta_train=pickle.load(f)
 
         print("Training model...")
-        pretrain_AE(AE_EPOCHS, BIN_SIZE, PROP, BATCH_SIZE, DEVICE, AE_LR,TE_FAM_NUMBER,
+        pretrain_AE(AE_EPOCHS, bin_size, prop, BATCH_SIZE, DEVICE, AE_LR,TE_FAM_NUMBER,
                         TE_train, Batch_train, data_mode)
             
-        Meta_Data, hidden_info, Batch_Info, Region_Info = get_AE_embedding(AE_EPOCHS, BIN_SIZE, PROP, 
+        Meta_Data, hidden_info, Batch_Info, Region_Info = get_AE_embedding(data_mode, bin_size, prop, 
                                                                         BATCH_SIZE, DEVICE, AE_LR,TE_FAM_NUMBER,
                                                                         MLP_TE_train, MLP_Batch_train, 
-                                                                        MLP_Region_train, MLP_meta_train,
-                                                                        data_mode)
+                                                                        MLP_Region_train, MLP_meta_train, AE_EPOCHS)
         MLP_trained_loader = get_MLP_input(BATCH_SIZE, Meta_Data, hidden_info, Batch_Info, Region_Info)
-        training_MLP(MLP_EPOCHS,BIN_SIZE, PROP, DEVICE, BATCH_SIZE, TE_FAM_NUMBER, MLP_LR, MLP_trained_loader, data_mode)
+        training_MLP(MLP_EPOCHS,bin_size, prop, DEVICE, BATCH_SIZE, TE_FAM_NUMBER, MLP_LR, MLP_trained_loader, data_mode)
 
         print("Finish training model.")
 
@@ -340,17 +340,16 @@ def MATES_train(data_mode, file_name, BIN_SIZE, PROP, BATCH_SIZE= 4096, AE_LR = 
             MLP_meta_train=pickle.load(f)
 
         print("Training model for " + sample + '...')
-        pretrain_AE(AE_EPOCHS, BIN_SIZE, PROP, BATCH_SIZE, DEVICE, AE_LR,TE_FAM_NUMBER,
+        pretrain_AE(AE_EPOCHS, bin_size, prop, BATCH_SIZE, DEVICE, AE_LR,TE_FAM_NUMBER,
                     TE_train, Batch_train, data_mode, sample)
         
-        Meta_Data, hidden_info, Batch_Info, Region_Info = get_AE_embedding(AE_EPOCHS, BIN_SIZE, PROP, 
+        Meta_Data, hidden_info, Batch_Info, Region_Info = get_AE_embedding(data_mode, bin_size, prop, 
                                                                         BATCH_SIZE, DEVICE, AE_LR,TE_FAM_NUMBER,
                                                                         MLP_TE_train, MLP_Batch_train, 
-                                                                        MLP_Region_train, MLP_meta_train,
-                                                                        data_mode,sample
-                                                                        )
+                                                                        MLP_Region_train, MLP_meta_train, AE_EPOCHS, sample)
+        
         
         MLP_trained_loader = get_MLP_input(BATCH_SIZE, Meta_Data, hidden_info, Batch_Info, Region_Info)
-        training_MLP(MLP_EPOCHS,BIN_SIZE, PROP, DEVICE, BATCH_SIZE, TE_FAM_NUMBER, MLP_LR, MLP_trained_loader, data_mode, sample)
+        training_MLP(MLP_EPOCHS,bin_size, prop, DEVICE, BATCH_SIZE, TE_FAM_NUMBER, MLP_LR, MLP_trained_loader, data_mode, sample)
 
         print("Finish training model for " + sample + '.')
