@@ -80,8 +80,9 @@ data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, p
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
 ```
 ```python
-data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
+data_processor.generate_prediction_sample(TE_mode, data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
 # Parameters
+## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
 ## sample_list_file : <str> path to file conatins sample names
 ## bin_size : <int> size of U/M Region, default = 5

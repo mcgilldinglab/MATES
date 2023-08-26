@@ -4,7 +4,7 @@ import pandas as pd
 import shutil
 
 ##### Quant Unique TE #####
-def unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path_list=None):
+def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None):
     if TE_mode == "exclusive":
         TE_ref_path = './TE_nooverlap.csv'
     else: 
@@ -13,14 +13,14 @@ def unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path
     os.makedirs("Unique_TE", exist_ok=True)
 
     if data_mode == "Smart_seq":
-        sample_count = sum(1 for line in open(file_name)) + 1
+        sample_count = sum(1 for line in open(sample_list_file)) + 1
         file_batch = threads_num
 
         result = sample_count / file_batch
         sample_per_batch = int(result + 0.5)
         processes = []
         for i in range(threads_num):
-            command = f"python scripts/quant_unique_TE.py {file_name} {i} {sample_per_batch} {TE_ref_path} {data_mode} {None}"
+            command = f"python scripts/quant_unique_TE.py {sample_list_file} {i} {sample_per_batch} {TE_ref_path} {data_mode} {None}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
 
@@ -44,9 +44,9 @@ def unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path
         print("Finish finalizing Unique TE MTX.")
 
     elif data_mode == "10X":
-        with open(file_name) as sample_file:
+        with open(sample_list_file) as sample_file:
             sample_name = [line.rstrip('\n') for line in sample_file]
-        with open(barcodes_file_path_list) as bc_file:
+        with open(bc_path_file) as bc_file:
             barcodes_paths = [line.rstrip('\n') for line in bc_file]
         for idx, sample in enumerate(sample_name):
             sample_count = sum(1 for line in open(barcodes_paths[idx])) + 1
@@ -81,7 +81,7 @@ def unique_TE_MTX(TE_mode, data_mode, file_name, threads_num, barcodes_file_path
         print('Invalid data format.')
 
 ##### Quant All TE #####
-def finalize_TE_MTX(data_mode, file_name=None):
+def finalize_TE_MTX(data_mode, sample_list_file=None):
     if data_mode == "Smart_seq":
         print("Start create TE_MTX...")
         df_empty = pd.read_csv('prediction/Multi_MTX.csv')
@@ -102,10 +102,10 @@ def finalize_TE_MTX(data_mode, file_name=None):
         shutil.rmtree("prediction")
     elif data_mode == "10X":
         os.makedirs("result_MTX", exist_ok=True)
-        if file_name == None:
+        if sample_list_file == None:
             print('Please provide sample list for 10X data.')
             exit(1)
-        with open(file_name, "r") as f:
+        with open(sample_list_file, "r") as f:
             for line in f:
                 line = line.strip()
                 print("Start create TE_MTX for ", line, "...")

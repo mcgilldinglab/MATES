@@ -1,13 +1,13 @@
 #!/bin/bash
 if [ -f "$1" ] && [ -f "$2" ]; then
-    for line in `cat "$1"`
+    paste "$1" "$2" | while IFS="$(printf '\t')" read -r line1 line2;
     do
-    echo "Start Processing ${line}" >> ./unique_read/split_barcode.log
-    mkdir ./unique_read/${line}
-    mkdir ./unique_read/${line}/by_barcode
-    python scripts/split_bam_by_bc.py ./unique_read/${line}_uniqueread.bam \
-        "$2" ./unique_read/${line}/by_barcode/ >> ./unique_read/${line}/${line}_unique_splitting.log
-    echo "End Processing ${line}" >> ./unique_read/split_barcode.log
+    echo "Start Processing ${line1}" >> ./unique_read/split_barcode.log
+    mkdir ./unique_read/${line1}
+    mkdir ./unique_read/${line1}/by_barcode
+    python scripts/split_bam_by_bc.py ./unique_read/${line1}_uniqueread.bam \
+        ${line2} ./unique_read/${line1}/by_barcode/ >> ./unique_read/${line1}/${line1}_unique_splitting.log
+    echo "End Processing ${line1}" >> ./unique_read/split_barcode.log
     done
 fi
 

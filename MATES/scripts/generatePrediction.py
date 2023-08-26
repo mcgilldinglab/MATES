@@ -8,9 +8,11 @@ from pathlib import Path
 from os.path import join
 from tqdm import tqdm
 
-def generatePrediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barcodes_file):
+def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barcodes_file=None):
     cur_path = os.getcwd()
     TEs = pd.read_csv(path_to_TE_ref, header = None)
+    if not os.path.isdir(cur_path + '/Multi_TE'):
+            os.mkdir(cur_path + '/Multi_TE')
     if data_mode == 'Smart_seq':
         TE_fam_path = cur_path + '/MU_Stats/'+str(bin_size)+'_'+str(prop)+'_stat.csv'
         tmp = pd.read_csv(TE_fam_path)
@@ -19,8 +21,8 @@ def generatePrediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barco
         selected_Fam = tmp['TE_fam'].tolist()
         Predict_TE_idx = TEs[TEs[6].isin(selected_Fam)][4].tolist()
 
-        if Path(barcodes_file).is_file():
-            with open(barcodes_file, "r") as fh:
+        if Path(file_name).is_file():
+            with open(file_name, "r") as fh:
                 barcodes = [l.rstrip() for l in fh.readlines()]
         path = cur_path+'/count_coverage/'
         if not os.path.isdir(cur_path + '/Multi_TE'):
@@ -51,6 +53,7 @@ def generatePrediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barco
     multi_vec_matrix = []
     multi_TE_matrix = []
     multi_cell_info = []
+    print("Start analyse full prediciton data of multi read...")
     with tqdm(total = len(barcodes)) as pbar:
         for idx, cb in enumerate(barcodes):
             cb_path=join(path,cb)
@@ -118,10 +121,16 @@ def generatePrediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barco
         with open(p5, 'wb') as f:
             pickle.dump(MLP_meta_full, f)
 
-        print("Finish analyse full data of multi read.")
+        print("Finish analyse full prediciton data of multi read.")
 
-        multi_path = 'Multi_TE/' + sample + '/Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz'
-        unique_path = 'MU_Stats/' + sample + '/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl'
+        if data_mode == 'Smart_seq':
+            multi_path = 'Multi_TE/Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz'
+            unique_path = 'MU_Stats/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl'
+            p = 'Multi_TE/Multi_Batch_full_encode_'+str(bin_size)+'_'+str(prop)+'.npz'
+        elif data_mode == '10X':
+            multi_path = 'Multi_TE/' + sample + '/Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz'
+            unique_path = 'MU_Stats/' + sample + '/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl'
+            p = 'Multi_TE/' + sample + '/Multi_Batch_full_encode_'+str(bin_size)+'_'+str(prop)+'.npz'
         meta_dict = np.load(unique_path,allow_pickle=True)
         Fam_Idx_map = {f:i for i, f in enumerate(list(meta_dict.keys())) }
         multi_TE = np.load(multi_path, allow_pickle = True)
@@ -130,6 +139,6 @@ def generatePrediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barco
             temp[temp == key] = val
         tmp = list(map(int, list(temp)))
         res = scipy.sparse.csr_matrix(tmp)
-        p = 'Multi_TE/' + sample + '/Multi_Batch_full_encode_'+str(bin_size)+'_'+str(prop)+'.npz'
+        
         scipy.sparse.save_npz((p), res)
-        print('Finish ' + sample)  
+        print('Finish saving data for prediction.')  
