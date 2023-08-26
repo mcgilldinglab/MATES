@@ -107,18 +107,18 @@ def get_multi_sample(cell_ana, data_mode, unique_vec_meta_Transform, bin_size, p
 
 def generate_Training(data_mode, file_name, bin_size, prop):
     cur_path = os.getcwd()
-    with open('./'+file_name) as file:
-        sample_list = file.readlines()
-    for i in range(len(sample_list)):
-        sample_list[i] = sample_list[i][:-1]
     if data_mode == 'Smart_seq':
+        with open('./'+file_name) as file:
+            sample_list = file.readlines()
+        for i in range(len(sample_list)):
+            sample_list[i] = sample_list[i][:-1]
         path = cur_path+'/MU_Stats/'
         file = open(path + 'M&U_'+str(bin_size)+'_'+str(prop)+'%.pkl', 'rb')
         cell_ana = pickle.load(file)
         csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
         stat = pd.read_csv(csv)
-
-        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat)
+        print('Start generating training sample for unqiue read TE...')
+        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode)
         TE_train = np.array(unique_vec_matrix)
         Batch_train = np.array(unique_TE_matrix)
         p1= cur_path + '/MU_Stats/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
@@ -127,7 +127,7 @@ def generate_Training(data_mode, file_name, bin_size, prop):
         scipy.sparse.save_npz((p2), sparse.csr_matrix(Batch_train))
         with open(cur_path + '/MU_Stats/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
             pickle.dump(unique_vec_meta_select, f)
-        print("Finish analyse training sample for unqiue read TE.")
+        print("Finish generating training sample for unqiue read TE.")
         
         unique_vec_meta_Transform = {}
         for cell in cell_ana.keys():
@@ -137,7 +137,7 @@ def generate_Training(data_mode, file_name, bin_size, prop):
         for te, metalist in unique_vec_meta_select.items():
             for tmp in metalist:
                 unique_vec_meta_Transform[tmp[0]][te].append(tmp[1])
-
+        print('Start generating training sample for multi read TE...')
         MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train = get_multi_sample(cell_ana, data_mode, 
                                                                                            unique_vec_meta_Transform, 
                                                                                            bin_size, prop)
@@ -151,7 +151,7 @@ def generate_Training(data_mode, file_name, bin_size, prop):
 
         with open(cur_path + '/MU_Stats/Multi_meta_train_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
             pickle.dump(MLP_meta_train, f)
-        print("Finish analyse training sample for multi read TE.")
+        print("Finish analysing training sample for multi read TE.")
         print("Finish generating training sample.")
 
     elif data_mode == '10X':
@@ -161,9 +161,8 @@ def generate_Training(data_mode, file_name, bin_size, prop):
         cell_ana = pickle.load(file)
         csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
         stat = pd.read_csv(csv)
-        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode,
-                                                                                        unique_vec_meta_Transform, 
-                                                                                           bin_size, prop, sample)
+        print('Start generating training sample for unqiue read TE in '+sample+"...")
+        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode, sample)
         TE_train = np.array(unique_vec_matrix)
         Batch_train = np.array(unique_TE_matrix)
         p1= cur_path + '/MU_Stats/'+sample+'/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
@@ -172,7 +171,7 @@ def generate_Training(data_mode, file_name, bin_size, prop):
         scipy.sparse.save_npz((p2), sparse.csr_matrix(Batch_train))
         with open(cur_path + '/MU_Stats/'+sample+'/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
             pickle.dump(unique_vec_meta_select, f)
-        print("Finish analyse training sample for unqiue read TE in "+sample+".")
+        print("Finish analyse generating sample for unqiue read TE in "+sample+".")
         
         unique_vec_meta_Transform = {}
         for cell in cell_ana.keys():
@@ -182,7 +181,7 @@ def generate_Training(data_mode, file_name, bin_size, prop):
         for te, metalist in unique_vec_meta_select.items():
             for tmp in metalist:
                 unique_vec_meta_Transform[tmp[0]][te].append(tmp[1])
-
+        print('Start generating training sample for multi read TE in '+sample+"...")
         MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train = get_multi_sample(cell_ana, data_mode,sample)
         
         p5 = cur_path + '/MU_Stats/'+sample+'/Multi_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
@@ -194,5 +193,5 @@ def generate_Training(data_mode, file_name, bin_size, prop):
 
         with open(cur_path + '/MU_Stats/'+sample+'/Multi_meta_train_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
             pickle.dump(MLP_meta_train, f)
-        print("Finish analyse training sample for multi read TE in "+sample+".")
+        print("Finish analyse generating sample for multi read TE in "+sample+".")
         print("Finish Sample" + sample)

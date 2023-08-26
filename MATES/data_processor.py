@@ -1,10 +1,9 @@
 import os
-from scripts.calculate_MU import calculate_MU
-from scripts.generateTraining import generate_Training
-
+from MATES.scripts.calculate_MU import calculate_MU
+from MATES.scripts.generateTraining import generate_Training
 
 def calculate_UM_region(TE_mode, data_mode, file_name, bin_size, proportion, barcodes_file_path_list=None):
-    if TE_mode == "exclusiv":
+    if TE_mode == "exclusive":
         TE_ref_path = './TE_nooverlap.csv'
     else: 
         TE_ref_path = './TE_Full.csv'
@@ -14,8 +13,10 @@ def calculate_UM_region(TE_mode, data_mode, file_name, bin_size, proportion, bar
     os.makedirs("MU_Stats", exist_ok=True)
 
     if data_mode == "10X":
-        sample_name = open(file_name).read().strip()
-        barcodes_paths = open(barcodes_file_path_list).read().strip()
+        with open(file_name) as sample_file:
+            sample_name = [line.rstrip('\n') for line in sample_file]
+        with open(barcodes_file_path_list) as bc_file:
+            barcodes_paths = [line.rstrip('\n') for line in bc_file]
         for idx, sample in enumerate(sample_name):
             calculate_MU(data_mode, sample, bin_size, proportion, TE_ref_path, barcodes_paths[idx])
     elif data_mode == 'Smart_seq':
@@ -28,7 +29,8 @@ def generate_training_sample(data_mode, file_name, bin_size, proportion):
         exit(1)
     
     if data_mode == "10X":
-        sample_name = open(file_name).read().strip()
+        with open(file_name) as sample_file:
+            sample_name = [line.rstrip('\n') for line in sample_file]
         for idx, sample in enumerate(sample_name):
             generate_Training(data_mode, sample, bin_size, proportion)
     elif data_mode == 'Smart_seq':

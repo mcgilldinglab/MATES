@@ -32,7 +32,7 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam, path_to_bc=N
     os.makedirs("./multi_read", exist_ok=True)
     processes = []
     for i in range(count):
-        command = f"sh scripts/split_u_m.sh ./file_tmp/{i} {path_to_bam}"
+        command = f"sh MATES/scripts/split_u_m.sh ./file_tmp/{i} {path_to_bam}"
         process = subprocess.Popen(command, shell=True)
         processes.append(process)
     for process in processes:
@@ -46,7 +46,7 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam, path_to_bc=N
         print("Start splitting multi sub-bam based on cell barcodes...")
         processes = []
         for i in range(count):
-            command = f"sh scripts/split_bc_m.sh ./file_tmp/{i} {path_to_bc}"
+            command = f"sh MATES/scripts/split_bc_m.sh ./file_tmp/{i} {path_to_bc}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
 
@@ -55,7 +55,7 @@ def split_bam_files(data_mode, threads_num, file_name, path_to_bam, path_to_bc=N
 
         processes = []
         for i in range(count):
-            command = f"sh scripts/split_bc_u.sh ./file_tmp/{i} {path_to_bc}"
+            command = f"sh MATES/scripts/split_bc_u.sh ./file_tmp/{i} {path_to_bc}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
 
