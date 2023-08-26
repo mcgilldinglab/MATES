@@ -13,13 +13,13 @@ def get_gene_name(TE_chrom_new):
 species = sys.argv[1]
 
 if species == 'Mouse':
-    command = "python Ref2csv.py Mouse" 
+    command = "python MATES/scripts/Ref2csv.py Mouse" 
     os.system(command)
     TEs = pd.read_csv('mm_TEs.csv')
     genes = pd.read_csv("mm_Genes.csv")
 
 if species == 'Human':
-    command = "python Ref2csv.py Human"
+    command = "python MATES/scripts/Ref2csv.py Human"
     os.system(command)
     TEs = pd.read_csv('hg_TEs.csv')
     genes = pd.read_csv("hg_Genes.csv")
