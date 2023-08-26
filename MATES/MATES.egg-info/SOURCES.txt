@@ -1,0 +1,6 @@
+setup.py
+MATES.egg-info/PKG-INFO
+MATES.egg-info/SOURCES.txt
+MATES.egg-info/dependency_links.txt
+MATES.egg-info/requires.txt
+MATES.egg-info/top_level.txt
