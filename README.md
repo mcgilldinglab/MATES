@@ -42,12 +42,12 @@ from MATES import TE_quantifier
 * **bam_processor**
 	The bam_processor module efficiently manages input BAM files by partitioning them into sub-BAM files for individual cells, distinguishing unique mapping from multi mapping reads. It also constructs TE-specific coverage vectors, shedding light on read distributions around TE instances at the single-cell level, enabling accurate TE quantification and comprehensive cellular characterization.
 ```python
-bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, path_to_bam, bc_path_file=None)
+bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_path_file=None)
 # Parameters
 ## data_mode : <str> 10X or Smart_seq
 ## threads_num : <int>
 ## sample_list_file : <str> path to file conatins sample names
-## path_to_bam : <str> path to bam file
+## bam_path_file : <str> path to file conatins matching bam file address of sample in sample list
 ## bc_path_file(optional) : <str> path to file contains matching barcodes list address of sample in sample list
 ```
 ```python
@@ -135,7 +135,8 @@ TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 ## data_mode : <str> 10X or Smart_seq
 ## sample_list_file(optional) : <str> only needed for 10X data, path to file conatins sample names
 ```
-### Step 0: Alignment
+### Step 0: Alignment/TE Reference
+* Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
 
 - A sample alignment command line for **10X scRNA/scATAC** Data:
@@ -157,35 +158,49 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
         --readFilesIn sample/sample_1.fastq.gz sample/sample_2.fastq.gz \
         --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts
 ```
+* TE Reference
+We provide two mode of TE reference. ** exclusive **, which refers that exclude all TE instances in the reference that have overlapping with gene reference, and ** inclusive ** refers that we do not remove any TE instances.
+
+The processed TE refernce can be found in TE_ref folder with two different species Human or Mouse. 'TE_nooverlap.csv' is for exclusive mode and 'TE_full.csv' is for inclusive mode. By running the MATES, you will need to place TE refrence fle in your working directory.
+
 ### Step 1: Processing Bam Files
+To run the first step, you'll be required to furnish three separate .txt files containing essential information: sample names, respective BAM file addresses, and in the case of 10X data, the supplementary addresses for barcode files associated with each sample.
 ```python
 import MATES
-MATES.bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, path_to_bam, bc_path_file=None)
+from MATES import bam_processor
+
+bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_path_file=None)
 ```
 ### Step 2: Build Coverage Vectors
 ```python
-MATES.bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None)
+bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None)
 ```
 
 ### Step 3: Generate Training/Predicting Samples
 ```python
-MATES.data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
+from MATES import data_processor
 
-MATES.data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
+data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
 
-MATES.data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
+data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
+
+data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
 ```
 ### Step 4: Training MATES Model and Make Prediction of α
 ```python
-MATES.MATES_model.train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
+from MATES import MATES_model
 
-MATES.MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
+MATES_model.train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
+
+MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
 ```
 ### Step 5: Quantify TE Expression Matrix
 ```python
-MATES.TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
+from MATES import TE_quantifier
 
-MATES.TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
+TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
+
+TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 ```
 
 ## Tutorial:
