@@ -136,7 +136,7 @@ TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 ## sample_list_file(optional) : <str> only needed for 10X data, path to file conatins sample names
 ```
 ### Step 0: Alignment/TE Reference
-* Alignment
+#### Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
 
 - A sample alignment command line for **10X scRNA/scATAC** Data:
@@ -158,8 +158,8 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
         --readFilesIn sample/sample_1.fastq.gz sample/sample_2.fastq.gz \
         --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts
 ```
-* TE Reference
-We provide two mode of TE reference. ** exclusive **, which refers that exclude all TE instances in the reference that have overlapping with gene reference, and ** inclusive ** refers that we do not remove any TE instances.
+#### TE Reference
+We provide two mode of TE reference. **exclusive**, which refers that exclude all TE instances in the reference that have overlapping with gene reference, and **inclusive** refers that we do not remove any TE instances.
 
 The processed TE refernce can be found in TE_ref folder with two different species Human or Mouse. 'TE_nooverlap.csv' is for exclusive mode and 'TE_full.csv' is for inclusive mode. By running the MATES, you will need to place TE refrence fle in your working directory.
 
