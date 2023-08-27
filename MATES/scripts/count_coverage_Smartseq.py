@@ -226,11 +226,12 @@ TEs=pd.read_csv(TE_ref_path,header=None)
 TEs.columns = ['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']
 TE_ref_bed = pybedtools.example_bedtool(cur_path+'/'+TE_ref_path[:-4] + '.bed')
 
+print('Start build coverage vector for thread ' + str(batch) + '...')
 for sample in sample_list[start_idx: end_idx]:
     if not os.path.exists(join(cur_path,'count_coverage/'+sample)):
         os.mkdir(join(cur_path,'count_coverage/'+sample))
-    unique_path = join(cur_path,'unique_read/'+sample)
-    multi_path = join(cur_path, 'multi_read/'+sample)
+    unique_path = join(cur_path,'unique_read')
+    multi_path = join(cur_path, 'multi_read')
    
     counted = 0
     
@@ -247,7 +248,6 @@ for sample in sample_list[start_idx: end_idx]:
         k_path_u = k_path + '/unique_vec'
         os.rmdir(k_path_u)        
         continue
-
     
     TE_index_list_unique = generate_unique_matric(sample,path_to_unique_bam, TE_ref_bed, sav_vec = True)
     TE_index_list_multi = generate_multi_matric(sample, path_to_multi_bam, TE_ref_bed)
@@ -312,4 +312,5 @@ for sample in sample_list[start_idx: end_idx]:
 
     counted += 1
     if counted % 10 == 0 or counted == batch_size:
-        print("Finish batch " + str(batch) + ":" + str(counted) +"/"+ str(batch_size) + " for sample" + sample)
+        print("Finish batch " + str(batch) + ":" + str(counted) +"/"+ str(batch_size))
+print("Finish building coverage vector for batch " + str(batch) + ".")
