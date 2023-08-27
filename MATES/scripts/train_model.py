@@ -9,9 +9,9 @@ from scipy import sparse
 import os
 import numpy as np
 import datetime
-from AutoEncoder import AutoEncoder
-from MLP import MultiLayerPerceptron
-from MLP import MLP_loss
+from .AutoEncoder import AutoEncoder
+from .MLP import MultiLayerPerceptron
+from .MLP import MLP_loss
 import matplotlib.pyplot as plt
 from os.path import join
 from tqdm import tqdm
