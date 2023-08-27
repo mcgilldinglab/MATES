@@ -1,6 +1,6 @@
 #!bin/bash
 if [ -f "$1" ] && [ -f "$2" ]; then
-    paste "$1" "$2" | while IFS="$(printf '\t')" read -r line1 line2; do
+    paste "$1" "$2" | while IFS="$(printf '\t')" read -r line1 line2;
         do
         samtools view -F 4 -bq 255 "${line2}" > ./unique_read/${line1}_uniqueread.bam
         samtools index ./unique_read/${line1}_uniqueread.bam
