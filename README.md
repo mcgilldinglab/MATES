@@ -46,7 +46,7 @@ bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path
 # Parameters
 ## data_mode : <str> 10X or Smart_seq
 ## threads_num : <int>
-## sample_list_file : <str> path to file conatins sample names
+## sample_list_file : <str> path to file conatins sample IDs
 ## bam_path_file : <str> path to file conatins matching bam file address of sample in sample list
 ## bc_path_file(optional) : <str> path to file contains matching barcodes list address of sample in sample list
 ```
@@ -56,7 +56,7 @@ bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_fi
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
 ## threads_num : <int>
-## sample_list_file : <str> path to file conatins sample names
+## sample_list_file : <str> path to file conatins sample IDs
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
 * **data_processor**
@@ -66,7 +66,7 @@ data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_siz
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
-## sample_list_file : <str> path to file conatins sample names
+## sample_list_file : <str> path to file conatins sample IDs
 ## bin_size : <int> size of U/M Region, default = 5
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
@@ -75,7 +75,7 @@ data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_siz
 data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
 # Parameters
 ## data_mode : <str> 10X or Smart_seq
-## sample_list_file : <str> path to file conatins sample names
+## sample_list_file : <str> path to file conatins sample IDs
 ## bin_size : <int> size of U/M Region, default = 5
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
 ```
@@ -84,7 +84,7 @@ data_processor.generate_prediction_sample(TE_mode, data_mode,sample_list_file, b
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
-## sample_list_file : <str> path to file conatins sample names
+## sample_list_file : <str> path to file conatins sample IDs
 ## bin_size : <int> size of U/M Region, default = 5
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
@@ -96,7 +96,7 @@ data_processor.generate_prediction_sample(TE_mode, data_mode,sample_list_file, b
 MATES_model.train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
 # Parameters
 ## data_mode : <str> 10X or Smart_seq
-## sample_list_file : <str> path to file conatins sample names
+## sample_list_file : <str> path to file conatins sample IDs
 ## bin_size : <int> size of U/M Region, default = 5
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
 ## BATCH_SIZE : <int> default = 4096
@@ -111,7 +111,7 @@ MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, propo
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
-## sample_list_file : <str> path to file conatins sample names
+## sample_list_file : <str> path to file conatins sample IDs
 ## bin_size : <int> size of U/M Region, default = 5
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
 ## AE_EPOCHS : <int> training epochs for AutoEncoder, default = 200
@@ -125,7 +125,7 @@ TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, b
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
-## sample_list_file : <str> path to file conatins sample names
+## sample_list_file : <str> path to file conatins sample IDs
 ## threads_num : <int>
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
@@ -133,7 +133,7 @@ TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, b
 TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 # Parameters
 ## data_mode : <str> 10X or Smart_seq
-## sample_list_file(optional) : <str> only needed for 10X data, path to file conatins sample names
+## sample_list_file(optional) : <str> only needed for 10X data, path to file conatins sample IDs
 ```
 ### Step 0: Alignment/TE Reference
 #### Alignment
@@ -162,6 +162,12 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
 We provide two mode of TE reference. **exclusive**, which refers that exclude all TE instances in the reference that have overlapping with gene reference, and **inclusive** refers that we do not remove any TE instances.
 
 The processed TE refernce can be found in TE_ref folder with two different species Human or Mouse. 'TE_nooverlap.csv' is for exclusive mode and 'TE_full.csv' is for inclusive mode. By running the MATES, you will need to place TE refrence fle in your working directory.
+
+To generate TE reference, simply run:
+```sh
+python build_reference.py Mouse
+python build_reference.py Human
+```
 
 ### Step 1: Processing Bam Files
 To run the first step, you'll be required to furnish three separate .txt files containing essential information: sample names, respective BAM file addresses, and in the case of 10X data, the supplementary addresses for barcode files associated with each sample.
