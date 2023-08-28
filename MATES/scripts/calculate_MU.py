@@ -193,7 +193,8 @@ def calculate_MU(data_mode, file_name, BIN_SIZE, PROPORTION, path_to_TE_ref, bar
         with open('./'+file_name) as file:
             sample_list = file.readlines()
         for i in range(len(sample_list)):
-            sample_list[i] = sample_list[i][:-1]
+            if sample_list[i][-1] == '\n':
+                sample_list[i] = sample_list[i][:-1]
         vec_count = calculate_M_U_Smart_seq(sample_list, TE_ref, BIN_SIZE, PROPORTION)
         print('Finish calculating U/M region for each cell, finalizing...')
 
