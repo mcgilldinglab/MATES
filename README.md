@@ -27,7 +27,9 @@ git clone https://github.com/mcgilldinglab/MATES.git
 pip3 install MATES
 ```
 Installation should take only a few minutes. Verify that MATES is correctly installed by running in python:
-    import MATES
+```sh
+import MATES
+```
 ## Links
 Interactive MATES web server: <a>https://mates.cellcycle.org</a>.
 ## Usage
