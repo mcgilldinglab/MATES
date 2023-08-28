@@ -210,7 +210,8 @@ TE_ref_path = sys.argv[4]
 with open('./'+file_name) as file:
     sample_list = file.readlines()
 for i in range(len(sample_list)):
-    sample_list[i] = sample_list[i][:-1]
+    if sample_list[i][-1] == '\n':
+        sample_list[i] = sample_list[i][:-1]
 cur_path = os.getcwd()
 if not os.path.exists(join(cur_path,'count_coverage')):
     os.mkdir(join(cur_path,'count_coverage'))
