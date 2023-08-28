@@ -138,6 +138,7 @@ TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 ### Step 0: Alignment/TE Reference
 #### Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
+**Note**: the bam file you input must contains CR and NH fields.
 
 - A sample alignment command line for **10X scRNA/scATAC** Data:
 ```sh

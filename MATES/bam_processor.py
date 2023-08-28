@@ -45,7 +45,7 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
     os.makedirs("./unique_read", exist_ok=True)
     os.makedirs("./multi_read", exist_ok=True)
     processes = []
-    for i in range(file_batch):
+    for i in range(len(os.listdir('./file_tmp'))):
         command = f"sh MATES/scripts/split_u_m.sh ./file_tmp/{i} ./bam_tmp/{i}"
         process = subprocess.Popen(command, shell=True)
         processes.append(process)
