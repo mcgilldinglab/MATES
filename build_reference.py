@@ -2,6 +2,7 @@ import pandas as pd
 import pybedtools
 import os
 import sys
+import pyranges as pr
 
 def get_gene_name(TE_chrom_new):
     if TE_chrom_new in (diff_ref['TE_chrom'].tolist()):
@@ -16,18 +17,28 @@ if species == 'Mouse':
     command = "python MATES/scripts/Ref2csv.py Mouse" 
     os.system(command)
     TEs = pd.read_csv('mm_TEs.csv')
-    genes = pd.read_csv("mm_Genes.csv")
+    TE_ref = TEs.rename(columns={'Unnamed: 0':'index'})
+    TE_ref = TE_ref.iloc[1:]
+    TE = TE_ref[['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']]
+    genes = pd.read_csv("mm_Genes.csv") 
 
 if species == 'Human':
     command = "python MATES/scripts/Ref2csv.py Human"
     os.system(command)
     TEs = pd.read_csv('hg_TEs.csv')
+    TE_ref = TEs.rename(columns={'Unnamed: 0':'index'})
+    TE_ref = TE_ref.iloc[1:]
+    TE = TE_ref[['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']]
     genes = pd.read_csv("hg_Genes.csv")
 
+if species == 'Other':
+    TEs = pd.read_csv(sys.argv[2])
+    TEs['index'] = TEs.index
+    TEs = TEs[["genoName","genoStart","genoEnd", "strand","index", "repName","repClass"]]
+    TEs.columns = ['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']
+    genes = pr.read_gtf(sys.argv[3])
+    genes = genes[['Chromosome','Feature','Start','End','Strand','gene_id','gene_name']]
 
-TE_ref = TEs.rename(columns={'Unnamed: 0':'index'})
-TE_ref = TE_ref.iloc[1:]
-TE = TE_ref[['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']]
 TE = TE.dropna()
 TE['length'] = TE['end']-TE['start']
 

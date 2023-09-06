@@ -166,14 +166,26 @@ STAR --runThreadN 64 --genomeDir path_to_genome --readFilesCommand zcat \
 #### TE Reference
 We provide two mode of TE reference. **exclusive**, which refers that exclude all TE instances in the reference that have overlapping with gene reference, and **inclusive** refers that we do not remove any TE instances.
 
-The processed TE refernce can be found in TE_ref folder with two different species Human or Mouse. 'TE_nooverlap.csv' is for exclusive mode and 'TE_full.csv' is for inclusive mode. By running the MATES, you will need to place TE refrence fle in your working directory.
+The processed TE refernce can be found in TE_ref folder with two different species Human or Mouse. 'TE_nooverlap.csv' is for exclusive mode and 'TE_full.csv' is for inclusive mode. By running the MATES, you will need to place TE refrence file in your working directory.
 
 To generate TE reference, simply run:
 ```sh
 python build_reference.py Mouse
 python build_reference.py Human
 ```
-
+If you have speciese other than human/mouse, downloaded TE reference in csv format and gene refrence in GTF format from UCSC table browser, run:
+```sh
+python build_reference.py Other path_to_TE_reference path_to_Gene_reference
+```
+```sh
+## A sample of D.melanogaster TE refrence downloaded from UCSC table browser:
+$ cat TE_reference.csv | head
+\#"bin","swScore","milliDiv","milliDel","milliIns","genoName","genoStart","genoEnd","genoLeft","strand","repName","repClass","repFamily","repStart","repEnd","repLeft","id"
+"73","845","199","35","16","chr4","130778","131107","-1217024","-","DNAREP1_DM","RC","Helitron","-82","512","268","8"
+"74","18658","190","35","41","chr4","1307882","1314210","-33921","-","HETA","LINE","Jockey","-1","6080","1","8"
+"585","416","0","0","0","chr4","0","355","-1347776","+","(TTATTATA)n","Simple_repeat","Simple_repeat","1","355","0","8"
+"585","15","134","29","29","chr4","688","723","-1347408","+","(TAA)n","Simple_repeat","Simple_repeat","1","35","0","8"
+```
 ### Step 1: Processing Bam Files
 To run the first step, you'll be required to furnish three separate .txt files containing essential information: sample names, respective BAM file addresses, and in the case of 10X data, the supplementary addresses for barcode files associated with each sample.
 ```python
