@@ -180,7 +180,7 @@ python build_reference.py Other path_to_TE_reference path_to_Gene_reference
 ```sh
 ## A sample of D.melanogaster TE refrence downloaded from UCSC table browser:
 $ cat TE_reference.csv | head
-\#"bin","swScore","milliDiv","milliDel","milliIns","genoName","genoStart","genoEnd","genoLeft","strand","repName","repClass","repFamily","repStart","repEnd","repLeft","id"
+#"bin","swScore","milliDiv","milliDel","milliIns","genoName","genoStart","genoEnd","genoLeft","strand","repName","repClass","repFamily","repStart","repEnd","repLeft","id"
 "73","845","199","35","16","chr4","130778","131107","-1217024","-","DNAREP1_DM","RC","Helitron","-82","512","268","8"
 "74","18658","190","35","41","chr4","1307882","1314210","-33921","-","HETA","LINE","Jockey","-1","6080","1","8"
 "585","416","0","0","0","chr4","0","355","-1347776","+","(TTATTATA)n","Simple_repeat","Simple_repeat","1","355","0","8"
