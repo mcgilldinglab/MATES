@@ -186,6 +186,8 @@ $ cat TE_reference.csv | head
 "585","416","0","0","0","chr4","0","355","-1347776","+","(TTATTATA)n","Simple_repeat","Simple_repeat","1","355","0","8"
 "585","15","134","29","29","chr4","688","723","-1347408","+","(TAA)n","Simple_repeat","Simple_repeat","1","35","0","8"
 ```
+You can also find * [UCSC table browser use guide](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/) to help with downloading reference.
+
 ### Step 1: Processing Bam Files
 To run the first step, you'll be required to furnish three separate .txt files containing essential information: sample names, respective BAM file addresses, and in the case of 10X data, the supplementary addresses for barcode files associated with each sample.
 ```python
