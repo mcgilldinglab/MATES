@@ -63,6 +63,18 @@ bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_fi
 ## sample_list_file : <str> path to file conatins sample IDs
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
+If you want to perform TE quantification on Long Reads data, you can use **bam_processor.split_bam_files** based on your sequencing plantform. And **instead** of using **bam_processor.count_coverage_vec**, use below function:
+
+```python
+bam_processor.count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir, bc_path_file=None):
+# Parameters
+## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
+## data_mode : <str> 10X or Smart_seq
+## threads_num : <int>
+## sample_list_file : <str> path to file conatins sample IDs
+## bam_dir: <str> path to director conatins sample bam files
+## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
+```
 * **data_processor**
 	The data_processor module assists in computing Unique and Multi Regions, generating training samples, and summarizing the expression of multi-mapping reads for prediction.
 ```python
