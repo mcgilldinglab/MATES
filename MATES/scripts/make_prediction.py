@@ -21,7 +21,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
     for i in range(len(MLP_TE_full)):
         MLP_full_data.append([MLP_TE_full[i],  MLP_Batch_full[i], MLP_meta_full_tmp[i]])
 
-    BATCH_SIZE = 1024
+    BATCH_SIZE = 1
     MLP_full_loader = DataLoader(MLP_full_data, BATCH_SIZE, shuffle = True, drop_last=True)
 
 
@@ -54,7 +54,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
         MLP.train()
         AENet.train()
         torch.autograd.set_detect_anomaly(True)
-        with tqdm (total = (len(MLP_TE_full)//1024)) as pbar:
+        with tqdm (total = (len(MLP_TE_full)//1)) as pbar:
             for step, (TE_vecs, Batch_ids, metainfo) in enumerate(MLP_full_loader):
                 MLP_TE_data.data.copy_(TE_vecs)
                 # MLP_Region_data.data.copy_(TE_region)
@@ -118,6 +118,8 @@ def make_prediction(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_
             for key2, val2 in val.iteritems():
                 df_empty.loc[key2[1], key2[0]] = int(val2)
         df_empty = df_empty.fillna(0)
+        if not os.path.isdir('prediction'):
+            os.mkdir('prediction')
         df_empty.drop_duplicates().to_csv("prediction/Multi_MTX.csv")
         print('Finish quantify Multi TE, Combinning with unique TE...')
         df_unique = pd.read_csv('Unique_TE/Unique_All_MTX.csv', index_col = 0)
