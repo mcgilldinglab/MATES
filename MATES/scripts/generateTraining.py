@@ -73,7 +73,7 @@ def get_multi_sample(cell_ana, data_mode, unique_vec_meta_Transform, bin_size, p
     if data_mode == 'Smart_seq':
         path = cur_path + '/count_coverage'
     elif data_mode == '10X':
-        path = join(cur_path+'/count_coverage',sample)
+        path = join(cur_path +'/count_coverage',sample)
     for cb in cell_ana.keys():
         cb_path=join(path,cb)
         if os.path.isdir(cb_path):
@@ -139,8 +139,7 @@ def generate_Training(data_mode, file_name, bin_size, prop):
                 unique_vec_meta_Transform[tmp[0]][te].append(tmp[1])
         print('Start generating training sample for multi read TE...')
         MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train = get_multi_sample(cell_ana, data_mode, 
-                                                                                           unique_vec_meta_Transform, 
-                                                                                           bin_size, prop)
+                                                                            unique_vec_meta_Transform,bin_size, prop)
         
         p5 = cur_path + '/MU_Stats/Multi_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
         scipy.sparse.save_npz((p5), sparse.csr_matrix(MLP_TE_train))
@@ -182,7 +181,8 @@ def generate_Training(data_mode, file_name, bin_size, prop):
             for tmp in metalist:
                 unique_vec_meta_Transform[tmp[0]][te].append(tmp[1])
         print('Start generating training sample for multi read TE in '+sample+"...")
-        MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train = get_multi_sample(cell_ana, data_mode,sample)
+        MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train = get_multi_sample(cell_ana, data_mode, 
+                                                                            unique_vec_meta_Transform,bin_size, prop,sample)
         
         p5 = cur_path + '/MU_Stats/'+sample+'/Multi_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
         scipy.sparse.save_npz((p5), sparse.csr_matrix(MLP_TE_train))
