@@ -20,7 +20,8 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_fil
         sample_per_batch = int(result + 0.5)
         processes = []
         for i in range(threads_num):
-            command = f"python scripts/quant_unique_TE.py {sample_list_file} {i} {sample_per_batch} {TE_ref_path} {data_mode} {None}"
+
+            command = f"python MATES/scripts/quant_unique_TE.py {sample_list_file} {i} {sample_per_batch} {TE_ref_path} {data_mode} {None}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
 
@@ -54,9 +55,10 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_fil
             result = sample_count / file_batch
             sample_per_batch = int(result + 0.5)
             processes = []
-            print(threads_num)
+
             for i in range(threads_num):
                 command = f"python MATES/scripts/quant_unique_TE.py {sample} {i} {sample_per_batch} {TE_ref_path} {data_mode} {barcodes_paths[idx]}"
+                
                 process = subprocess.Popen(command, shell=True)
                 processes.append(process)
 
@@ -108,12 +110,14 @@ def finalize_TE_MTX(data_mode, sample_list_file=None):
         with open(sample_list_file, "r") as f:
             for line in f:
                 line = line.strip()
-                print("Start create TE_MTX for ", line, "...")
+                print("Start create TE_MTX for", line, "...")
                 df_empty = pd.read_csv("prediction/"+line+'/Multi_MTX.csv')
                 df_unique = pd.read_csv('Unique_TE/'+line+'/Unique_All_MTX.csv', index_col = 0)
                 df_unique = df_unique.fillna(0)
                 df_full = pd.concat([df_unique,df_empty], ignore_index=False)
                 df_full = df_full.groupby(df_full.index).sum()
+                if not os.path.isdir('Combination'):
+                    os.mkdir('Combination')
                 if not os.path.isdir('Combination/'+line):
                     os.mkdir('Combination/'+line)
                 df_full.drop_duplicates().to_csv('Combination/'+line+'/TE_MTX.csv')

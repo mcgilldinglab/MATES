@@ -157,8 +157,9 @@ def count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir,
             processes.append(process)
         for process in processes:
             process.wait()
-    ## TODO        
+            
     elif data_mode == "10X":
+        ## TODO
         with open(sample_list_file) as sample_file:
             sample_name = [line.rstrip('\n') for line in sample_file]
         with open(bc_path_file) as bc_file:

@@ -35,7 +35,7 @@ def generate_training_sample(data_mode, sample_list_file, bin_size, proportion):
         for idx, sample in enumerate(sample_name):
             generate_Training(data_mode, sample, bin_size, proportion)
     elif data_mode == 'Smart_seq':
-        generate_Training(sample_list_file, sample, bin_size, proportion)
+        generate_Training(data_mode, sample_list_file, bin_size, proportion)
         
 def generate_prediction_sample(TE_mode, data_mode,sample_list_file, bin_size, proportion, bc_path_file=None):
     if TE_mode == "exclusive":
@@ -55,4 +55,4 @@ def generate_prediction_sample(TE_mode, data_mode,sample_list_file, bin_size, pr
         for idx, sample in enumerate(sample_name):
             generate_Prediction(data_mode,sample,bin_size, proportion, TE_ref_path, barcodes_paths[idx])
     elif data_mode == 'Smart_seq':
-        generate_Prediction(data_mode,sample_list_file,bin_size, proportion, TE_ref_path, barcodes_paths[idx])
+        generate_Prediction(data_mode,sample_list_file,bin_size, proportion, TE_ref_path)
