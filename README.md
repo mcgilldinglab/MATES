@@ -64,7 +64,7 @@ bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_fi
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
 If you want to perform TE quantification on Long Reads data, you can use **bam_processor.split_bam_files** based on your sequencing plantform. **Instead** of using **bam_processor.count_coverage_vec**, use below function:
-# For simplicity, in **data_mode**, we use **10X** to indicating data using barcodes to distinguish data, i.e. you may have a barcode file to seperating the data in the bam file or **Smart_seq** to indicating data do not use barcodes to distinguish data, i.e. one bam file per cell.
+$${\color{grey}For simplicity, in **data_mode**, we use **10X** to indicating data using barcodes to distinguish data, i.e. you may have a barcode file to seperating the data in the bam file or **Smart_seq** to indicating data do not use barcodes to distinguish data, i.e. one bam file per cell.}$$
 
 ```python
 bam_processor.count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir, bc_path_file=None):
