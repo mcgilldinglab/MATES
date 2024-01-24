@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 import pickle
@@ -111,7 +110,8 @@ def generate_unique_matric(sample_name, path_to_bam, TE_ref_bed, sav_vec = True)
             TE_region_count = get_region_count(aligned_file, chrom,start,end)
             if TE_region_count!=0:
                 TE_index_list.append(TE_index)
-                TE_region_read_num.append(count_region_read(aligned_file,chrom,start,end))
+                TE_read_num = count_region_read(aligned_file,chrom,start,end)
+                TE_region_read_num.append(TE_read_num)
                 ##setup coverage region
                 if strand == '+':
                     region_start = start - 1000
@@ -122,18 +122,11 @@ def generate_unique_matric(sample_name, path_to_bam, TE_ref_bed, sav_vec = True)
                 
                 ##add coverage vector to the matrix
                 coverage_vector, coverage_vector_igv = get_coverage_vector(aligned_file, chrom,region_start, region_end,total_reads)
-
-                ### IGV vector did not divide by library size
-                # IGV_vecs.append(coverage_vector_igv)
+                
                 if sav_vec:
                     sparse_vector = sparse.csr_matrix(coverage_vector)
                     scipy.sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
-    
-    # IGV_vecs = np.array(IGV_vecs)
-    # unique_IGV_mtx = sparse.csr_matrix(IGV_vecs)
-    # scipy.sparse.save_npz(join(path,"unique_IGV_vec.npz"), unique_IGV_mtx)
-    # with open(join(path,"unique_IGV_meta.npz"),'wb') as f:
-    #     pickle.dump(TE_index_list,f)
+
 
     count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
     count_table_TE = pd.DataFrame(count_table_TE)
@@ -145,19 +138,18 @@ def generate_unique_matric(sample_name, path_to_bam, TE_ref_bed, sav_vec = True)
 def generate_multi_matric(sample_name, path_to_bam, TE_ref_bed):
     TE_index_list = []
     TE_region_read_num = []
-    
     aligned_file = pysam.AlignmentFile(path_to_bam, "rb")
     total_reads =  get_read_num(sample_name)
     
     cur_path = os.getcwd()
-    path = join(cur_path, 'count_coverage/' + sample_name)
+    path = join(cur_path, 'count_coverage/'+sample_name)
     if not os.path.exists(path):
         os.mkdir(path)
 
     multi_vec_path = join(path,'multi_vec')
     if not os.path.exists(multi_vec_path):
         os.mkdir(multi_vec_path)
-
+    
     pybedtools.set_tempdir(cur_path+'/tmp')  
     b = pybedtools.example_bedtool(path_to_bam)
     a_with_b = TE_ref_bed.intersect(b, c = True, wa = True, nonamecheck=True)
@@ -165,7 +157,7 @@ def generate_multi_matric(sample_name, path_to_bam, TE_ref_bed):
     a_with_b.saveas(count_path)
 
     TE_vec_count = pd.read_csv(count_path,sep='\t', header=None, low_memory=False)
-    TE_vec_count.columns = ['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length', 'count']
+    TE_vec_count.columns = ['chromosome', 'start', 'end', 'name', 'index', 'strand','TE_fam', 'length', 'count']
     TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
     
     for idx, row in TE_selected.iterrows():
@@ -179,7 +171,8 @@ def generate_multi_matric(sample_name, path_to_bam, TE_ref_bed):
             TE_region_count = get_region_count(aligned_file, chrom,start,end)
             if TE_region_count!=0:
                 TE_index_list.append(TE_index)
-                TE_region_read_num.append(count_region_read(aligned_file,chrom,start,end))
+                TE_read_num = count_region_read(aligned_file,chrom,start,end)
+                TE_region_read_num.append(TE_read_num)
                 ##setup coverage region
                 if strand == '+':
                     region_start = start - 1000
@@ -196,9 +189,8 @@ def generate_multi_matric(sample_name, path_to_bam, TE_ref_bed):
 
     count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
     count_table_TE = pd.DataFrame(count_table_TE)
-    TE_path = join(path,'TE_multi_Info.csv') 
-    count_table_TE.to_csv(TE_path,index = False)
 
+    count_table_TE.to_csv(join(path,'TE_multi_Info.csv'),index = False)
     aligned_file.close() 
     return TE_index_list
 
@@ -238,7 +230,7 @@ for sample in sample_list[start_idx: end_idx]:
     
     path_to_unique_bam =  join(unique_path, sample+'_uniqueread.bam')
     path_to_multi_bam =  join(multi_path, sample+'_multireads.bam')
-    
+
     if not os.path.exists(path_to_unique_bam):        
         continue
 
