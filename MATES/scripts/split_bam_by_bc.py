@@ -48,7 +48,7 @@ def main(input_bam, barcodes_file, output_prefix):
                     print("error")
                     pass
         writer.close_files()
-        print('Finish Batch:', i+1)
+        print('Finish Batch:', 0)
     else:
         for i in range(batches+1):
             start_idx = 0+1000*i

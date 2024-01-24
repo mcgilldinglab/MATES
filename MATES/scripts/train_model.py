@@ -1,4 +1,6 @@
 from pathlib import Path
+import pandas as pd
+
 import pickle
 import torch
 from torch import nn
@@ -15,6 +17,7 @@ from .MLP import MLP_loss
 import matplotlib.pyplot as plt
 from os.path import join
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 def pretrain_AE(EPOCHS, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER,
                 TE_train, Batch_train, data_mode, sample=None):
@@ -173,7 +176,7 @@ def get_MLP_input(BATCH_SIZE, Meta_Data, hidden_info, Batch_Info, Region_Info):
     MLP_trained_data = []
     for i in range(len(MLP_TE_trained)):
         MLP_trained_data.append([MLP_TE_trained[i],  MLP_Batch_trained[i], MLP_Region_trained[i],MLP_meta_trained[i]])
-    print(len(MLP_TE_trained))
+#     print(len(MLP_TE_trained))
     MLP_trained_loader = DataLoader(MLP_trained_data, BATCH_SIZE, shuffle = True, drop_last=True)
 
 
@@ -232,7 +235,7 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
                 
                 alpha = MLP(embeddings, MLP_BATCH_data_2, BATCH_SIZE)
 
-                Loss = criterion(alpha, MLP_Region_data_2, BATCH_SIZE,)
+                Loss = criterion(alpha, MLP_Region_data_2, BATCH_SIZE,bin_size)
                 MLP_optimizer.zero_grad()
                 Loss.mean().backward()
                 MLP_optimizer.step()
@@ -252,6 +255,17 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
             print("epoch : {}/{}, loss = {:.6f}, takes : {} seconds".format(epoch + 1, EPOCHS, np.mean(MLP_Loss_val), endtime-starttime), file = MLP_log)
             pbar.update(1)
     MLP_log.close()
+    ##plt
+    figure, axis = plt.subplots(2)
+  
+    axis[0].plot(MLP_Loss_list)
+    axis[0].set_title("MLP Loss")
+    tmp=[]
+    for i in problist:
+        tmp.append(round(i*10)/10)
+    axis[1]=pd.Series(tmp).value_counts(sort=True).plot(kind='bar')
+    axis[1].set_title('MLP Dist')
+    plt.savefig(path_dir+'/MLP_dist_plot.png')
     
 
 def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, 
@@ -266,6 +280,14 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
         torch.cuda.memory_allocated()
     else:
         DEVICE = torch.device('cpu')
+    
+    print('Data Mode: ',data_mode)
+    print('AE Settings:  Epoch: {:6d}, Learning Rate: {:.6f}'.format(AE_EPOCHS,AE_LR))
+    print('MLP Settings: Epoch: {:6d}, Learning Rate: {:.6f}'.format(MLP_EPOCHS,MLP_LR))
+    print('Batch Size: {:6d}'.format(BATCH_SIZE))
+    print('Searching Bin Size: {:6d}'.format(bin_size))
+    print('Dominate Proportion: {:6d}'.format(prop))
+    
     if data_mode == 'Smart_seq':
         print("Loading training data...")
         path_dir = join(os.getcwd(), 'training_'+BIN_SIZE + '_' + PROP)
@@ -314,8 +336,11 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
         path_dir = join(os.getcwd(), 'training_'+BIN_SIZE + '_' + PROP)
         if not os.path.isdir(path_dir):
             os.mkdir(path_dir)
+        if not os.path.isdir(join(path_dir, sample)):
             os.mkdir(join(path_dir, sample))
+        if not os.path.isdir(join(path_dir, sample) + '/AE_pretrain'):
             os.mkdir(join(path_dir, sample) + '/AE_pretrain')
+        if not os.path.isdir(join(path_dir, sample) + '/MLP'):
             os.mkdir(join(path_dir, sample) + '/MLP')
 
         path = cur_path + '/MU_Stats/'+sample      
