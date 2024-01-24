@@ -245,70 +245,13 @@ TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 ## Tutorial:
 ### Pipeline implementation
 * [MATES implementation procedures on Smart-seq2 scRNA and 10X scRNA/scATAC/Multi-Omics data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/pipeline_tutorial.ipynb)
+* [MATES implementation procedures on Long Reads data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/Tut_LongRead.md)
+
 ### Training MATES on 10x scRNA-seq dataset
 * [MATES downstream analysis on 10X scRNA data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scRNA/10X/scRNA_10X_GeneTE_Analysis.ipynb)
 ### Training MATES on Smart-seq2 scRNA dataset
 * [MATES downstream analysis on Smart-seq2 scRNA data (TE only)](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scRNA/Smart_seq2/scRNA_SmartSeq_TE_Analysis.ipynb) 
 * [MATES downstream analysis on Smart-seq2 scRNA data (Gene+TE)](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scRNA/Smart_seq2/scRNA_SmartSeq_GeneTE_Analysis.ipynb) 
-
 ### Training MATES on 10x scATAC-seq dataset
 * [MATES downstream analysis on 10X scATAC data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scATAC/scATAC_Peak_TE_analysis.ipynb)
-<!-- ### Step 1: Building Transposon Element(TE) Reference
-The default option of our tool/procedure involves the removal of all transposable element (TE) regions that share overlapping base pairs with gene references. This step is taken to prevent any potential information leakage. The TE reference data is sourced from repeatmasker and the Gene reference data is sourced from ebi.
-
-To build the reference:
-```sh
-## for human data
-python build_reference.py Human 
-## for mouse data
-python build_reference.py Mouse 
-```
-If you have your own TE/Gene reference, you can only run the last command, make sure they are at the csv format with following columns:
-```sh
-## for mouse, name refernce to mm_TEs.csv and mm_Genes.csv
-## for human, name reference to hg_TEs.csv and hg_Genes.csv
-##Note: The first column of TE reference must be index and score column is optional.
-cat mm_TEs.csv | head -n 3
-,TE_chrom,start,end,score,strand,TE_Name,TE_Fam
-0,chr1,10001,10468,(248945954),+,(TAACCC)n,Simple_repeat
-1,chr1,10469,11447,(248944975),-,TAR1,Satellite/telo
-
-cat mm_Genes.csv | head -n 3
-Chromosome,Feature,Start,End,Strand,gene_id,gene_name
-chr1,gene,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
-chr1,transcript,3073252,3074322,+,ENSMUSG00000102693.1,4933401J01Rik
-``` -->
-
-<!-- ### Step 2: Training Preparation
-#### For scRNA data and scATAC data
-The follwing procedure not require GPU usage.
-```sh
-sh training_preparation.sh -t threads_num -f file_name -p path_to_bam --TE_mode TE_mode --data_mode data_mode --bin_size bin_size --proportion proportion
-
-##Usage
-# -t Threads number
-# -f File contains sample name
-# -p Path to STAR/STAR_Solo aligned bam folder
-# --TE_mode exlusive or inclusive, represents whether keep the TE instances with gene, the default will be exclusive
-# --data_mode 10X or Smart_seq
-# --bin_size Bin size for identifying U/M region
-# --proportion Proportion of dominating U/M reads in region
-```
-#### For Multi-omics Data
-
-### Step 3: Training and Prediction
-This step **requires GPU availablity**, after running the below command, will provide the resulted TE matrices inclusing unique TE matrix, multi TE matrix and combined final matrix.
-#### For scRNA data and scATAC data
-``` sh
-sh model_training.sh -f file_name --data_mode data_mode --bin_size bin_size --proportion proportion
-
-##Usage
-# -f File contains sample name
-# --data_mode 10X or Smart_seq
-# --bin_size Bin size for identifying U/M region
-# --proportion Proportion of dominating U/M reads in region
-```
-#### For Multi-omics Data
-
-### Step 4: Downstrem Analysis -->
 
