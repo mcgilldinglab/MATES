@@ -173,7 +173,7 @@ def count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir,
 
             processes = []
             for i in range(file_batch):
-                command = f"python MATES/scripts/count_Uread_10X.py {sample} {i} {sample_per_batch} {barcodes_paths[idx]} {TE_ref_path}"
+                command = f"python MATES/scripts/count_Uread_10X.py {sample} {i} {sample_per_batch} {barcodes_paths[idx]} {bam_dir} {TE_ref_path}"
                 process = subprocess.Popen(command, shell=True)
                 processes.append(process)
             for process in processes:
