@@ -46,12 +46,13 @@ from MATES import TE_quantifier
 * **bam_processor**
 	The bam_processor module efficiently manages input BAM files by partitioning them into sub-BAM files for individual cells, distinguishing unique mapping from multi mapping reads. It also constructs TE-specific coverage vectors, shedding light on read distributions around TE instances at the single-cell level, enabling accurate TE quantification and comprehensive cellular characterization.
 ```python
-bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_path_file=None)
+bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file,bc_ind = None, bc_path_file=None)
 # Parameters
 ## data_mode : <str> 10X or Smart_seq
 ## threads_num : <int>
 ## sample_list_file : <str> path to file conatins sample IDs
 ## bam_path_file : <str> path to file conatins matching bam file address of sample in sample list
+## bc_ind:<str> barcode field indicator in bam files, e.g. CB/CR...
 ## bc_path_file(optional) : <str> path to file contains matching barcodes list address of sample in sample list
 ```
 ```python

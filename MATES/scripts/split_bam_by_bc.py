@@ -25,7 +25,7 @@ class BamWriter:
             self._out_files[barcode].close()
 
 
-def main(input_bam, barcodes_file, output_prefix):
+def main(barcode_field, input_bam, barcodes_file, output_prefix):
     alignment = pysam.AlignmentFile(input_bam)
     if Path(barcodes_file).is_file():
         with open(barcodes_file, "r") as fh:
@@ -40,7 +40,7 @@ def main(input_bam, barcodes_file, output_prefix):
         for region in recs:
             for rec in region:
                 try:
-                    barcode = rec.get_tag("CR")
+                    barcode = rec.get_tag(barcode_field)
                     if (barcode[-1] == '1'):
                         barcode = barcode[:-2]
                     writer.write_record_to_barcode(rec=rec, barcode=barcode)
@@ -62,7 +62,7 @@ def main(input_bam, barcodes_file, output_prefix):
             for region in recs:
                 for rec in region:
                     try:
-                        barcode = rec.get_tag("CR")
+                        barcode = rec.get_tag(barcode_field)
                         if (barcode[-1] == '1'):
                             barcode = barcode[:-2]
                         writer.write_record_to_barcode(rec=rec, barcode=barcode)
@@ -77,7 +77,8 @@ def main(input_bam, barcodes_file, output_prefix):
 if __name__ == "__main__":
     import sys
     main(
-        input_bam=sys.argv[1],
-        barcodes_file=sys.argv[2],
-        output_prefix=sys.argv[3],
+        barcode_field = sys.argv[1],
+        input_bam=sys.argv[2],
+        barcodes_file=sys.argv[3],
+        output_prefix=sys.argv[4],
     )

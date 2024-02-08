@@ -2,7 +2,7 @@ import subprocess
 import os
 import math
 
-def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_path_file=None):
+def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file,bc_ind = None, bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
         print('Invalid data format.')
         exit(1)
@@ -61,7 +61,7 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
         
         processes = []
         for i in range(len(os.listdir('./file_tmp'))):
-            command = f"sh MATES/scripts/split_bc_u.sh ./file_tmp/{i} ./bc_tmp/{i}"
+            command = f"sh MATES/scripts/split_bc_u.sh ./file_tmp/{i} ./bc_tmp/{i} {bc_ind}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
         for process in processes:
@@ -70,7 +70,7 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
         
         processes = []
         for i in range(len(os.listdir('./file_tmp'))):
-            command = f"sh MATES/scripts/split_bc_m.sh ./file_tmp/{i} ./bc_tmp/{i}"
+            command = f"sh MATES/scripts/split_bc_m.sh ./file_tmp/{i} ./bc_tmp/{i} {bc_ind}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
 
@@ -168,6 +168,7 @@ def count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir,
         for idx, sample in enumerate(sample_name):
             sample_count = sum(1 for line in open(barcodes_paths[idx])) + 1
             file_batch = threads_num
+
             result = sample_count / file_batch
             sample_per_batch = int(result + 0.5)
 
