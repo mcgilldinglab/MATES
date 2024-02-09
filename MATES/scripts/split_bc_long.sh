@@ -2,12 +2,12 @@
 if [ -f "$1" ] && [ -f "$2" ]; then
     paste "$1" "$2" | while IFS="$(printf '\t')" read -r line1 line2;
     do
-    echo "Start Processing ${line1}" >> ./unique_read/split_barcode.log
-    mkdir ./unique_read/${line1}
-    mkdir ./unique_read/${line1}/by_barcode
-    python MATES/scripts/split_bam_by_bc.py "$3" ./unique_read/${line1}_uniqueread.bam \
-        ${line2} ./unique_read/${line1}/by_barcode/ >> ./unique_read/${line1}/${line1}_unique_splitting.log
-    echo "End Processing ${line1}" >> ./unique_read/split_barcode.log
+    echo "Start Processing ${line1}" >> ./long_read/split_barcode.log
+    mkdir ./long_read/${line1}
+    mkdir ./long_read/${line1}/by_barcode
+    python MATES/scripts/split_bam_by_bc.py "$2" ./long_read/${line1}.bam \
+        ${line2} ./long_read/${line1}/by_barcode/ >> ./long_read/${line1}/${line1}_splitting.log
+    echo "End Processing ${line1}" >> ./long_read/split_barcode.log
     done
 fi
 

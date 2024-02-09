@@ -2,7 +2,7 @@ import subprocess
 import os
 import math
 
-def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file,bc_ind = None, bc_path_file=None):
+def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind = 'CR', long_read = False, bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
         print('Invalid data format.')
         exit(1)
@@ -40,44 +40,54 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file,bc_i
                     batch_bc_name = f"./bc_tmp/{batch_number}"
                 with open(batch_bc_name, "a") as bc_batch_file:
                     bc_batch_file.write(line)
-
-    print("Start splitting bam files into unique/multi reads sub-bam files ...")
-    os.makedirs("./unique_read", exist_ok=True)
-    os.makedirs("./multi_read", exist_ok=True)
-    processes = []
-    for i in range(len(os.listdir('./file_tmp'))):
-        command = f"sh MATES/scripts/split_u_m.sh ./file_tmp/{i} ./bam_tmp/{i}"
-        process = subprocess.Popen(command, shell=True)
-        processes.append(process)
-    for process in processes:
-        process.wait()
-    print("Finish splitting bam files into unique reads and multi reads sub-bam files.")
-
-    if data_mode == "10X":
-        if bc_path_file == None:
-            print("Please provide barcodes file for 10X data!")
-            exit(1)
-        print("Start splitting multi sub-bam based on cell barcodes...")
-        
+    if long_read and data_mode == "10X":
+        os.makedirs("./long_read", exist_ok=True)
         processes = []
         for i in range(len(os.listdir('./file_tmp'))):
-            command = f"sh MATES/scripts/split_bc_u.sh ./file_tmp/{i} ./bc_tmp/{i} {bc_ind}"
+            command = f"sh MATES/scripts/split_bc_long.sh ./file_tmp/{i} ./bc_tmp/{i} {bc_ind}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
         for process in processes:
             process.wait()
-        print("Finish splitting unique sub-bam.")
-        
+        print("Finish splitting sub-bam for long read data.")
+    elif not long_read:
+        print("Start splitting bam files into unique/multi reads sub-bam files ...")
+        os.makedirs("./unique_read", exist_ok=True)
+        os.makedirs("./multi_read", exist_ok=True)
         processes = []
         for i in range(len(os.listdir('./file_tmp'))):
-            command = f"sh MATES/scripts/split_bc_m.sh ./file_tmp/{i} ./bc_tmp/{i} {bc_ind}"
+            command = f"sh MATES/scripts/split_u_m.sh ./file_tmp/{i} ./bam_tmp/{i}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
-
         for process in processes:
             process.wait()
+        print("Finish splitting bam files into unique reads and multi reads sub-bam files.")
 
-        print("Finish splitting multi sub-bam.")
+        if data_mode == "10X":
+            if bc_path_file == None:
+                print("Please provide barcodes file for 10X data!")
+                exit(1)
+            print("Start splitting multi sub-bam based on cell barcodes...")
+            
+            processes = []
+            for i in range(len(os.listdir('./file_tmp'))):
+                command = f"sh MATES/scripts/split_bc_u.sh ./file_tmp/{i} ./bc_tmp/{i} {bc_ind}"
+                process = subprocess.Popen(command, shell=True)
+                processes.append(process)
+            for process in processes:
+                process.wait()
+            print("Finish splitting unique sub-bam.")
+            
+            processes = []
+            for i in range(len(os.listdir('./file_tmp'))):
+                command = f"sh MATES/scripts/split_bc_m.sh ./file_tmp/{i} ./bc_tmp/{i} {bc_ind}"
+                process = subprocess.Popen(command, shell=True)
+                processes.append(process)
+
+            for process in processes:
+                process.wait()
+
+            print("Finish splitting multi sub-bam.")
 
     subprocess.run(["rm", "-r", "./file_tmp"], check=True)
     subprocess.run(["rm", "-r", "./bam_tmp"], check=True)
