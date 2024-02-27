@@ -38,7 +38,9 @@ def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, sav_vec = True):
     sample_name = samp_bc[0]
     bc = samp_bc[1]
     cur_path = os.getcwd()
-    path = join(cur_path, 'count_long_reads/'+bc)
+    path = join(cur_path, 'count_long_reads/'+sample_name+'/'+bc)
+    if not os.path.exists(path):
+        os.mkdir(path)
     unique_vec_path = join(path,'unique_vec')
     if not os.path.exists(unique_vec_path):
         os.mkdir(unique_vec_path)
@@ -78,8 +80,8 @@ batch = int(sys.argv[2])
 batch_size = int(sys.argv[3])
 
 barcodes_file = sys.argv[4]
-U_bam_dir = sys.argv[5]
-TE_ref_path = sys.argv[6]
+# U_bam_dir = sys.argv[5]
+TE_ref_path = sys.argv[5]
 
 cur_path = os.getcwd()
 if not os.path.exists(join(cur_path,'count_long_reads')):
@@ -87,14 +89,14 @@ if not os.path.exists(join(cur_path,'count_long_reads')):
 # for sample in sample_list:
 if not os.path.exists(join(cur_path,'count_long_reads/'+sample)):
     os.mkdir(join(cur_path,'count_long_reads/'+sample))
-unique_path = join(cur_path,U_bam_dir+'/'+sample)
+unique_path = join(cur_path,'long_read/'+sample)
 unique_path = join(unique_path, 'by_barcode')
 
 TEs=pd.read_csv(TE_ref_path,header=None)
 TEs.columns = ['chromosome','start','end','TE_Name', 'index','strand', 'TE_fam','length']
 
 TE_ref_bed = pybedtools.example_bedtool(cur_path+'/'+TE_ref_path[:-4] + '.bed')
-
+print(unique_path)
 if Path(barcodes_file).is_file():
     with open(barcodes_file, "r") as fh:
         barcodes = [l.rstrip() for l in fh.readlines()]

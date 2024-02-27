@@ -76,6 +76,7 @@ def main(barcode_field, input_bam, barcodes_file, output_prefix):
 
 if __name__ == "__main__":
     import sys
+    print(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     main(
         barcode_field = sys.argv[1],
         input_bam=sys.argv[2],
