@@ -12,10 +12,12 @@ With the burgeoning field of single-cell sequencing data, the potential for in-d
 samtools == 1.17
 ```sh
 conda install -c bioconda samtools
+pip install pysam
 ```
 bedtools == 2.31.0
 ```sh
 conda install -c bioconda bedtools
+pip install pybedtools
 ```
 For other dependencies you san simply run:
 ```sh
