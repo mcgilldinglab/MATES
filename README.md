@@ -19,15 +19,12 @@ bedtools == 2.31.0
 conda install -c bioconda bedtools
 pip install pybedtools
 ```
-For other dependencies you san simply run:
-```sh
-pip3 install -r requirements.txt 
-```
 
 ### Installing MATES
 To install MATES, you can run the following command:
 ```sh
 git clone https://github.com/mcgilldinglab/MATES.git
+pip3 install -r requirements.txt 
 cd MATES
 ```
 Installation should take only a few minutes. Verify that MATES is correctly installed by running in python:
