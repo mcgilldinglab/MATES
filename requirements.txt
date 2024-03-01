@@ -27,7 +27,7 @@ pyasn1-modules==0.2.8
 pycosat==0.6.3
 pycparser==2.21
 pyct==0.4.8
-pycurl==7.45.0
+pycurl==7.45.3
 PyDispatcher==2.0.5
 pydocstyle==6.1.1
 pyerfa==2.0.0
