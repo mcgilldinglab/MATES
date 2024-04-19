@@ -24,8 +24,8 @@ pip install pybedtools
 To install MATES, you can run the following command:
 ```sh
 git clone https://github.com/mcgilldinglab/MATES.git
-pip3 install -r requirements.txt 
 cd MATES
+pip3 install -r requirements.txt 
 python setup.py install
 ```
 Installation should take only a few minutes. Verify that MATES is correctly installed by running in python:

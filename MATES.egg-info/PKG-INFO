@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: MATES
+Version: 0.1.2
+License-File: LICENSE
+Requires-Dist: matplotlib==3.7.2
+Requires-Dist: numpy==1.25.2
+Requires-Dist: pandas==2.0.0
+Requires-Dist: pybedtools==0.9.1
+Requires-Dist: pysam==0.21.0
+Requires-Dist: scipy==1.11.2
+Requires-Dist: torch==2.0.1
+Requires-Dist: tqdm==4.66.1
+Requires-Dist: pyranges==0.0.129
