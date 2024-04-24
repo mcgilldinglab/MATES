@@ -5,7 +5,7 @@ if [ -f "$1" ] && [ -f "$2" ]; then
     echo "Start Processing ${line1}" >> ./long_read/split_barcode.log
     mkdir ./long_read/${line1}
     mkdir ./long_read/${line1}/by_barcode
-    python MATES/scripts/split_bam_by_bc_long.py "$4" ${line2} ${line3} \
+    python MATES/scripts/split_bam_by_bc.py "$4" ${line2} ${line3} \
      ./long_read/${line1}/by_barcode/ >> ./long_read/${line1}/${line1}_splitting.log
     echo "End Processing ${line1}" >> ./long_read/split_barcode.log
     done
