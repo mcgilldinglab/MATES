@@ -2,6 +2,7 @@ import subprocess
 import os
 import pandas as pd
 import shutil
+from sys import exit
 
 ##### Quant Unique TE #####
 def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None):
