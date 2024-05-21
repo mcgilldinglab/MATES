@@ -1,6 +1,7 @@
 import subprocess
 import os
 import math
+from sys import exit
 
 def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind = 'CR', long_read = False, bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
