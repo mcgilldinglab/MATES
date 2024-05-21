@@ -2,6 +2,7 @@ import os
 from MATES.scripts.train_model import MATES_train 
 from MATES.scripts.make_prediction import make_prediction
 from MATES.scripts.make_prediction_locus import make_prediction_locus
+from sys import exit
 
 def train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, 
           AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True):
