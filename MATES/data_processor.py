@@ -2,6 +2,7 @@ import os
 from MATES.scripts.calculate_MU import calculate_MU
 from MATES.scripts.generateTraining import generate_Training
 from MATES.scripts.generatePrediction import generate_Prediction
+from sys import exit
 
 def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None):
     if TE_mode == "exclusive":
