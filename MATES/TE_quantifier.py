@@ -2,7 +2,6 @@ import subprocess
 import os
 import pandas as pd
 import shutil
-from sys import exit
 
 ##### Quant Unique TE #####
 def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None):
@@ -106,8 +105,8 @@ def finalize_TE_MTX(data_mode, sample_list_file=None):
     elif data_mode == "10X":
         os.makedirs("result_MTX", exist_ok=True)
         if sample_list_file == None:
-            print('Please provide sample list for 10X data.')
-            exit(1)
+            raise ValueError('sample_list_file == None. Invalid data format.')
+
         with open(sample_list_file, "r") as f:
             for line in f:
                 line = line.strip()

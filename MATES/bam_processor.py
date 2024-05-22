@@ -1,12 +1,11 @@
 import subprocess
 import os
 import math
-from sys import exit
 
 def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind = 'CR', long_read = False, bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        print('Invalid data format.')
-        exit(1)
+        raise ValueError('Invalid data format.')
+
     # Calculate batch size and number of batches
     sample_count = sum(1 for line in open(sample_list_file))
     file_batch = threads_num
@@ -66,8 +65,8 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
 
         if data_mode == "10X":
             if bc_path_file == None:
-                print("Please provide barcodes file for 10X data!")
-                exit(1)
+                raise ValueError('bc_path_file == None. Please provide barcodes file for 10X data!')
+
             print("Start splitting multi sub-bam based on cell barcodes...")
             
             processes = []
@@ -100,8 +99,8 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
 ##### Count coverage vector #####
 def count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        print('Invalid data format.')
-        exit(1)
+        raise ValueError('Invalid data format.')
+
     if TE_mode == "exclusive":
         TE_ref_path = 'TE_nooverlap.csv'
     else: 
@@ -148,8 +147,8 @@ def count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_pat
     
 def count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        print('Invalid data format.')
-        exit(1)
+        raise ValueError('Invalid data format.')
+
     if TE_mode == "exclusive":
         TE_ref_path = 'TE_nooverlap.csv'
     else: 

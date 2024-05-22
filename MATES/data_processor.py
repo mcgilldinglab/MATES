@@ -2,7 +2,7 @@ import os
 from MATES.scripts.calculate_MU import calculate_MU
 from MATES.scripts.generateTraining import generate_Training
 from MATES.scripts.generatePrediction import generate_Prediction
-from sys import exit
+
 
 def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None):
     if TE_mode == "exclusive":
@@ -10,8 +10,8 @@ def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, propor
     else: 
         TE_ref_path = './TE_Full.csv'
     if data_mode != "10X" and data_mode != "Smart_seq":
-        print('Invalid data format.')
-        exit(1)
+        raise ValueError('Invalid data format.')
+
     os.makedirs("MU_Stats", exist_ok=True)
 
     if data_mode == "10X":
@@ -27,8 +27,8 @@ def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, propor
 
 def generate_training_sample(data_mode, sample_list_file, bin_size, proportion):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        print('Invalid data format.')
-        exit(1)
+        raise ValueError('Invalid data format.')
+
     
     if data_mode == "10X":
         with open(sample_list_file) as sample_file:
@@ -44,8 +44,8 @@ def generate_prediction_sample(TE_mode, data_mode,sample_list_file, bin_size, pr
     else: 
         TE_ref_path = './TE_Full.csv'
     if data_mode != "10X" and data_mode != "Smart_seq":
-        print('Invalid data format.')
-        exit(1)
+        raise ValueError('Invalid data format.')
+
     os.makedirs("MU_Stats", exist_ok=True)
 
     if data_mode == "10X":

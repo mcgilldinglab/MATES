@@ -2,13 +2,12 @@ import os
 from MATES.scripts.train_model import MATES_train 
 from MATES.scripts.make_prediction import make_prediction
 from MATES.scripts.make_prediction_locus import make_prediction_locus
-from sys import exit
 
 def train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, 
           AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        print('Invalid data format.')
-        exit(1)
+        raise ValueError('Invalid data format.')
+
     
     if data_mode == "10X":
         with open(sample_list_file) as sample_file:
@@ -28,8 +27,9 @@ def prediction(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, 
     else: 
         TE_ref_path = './TE_Full.csv'
     if data_mode != "10X" and data_mode != "Smart_seq":
-        print('Invalid data format.')
-        exit(1)
+        raise ValueError('Invalid data format.')
+
+
     if not os.path.exists('Multi_TE'):
         os.mkdir('Multi_TE')
     if data_mode == "10X":
@@ -49,8 +49,8 @@ def prediction_locus(TE_mode, data_mode, sample_list_file, bin_size=5, proportio
     else: 
         TE_ref_path = './TE_Full.csv'
     if data_mode != "10X" and data_mode != "Smart_seq":
-        print('Invalid data format.')
-        exit(1)
+        raise ValueError('Invalid data format.')
+
     if not os.path.exists('Multi_TE'):
         os.mkdir('Multi_TE')
     if data_mode == "10X":
