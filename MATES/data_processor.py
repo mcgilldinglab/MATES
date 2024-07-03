@@ -10,7 +10,7 @@ def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, propor
     else: 
         TE_ref_path = './TE_Full.csv'
     if data_mode != "10X" and data_mode != "Smart_seq":
-        raise ValueError('Invalid data format.')
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
     os.makedirs("MU_Stats", exist_ok=True)
 
@@ -27,7 +27,7 @@ def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, propor
 
 def generate_training_sample(data_mode, sample_list_file, bin_size, proportion):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        raise ValueError('Invalid data format.')
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
     
     if data_mode == "10X":
@@ -44,7 +44,7 @@ def generate_prediction_sample(TE_mode, data_mode,sample_list_file, bin_size, pr
     else: 
         TE_ref_path = './TE_Full.csv'
     if data_mode != "10X" and data_mode != "Smart_seq":
-        raise ValueError('Invalid data format.')
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
     os.makedirs("MU_Stats", exist_ok=True)
 

@@ -6,7 +6,7 @@ from MATES.scripts.make_prediction_locus import make_prediction_locus
 def train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, 
           AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        raise ValueError('Invalid data format.')
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
     
     if data_mode == "10X":
@@ -49,7 +49,7 @@ def prediction_locus(TE_mode, data_mode, sample_list_file, bin_size=5, proportio
     else: 
         TE_ref_path = './TE_Full.csv'
     if data_mode != "10X" and data_mode != "Smart_seq":
-        raise ValueError('Invalid data format.')
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
     if not os.path.exists('Multi_TE'):
         os.mkdir('Multi_TE')

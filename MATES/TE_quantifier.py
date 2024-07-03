@@ -5,6 +5,9 @@ import shutil
 
 ##### Quant Unique TE #####
 def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None):
+    if data_mode != "10X" and data_mode != "Smart_seq":
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+
     if TE_mode == "exclusive":
         TE_ref_path = './TE_nooverlap.csv'
     else: 
@@ -84,6 +87,9 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_fil
 
 ##### Quant All TE #####
 def finalize_TE_MTX(data_mode, sample_list_file=None):
+    if data_mode != "10X" and data_mode != "Smart_seq":
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+
     if data_mode == "Smart_seq":
         print("Start create TE_MTX...")
         df_empty = pd.read_csv('prediction/Multi_MTX.csv')
@@ -105,7 +111,7 @@ def finalize_TE_MTX(data_mode, sample_list_file=None):
     elif data_mode == "10X":
         os.makedirs("result_MTX", exist_ok=True)
         if sample_list_file == None:
-            raise ValueError('sample_list_file == None. Invalid data format.')
+            raise ValueError('Please provide path to sample list file.')
 
         with open(sample_list_file, "r") as f:
             for line in f:

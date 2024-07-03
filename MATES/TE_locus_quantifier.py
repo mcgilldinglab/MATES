@@ -3,7 +3,9 @@ from scipy import sparse
 from scipy.io import mmwrite
 import os
 
-def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False, bc_path_file=None):
+def unique_locus_TE_MTX(data_mode, sample_list_file, long_read = False, bc_path_file=None):
+    if data_mode != "10X" and data_mode != "Smart_seq":
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
     if data_mode == 'Smart_seq':
         if long_read:
             cells = os.listdir('./count_long_reads')

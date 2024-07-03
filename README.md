@@ -157,9 +157,8 @@ TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 * **TE_locus_quantifier**
 	TE_locus_quantifier module facilitates the quantification of TE expression from unique mapping reads at locus level.
 ```python
-TE_locus_quantifier.unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False, bc_path_file=None)
+TE_locus_quantifier.unique_locus_TE_MTX(data_mode, sample_list_file, long_read = False, bc_path_file=None)
 # Parameters
-## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
 ## sample_list_file : <str> path to file conatins sample IDs
 ## long_read : <bool> whether you're quantifying long read data

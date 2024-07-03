@@ -4,7 +4,7 @@ import math
 
 def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind = 'CR', long_read = False, bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        raise ValueError('Invalid data format.')
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
     # Calculate batch size and number of batches
     sample_count = sum(1 for line in open(sample_list_file))
@@ -99,7 +99,8 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
 ##### Count coverage vector #####
 def count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        raise ValueError('Invalid data format.')
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+
 
     if TE_mode == "exclusive":
         TE_ref_path = 'TE_nooverlap.csv'
@@ -147,7 +148,7 @@ def count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_pat
     
 def count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
-        raise ValueError('Invalid data format.')
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
     if TE_mode == "exclusive":
         TE_ref_path = 'TE_nooverlap.csv'
