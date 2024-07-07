@@ -21,7 +21,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
     for i in range(len(MLP_TE_full)):
         MLP_full_data.append([MLP_TE_full[i],  MLP_Batch_full[i], MLP_meta_full_tmp[i]])
 
-    BATCH_SIZE = 1
+    BATCH_SIZE = 1000
     MLP_full_loader = DataLoader(MLP_full_data, BATCH_SIZE, shuffle = True, drop_last=True)
 
 
@@ -42,8 +42,6 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
     MLP = MLP.to(device)
     MLP_TE_data = MLP_TE_data.to(device)
     MLP_BATCH_data = MLP_BATCH_data.to(device)
-
-  
     
     #optimizer  & loss
     for epoch in range(1):
@@ -54,25 +52,41 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
         MLP.train()
         AENet.train()
         torch.autograd.set_detect_anomaly(True)
-        with tqdm (total = (len(MLP_TE_full)//1)) as pbar:
+        with tqdm (total = (len(MLP_TE_full)//BATCH_SIZE)+1) as pbar:
             for step, (TE_vecs, Batch_ids, metainfo) in enumerate(MLP_full_loader):
+                # MLP_TE_data.data.copy_(TE_vecs)
+                # # MLP_Region_data.data.copy_(TE_region)
+                # Batch_info  = Batch_ids.clone().detach().view(BATCH_SIZE,1)
+                # MLP_BATCH_data.data.copy_(Batch_info)
+                current_batch_size = TE_vecs.size(0)
+                MLP_TE_data = torch.Tensor(current_batch_size,1*2001)
+                MLP_TE_data = Variable(MLP_TE_data)
+                MLP_TE_data = MLP_TE_data.to(device)
                 MLP_TE_data.data.copy_(TE_vecs)
-                # MLP_Region_data.data.copy_(TE_region)
-                Batch_info  = Batch_ids.clone().detach().view(BATCH_SIZE,1)
+                
+                MLP_BATCH_data = torch.Tensor(current_batch_size,1*1)
+                MLP_BATCH_data = Variable(MLP_BATCH_data)
+                MLP_BATCH_data = MLP_BATCH_data.to(device)
+                Batch_info  = Batch_ids.clone().detach().view(current_batch_size,1)
                 MLP_BATCH_data.data.copy_(Batch_info)
                 ##AE Part
                 embeddings, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, BATCH_SIZE)
                 ##MLP Part
-                alpha = MLP(embeddings, MLP_BATCH_data, BATCH_SIZE)
+                # alpha = MLP(embeddings, MLP_BATCH_data, BATCH_SIZE)
+                # Meta_Data_full[0] = Meta_Data_full[0]+(list(metainfo[0]))
+                # Meta_Data_full[1] = Meta_Data_full[1]+(list(metainfo[1]))
+                # Meta_Data_full[2] = Meta_Data_full[2]+(list(metainfo[2]))
+                # Batch_Info_full = np.append(Batch_Info_full,(Batch_info.cpu().detach().numpy().reshape(1,BATCH_SIZE)))
+                # problist_full = np.append(problist_full, alpha.cpu().detach().numpy().reshape(BATCH_SIZE))
+                # pbar.update(1)
+                alpha = MLP(embeddings, MLP_BATCH_data, current_batch_size)
                 Meta_Data_full[0] = Meta_Data_full[0]+(list(metainfo[0]))
                 Meta_Data_full[1] = Meta_Data_full[1]+(list(metainfo[1]))
                 Meta_Data_full[2] = Meta_Data_full[2]+(list(metainfo[2]))
-                Batch_Info_full = np.append(Batch_Info_full,(Batch_info.cpu().detach().numpy().reshape(1,BATCH_SIZE)))
-                problist_full = np.append(problist_full, alpha.cpu().detach().numpy().reshape(BATCH_SIZE))
+                Batch_Info_full = np.append(Batch_Info_full,(Batch_info.cpu().detach().numpy().reshape(1,current_batch_size)))
+                problist_full = np.append(problist_full, alpha.cpu().detach().numpy().reshape(current_batch_size))
                 pbar.update(1)
     return Meta_Data_full, problist_full
-
-
 
 def make_prediction(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_epochs, MLP_trained_epochs, sample = None, USE_GPU= torch.cuda.is_available()):
     TE_ref = pd.read_csv(path_to_TE_ref,header = None)
@@ -160,5 +174,9 @@ def make_prediction(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_
             for key2, val2 in val.items():
                 df_empty.loc[key2[1], key2[0]] = int(val2)
         df_empty = df_empty.fillna(0)
+        if not os.path.exists("prediction"):
+            os.makedirs("prediction")
+        if not os.path.exists("prediction/"+sample):
+            os.makedirs("prediction/"+sample)
         df_empty.drop_duplicates().to_csv("prediction/"+sample+'/Multi_MTX.csv')
         print('Finish quantify Multi TE')

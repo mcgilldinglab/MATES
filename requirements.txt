@@ -19,7 +19,7 @@ primer3-py==0.6.1
 prometheus-client==0.14.1
 prompt-toolkit==3.0.20
 Protego==0.1.16
-psutil==5.9.0
+psutil==6.0.0
 ptyprocess==0.7.0
 py==1.11.0
 pyasn1==0.4.8
@@ -84,9 +84,10 @@ simplegeneric==0.8.1
 matplotlib==3.7.2
 numpy==1.25.2
 pandas==2.0.0
-pybedtools==0.9.1
-pysam==0.21.0
+pybedtools==0.10.0
+pysam==0.22.1
 scipy==1.11.2
 torch==2.0.1
 tqdm==4.66.1
 pyranges==0.0.129
+Cython==3.0.10

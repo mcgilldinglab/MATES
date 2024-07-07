@@ -68,6 +68,6 @@ def generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, p
         barcodes_paths = read_file_lines(bc_path_file)
         
         for sample, barcodes_path in zip(sample_names, barcodes_paths):
-            generate_Prediction(data_mode, sample, bin_size, proportion, TE_ref_path, barcodes_path)
+            generate_Prediction(data_mode, sample, bin_size, proportion, TE_ref_path, TE_mode, barcodes_path)
     elif data_mode == 'Smart_seq':
-        generate_Prediction(data_mode, sample_list_file, bin_size, proportion, TE_ref_path)
+        generate_Prediction(data_mode, sample_list_file, bin_size, proportion, TE_ref_path, TE_mode)

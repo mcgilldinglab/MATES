@@ -20,15 +20,19 @@ def train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE
         MATES_train(data_mode, sample_list_file, bin_size, proportion, BATCH_SIZE, AE_LR, MLP_LR, 
                  AE_EPOCHS, MLP_EPOCHS)
 
-def prediction(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU= True):
+def prediction(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU= True, ref_path = 'Default'):
     
-    if TE_mode == "exclusive":
-        TE_ref_path = './TE_nooverlap.csv'
-    else: 
-        TE_ref_path = './TE_full.csv'
+    
     if data_mode != "10X" and data_mode != "Smart_seq":
         raise ValueError('Invalid data format.')
+    
+    if TE_mode not in ["inclusive", "exclusive"]:
+        raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
 
+    if ref_path == 'Default':
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
+    else:
+        TE_ref_path = ref_path
 
     if not os.path.exists('Multi_TE'):
         os.mkdir('Multi_TE')
@@ -42,14 +46,18 @@ def prediction(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, 
     elif data_mode == 'Smart_seq':
         make_prediction(data_mode, bin_size, proportion, TE_ref_path, AE_trained_epochs, MLP_trained_epochs, None, USE_GPU)
         
-def prediction_locus(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU= True):
+def prediction_locus(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU= True, ref_path = 'Default'):
     
-    if TE_mode == "exclusive":
-        TE_ref_path = './TE_nooverlap.csv'
-    else: 
-        TE_ref_path = './TE_full.csv'
+    
     if data_mode != "10X" and data_mode != "Smart_seq":
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    if TE_mode not in ["inclusive", "exclusive"]:
+        raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
+
+    if ref_path == 'Default':
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
+    else:
+        TE_ref_path = ref_path
 
     if not os.path.exists('Multi_TE'):
         os.mkdir('Multi_TE')

@@ -194,4 +194,4 @@ def generate_Training(data_mode, file_name, bin_size, prop):
         with open(cur_path + '/MU_Stats/'+sample+'/Multi_meta_train_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
             pickle.dump(MLP_meta_train, f)
         print("Finish analyse generating sample for multi read TE in "+sample+".")
-        print("Finish Sample" + sample)
+        print("Finish Sample " + sample)

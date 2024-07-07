@@ -1,11 +1,12 @@
 import subprocess
 import os
 import math
-from MATES.scripts.Intronic.count_unspliced import *
+
 from MATES.scripts.TE_locus_quantifier import unique_locus_TE_MTX
 from MATES.scripts.generatePrediction import generate_Prediction
 from MATES.scripts.helper_function import *
 from MATES.scripts.make_prediction_locus import make_prediction_locus
+from MATES.scripts.Intronic.count_unspliced import *
 from MATES.scripts.Intronic.substract_unspliced import *
 
 def create_directory(directory):

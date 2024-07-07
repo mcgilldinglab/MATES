@@ -162,8 +162,12 @@ def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_tr
 
         sparse_matrix = sparse.csr_matrix(matrix_df)
         locus_multi_mtx_dir = 'Multi_intron' if TE_mode == 'intronic' else 'Multi'
+        if not os.path.isdir('10X_locus'):
+            os.mkdir('10X_locus')
         if not os.path.isdir(join('10X_locus', locus_multi_mtx_dir)):
             os.mkdir(join('10X_locus', locus_multi_mtx_dir))
+        if not os.path.isdir(join('10X_locus', locus_multi_mtx_dir,sample)):
+            os.mkdir(join('10X_locus', locus_multi_mtx_dir,sample))
 
         mtx_filename = os.path.join("10X_locus", locus_multi_mtx_dir, sample, 'matrix.mtx')
         mmwrite(mtx_filename, sparse_matrix)

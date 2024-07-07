@@ -1,17 +1,28 @@
 import subprocess
 import os
+import numpy as np
 import pandas as pd
 import shutil
-
+import pkg_resources
+from scipy import sparse
+from scipy.sparse import csr_matrix, lil_matrix
+from scipy.io import mmread
+import anndata as ad
+from MATES.scripts.TE_locus_quantifier import unique_locus_TE_MTX
+from MATES.scripts.make_prediction_locus import make_prediction_locus
+from MATES.scripts.helper_function import *
 ##### Quant Unique TE #####
-def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None):
+def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, ref_path = 'Default', bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
-    if TE_mode == "exclusive":
-        TE_ref_path = './TE_nooverlap.csv'
-    else: 
-        TE_ref_path = './TE_full.csv'
+    if TE_mode not in ["inclusive", "exclusive"]:
+        raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
+
+    if ref_path == 'Default':
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
+    else:
+        TE_ref_path = ref_path
 
     os.makedirs("Unique_TE", exist_ok=True)
 
@@ -22,9 +33,10 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_fil
         result = sample_count / file_batch
         sample_per_batch = int(result + 0.5)
         processes = []
+        script_path = pkg_resources.resource_filename('MATES', 'scripts/quant_unique_TE.py')
         for i in range(threads_num):
 
-            command = f"python MATES/scripts/quant_unique_TE.py {sample_list_file} {i} {sample_per_batch} {TE_ref_path} {data_mode} {None}"
+            command = f"python {script_path} {sample_list_file} {i} {sample_per_batch} {TE_ref_path} {data_mode} {None}"
             process = subprocess.Popen(command, shell=True)
             processes.append(process)
 
@@ -58,9 +70,9 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_fil
             result = sample_count / file_batch
             sample_per_batch = int(result + 0.5)
             processes = []
-
+            script_path = pkg_resources.resource_filename('MATES', 'scripts/quant_unique_TE.py')
             for i in range(threads_num):
-                command = f"python MATES/scripts/quant_unique_TE.py {sample} {i} {sample_per_batch} {TE_ref_path} {data_mode} {barcodes_paths[idx]}"
+                command = f"python {script_path} {sample} {i} {sample_per_batch} {TE_ref_path} {data_mode} {barcodes_paths[idx]}"
                 
                 process = subprocess.Popen(command, shell=True)
                 processes.append(process)
@@ -85,11 +97,61 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_fil
     else:
         print('Invalid data format.')
 
+
+def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file):
+    if data_mode not in ["10X", "Smart_seq"]:
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    if TE_mode not in ["inclusive", "exclusive"]:
+        raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
+
+    # Check if the necessary files exist
+    check_file_exists(sample_list_file)
+    unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False)
+    if data_mode == '10X':
+        with open(sample_list_file) as sample_file:
+            sample_name = [line.rstrip('\n') for line in sample_file]
+            for idx, sample in enumerate(sample_name):
+                print("Finalizing locus expression matrix for " + sample + "...")
+                mtx_filename_multi = os.path.join("10X_locus/Multi", sample, 'matrix.mtx')
+                features_filename_multi = os.path.join("10X_locus/Multi", sample, 'features.csv')
+                cells_filename_multi = os.path.join("10X_locus/Multi", sample, 'barcodes.csv')
+
+                mtx_filename_unique = os.path.join("10X_locus/Unique", sample, 'matrix.mtx')
+                features_filename_unique = os.path.join("10X_locus/Unique", sample, 'features.csv')
+                cells_filename_unique = os.path.join("10X_locus/Unique", sample, 'barcodes.csv')
+
+                # Load the data
+                matrix_multi = mmread(mtx_filename_multi).tocsr()
+                features_multi = pd.read_csv(features_filename_multi)
+                cells_multi = pd.read_csv(cells_filename_multi)
+
+                matrix_unique = mmread(mtx_filename_unique).tocsr()
+                features_unique = pd.read_csv(features_filename_unique)
+                cells_unique = pd.read_csv(cells_filename_unique)
+
+                # Create AnnData objects
+                adata_multi = ad.AnnData(X=matrix_multi.T, obs=cells_multi, var=features_multi)
+                adata_unique = ad.AnnData(X=matrix_unique.T, obs=cells_unique, var=features_unique)
+
+                adata_multi.var_names_make_unique()
+                adata_unique.var_names_make_unique()
+
+                # Add the values for the same features
+                common_vars = adata_multi.var_names.intersection(adata_unique.var_names)
+                adata_multi[:, common_vars].X += adata_unique[:, common_vars].X
+
+                # Concatenate AnnData objects along the features axis (axis=1)
+                combined_adata = ad.concat([adata_multi, adata_unique[:, adata_unique.var_names.difference(common_vars)]], axis=1)
+                os.makedirs(os.path.join("10X_locus", sample), exist_ok = True)
+                # Save the final combined AnnData object
+                combined_adata.write(os.path.join("10X_locus", sample, 'combined_matrix.h5ad'))
+                print("Finis finalizing locus expression matrix for " + sample + ".")
+    
 ##### Quant All TE #####
 def finalize_TE_MTX(data_mode, sample_list_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
-
+    
     if data_mode == "Smart_seq":
         print("Start create TE_MTX...")
         df_empty = pd.read_csv('prediction/Multi_MTX.csv')

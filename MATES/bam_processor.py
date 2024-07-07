@@ -1,6 +1,7 @@
 import subprocess
 import os
 import math
+import pkg_resources
 from MATES.scripts.helper_function import *
 
 def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind='CR', long_read=False, bc_path_file=None):
@@ -21,10 +22,10 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
     split_file_into_batches(bam_path_file, batch_size, "./bam_tmp")
     if bc_path_file:
         split_file_into_batches(bc_path_file, batch_size, "./bc_tmp")
-
+    
     if long_read and data_mode == "10X":
         create_directory("./long_read")
-        command_template = "sh MATES/scripts/split_bc_long.sh ./file_tmp/{i} ./bam_tmp/{i} ./bc_tmp/{i} " + bc_ind
+        command_template = "bash MATES/scripts/split_bc_long.sh ./file_tmp/{i} ./bam_tmp/{i} ./bc_tmp/{i} " + bc_ind
         num_batches = len(os.listdir('./file_tmp'))
         run_command_in_batches(command_template, num_batches)
         print("Finish splitting sub-bam for long read data.")
@@ -32,7 +33,9 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
         print("Start splitting bam files into unique/multi reads sub-bam files ...")
         create_directory("./unique_read")
         create_directory("./multi_read")
-        command_template = "sh MATES/scripts/split_u_m.sh ./file_tmp/{i} ./bam_tmp/{i}"
+        
+        script_path = pkg_resources.resource_filename('MATES', 'scripts/split_u_m.sh')
+        command_template = f"bash {script_path} ./file_tmp/{{i}} ./bam_tmp/{{i}}"
         num_batches = len(os.listdir('./file_tmp'))
         run_command_in_batches(command_template, num_batches)
         print("Finish splitting bam files into unique reads and multi reads sub-bam files.")
@@ -42,11 +45,13 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
                 raise ValueError('Please provide barcodes file for 10X data!')
 
             print("Start splitting multi sub-bam based on cell barcodes...")
-            command_template = "sh MATES/scripts/split_bc_u.sh ./file_tmp/{i} ./bc_tmp/{i} " + bc_ind
+            script_path = pkg_resources.resource_filename('MATES', 'scripts/split_bc_u.sh')
+            command_template = f"bash {script_path} ./file_tmp/{{i}} ./bc_tmp/{{i}} {bc_ind}"
             run_command_in_batches(command_template, num_batches)
             print("Finish splitting unique sub-bam.")
-
-            command_template = "sh MATES/scripts/split_bc_m.sh ./file_tmp/{i} ./bc_tmp/{i} " + bc_ind
+            
+            script_path = pkg_resources.resource_filename('MATES', 'scripts/split_bc_m.sh')
+            command_template = f"bash {script_path} ./file_tmp/{{i}} ./bc_tmp/{{i}} {bc_ind}"
             run_command_in_batches(command_template, num_batches)
             print("Finish splitting multi sub-bam.")
 
@@ -80,16 +85,18 @@ def count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, ref_pa
     if data_mode == "Smart_seq":
         sample_count = sum(1 for line in open(sample_list_file)) + 1
         batch_size = math.ceil(sample_count / threads_num)
-        command_template = f"python MATES/scripts/count_coverage_Smartseq.py {sample_list_file} {{i}} {batch_size} {TE_ref_path} {TE_mode}"
+        script_path = pkg_resources.resource_filename('MATES', 'scripts/count_coverage_Smartseq.py')
+        command_template = f"python {script_path} {sample_list_file} {{i}} {batch_size} {TE_ref_path} {TE_mode}"
         run_command_in_batches(command_template, threads_num)
     elif data_mode == "10X":
         sample_names = read_file_lines(sample_list_file)
         barcodes_paths = read_file_lines(bc_path_file)
-
+        script_path = pkg_resources.resource_filename('MATES', 'scripts/count_coverage_10X.py')
         for idx, sample in enumerate(sample_names):
             sample_count = sum(1 for line in open(barcodes_paths[idx])) + 1
             batch_size = math.ceil(sample_count / threads_num)
-            command_template = f"python MATES/scripts/count_coverage_10X.py {sample} {{i}} {batch_size} {barcodes_paths[idx]} {TE_ref_path} {TE_mode}"
+            create_directory("./count_coverage/" + sample)
+            command_template = f"python {script_path} {sample} {{i}} {batch_size} {barcodes_paths[idx]} {TE_ref_path} {TE_mode}"
             run_command_in_batches(command_template, threads_num)
 
     remove_directory("./tmp")

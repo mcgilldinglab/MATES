@@ -327,4 +327,4 @@ for bc in barcodes[start_idx: end_idx]:
 
     counted += 1
     if counted % 10 == 0 or counted == batch_size:
-        print("Finish batch " + str(batch) + ":" + str(counted) +"/"+ str(batch_size) + " for sample" + sample)
+        print("Finish batch " + str(batch) + ":" + str(counted) +"/"+ str(batch_size) + " for sample " + sample)

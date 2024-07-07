@@ -4,7 +4,7 @@ import math
 
 def create_directory(directory):
     os.makedirs(directory, exist_ok=True)
-    print(f"Directory {directory} created or already exists.")
+    print(f"Directory {directory} created.")
 
 def split_file_into_batches(file_path, batch_size, output_dir):
     create_directory(output_dir)

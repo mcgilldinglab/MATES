@@ -16,7 +16,7 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, TE_m
     if not os.path.isdir(join(cur_path ,Multi_TE_dir)):
             os.mkdir(join(cur_path, Multi_TE_dir))
     if data_mode == 'Smart_seq':
-        TE_fam_path = join(cur_path,Multi_TE_dir,str(bin_size)+'_'+str(prop)+'_stat.csv')
+        TE_fam_path = join(cur_path,'MU_Stats',str(bin_size)+'_'+str(prop)+'_stat.csv')
         tmp = pd.read_csv(TE_fam_path)
         tmp.columns=['TE_fam', 'count']
         tmp = tmp[tmp['count']>50]
@@ -34,7 +34,7 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, TE_m
     
     elif data_mode == '10X':
         sample = file_name
-        TE_fam_path = join(cur_path,Multi_TE_dir,str(bin_size)+'_'+str(prop)+'_stat.csv')
+        TE_fam_path = join(cur_path,'MU_Stats',sample,str(bin_size)+'_'+str(prop)+'_stat.csv')
         tmp = pd.read_csv(TE_fam_path)
         tmp.columns=['TE_fam', 'count']
         tmp = tmp[tmp['count']>50]
@@ -108,20 +108,30 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, TE_m
                 multi_cell_info = []
             pbar.update(1)
 
-
-        MLP_TE_full = scipy.sparse.load_npz(p3)
-        with open(p4, 'rb') as f:
-            MLP_Batch_full = pickle.load(f)
-        with open(p5, 'rb') as f:
-            MLP_meta_full = pickle.load(f)
-        MLP_TE_full = scipy.sparse.vstack([MLP_TE_full,sparse.csr_matrix(np.array(multi_vec_matrix))])
-        MLP_Batch_full = np.append(MLP_Batch_full, multi_TE_matrix)
-        MLP_meta_full = np.vstack([MLP_meta_full,multi_cell_info])
-        scipy.sparse.save_npz((p3), sparse.csr_matrix(MLP_TE_full))
-        with open(p4, 'wb') as f:
-            pickle.dump(MLP_Batch_full, f)
-        with open(p5, 'wb') as f:
-            pickle.dump(MLP_meta_full, f)
+        if idx < 500:
+            MLP_TE_full = np.array(multi_vec_matrix)
+            MLP_Batch_full = np.array(multi_TE_matrix)
+            MLP_meta_full = np.array(multi_cell_info)
+            print(MLP_meta_full.shape)
+            scipy.sparse.save_npz((p3), sparse.csr_matrix(MLP_TE_full))
+            with open(p4, 'wb') as f:
+                pickle.dump(MLP_Batch_full, f)
+            with open(p5, 'wb') as f:
+                pickle.dump(MLP_meta_full, f)
+        else:
+            MLP_TE_full = scipy.sparse.load_npz(p3)
+            with open(p4, 'rb') as f:
+                MLP_Batch_full = pickle.load(f)
+            with open(p5, 'rb') as f:
+                MLP_meta_full = pickle.load(f)
+            MLP_TE_full = scipy.sparse.vstack([MLP_TE_full,sparse.csr_matrix(np.array(multi_vec_matrix))])
+            MLP_Batch_full = np.append(MLP_Batch_full, multi_TE_matrix)
+            MLP_meta_full = np.vstack([MLP_meta_full,multi_cell_info])
+            scipy.sparse.save_npz((p3), sparse.csr_matrix(MLP_TE_full))
+            with open(p4, 'wb') as f:
+                pickle.dump(MLP_Batch_full, f)
+            with open(p5, 'wb') as f:
+                pickle.dump(MLP_meta_full, f)
 
         print("Finish analyse full prediciton data of multi read.")
 
