@@ -25,7 +25,7 @@ def prediction(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, 
     if TE_mode == "exclusive":
         TE_ref_path = './TE_nooverlap.csv'
     else: 
-        TE_ref_path = './TE_Full.csv'
+        TE_ref_path = './TE_full.csv'
     if data_mode != "10X" and data_mode != "Smart_seq":
         raise ValueError('Invalid data format.')
 
@@ -47,7 +47,7 @@ def prediction_locus(TE_mode, data_mode, sample_list_file, bin_size=5, proportio
     if TE_mode == "exclusive":
         TE_ref_path = './TE_nooverlap.csv'
     else: 
-        TE_ref_path = './TE_Full.csv'
+        TE_ref_path = './TE_full.csv'
     if data_mode != "10X" and data_mode != "Smart_seq":
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 

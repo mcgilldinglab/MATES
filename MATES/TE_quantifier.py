@@ -11,7 +11,7 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_fil
     if TE_mode == "exclusive":
         TE_ref_path = './TE_nooverlap.csv'
     else: 
-        TE_ref_path = './TE_Full.csv'
+        TE_ref_path = './TE_full.csv'
 
     os.makedirs("Unique_TE", exist_ok=True)
 

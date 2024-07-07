@@ -217,7 +217,7 @@ barcodes_file = sys.argv[4]
 TE_ref_path = sys.argv[5]
 TE_mode = sys.argv[6]
 
-coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'Intronic' else 'count_coverage'
+coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'intronic' else 'count_coverage'
 cur_path = os.getcwd()
 if not os.path.exists(join(cur_path,coverage_stored_dir)):
     os.mkdir(join(cur_path,coverage_stored_dir))

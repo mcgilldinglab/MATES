@@ -11,7 +11,7 @@ def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, propor
         raise ValueError("Invalid TE mode. Supported formats mode 'inclusive' or 'exlusive'.")
 
     if ref_path == 'Default':
-        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_Full.csv'
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
     else:
         TE_ref_path = ref_path
 
@@ -51,7 +51,7 @@ def generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, p
         raise ValueError("Invalid TE mode. Supported formats mode 'inclusive' or 'exlusive'.")
 
     if ref_path == 'Default':
-        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_Full.csv'
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
     else:
         TE_ref_path = ref_path
     

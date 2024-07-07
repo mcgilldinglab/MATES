@@ -2,6 +2,8 @@ import subprocess
 import os
 import math
 from MATES.scripts.Intronic.count_unspliced import *
+from MATES.scripts.TE_locus_quantifier import unique_locus_TE_MTX
+from MATES.scripts.generatePrediction import generate_Prediction
 from MATES.scripts.helper_function import *
 
 def create_directory(directory):
@@ -109,12 +111,10 @@ def count_unspliced_reads(data_mode, threads_num, sample_list_file, ref_path):
                 
                 print(f'Finished counting unspliced reads for {sample}')
 
-def count_intornic_coverage_vec(TE_mode, ref_path, data_mode, threads_num, sample_list_file, building_mode='5prime', bc_path_file=None):
+def count_intornic_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, ref_path = 'Default', bc_path_file=None):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
-    if building_mode not in ["3prime", "5prime"]:
-        raise ValueError("Invalid building mode. Supported formats are building coverage vector from '3prime' or '5prime'.")
-    if TE_mode != 'Intronic':
+    if TE_mode != 'intronic':
         raise ValueError("Invalid TE mode. This function only quantifies Intronic TEs.")
 
     if ref_path == 'Default':
@@ -147,3 +147,39 @@ def count_intornic_coverage_vec(TE_mode, ref_path, data_mode, threads_num, sampl
             run_command_in_batches(command_template, threads_num)
 
     remove_directory("./tmp")
+
+def generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, proportion, ref_path = 'Default', bc_path_file=None):
+    if data_mode not in ["10X", "Smart_seq"]:
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    if TE_mode != 'introinc':
+        raise ValueError("Invalid TE mode. Supported only 'introinc' in this function.")
+
+    if ref_path == 'Default':
+        TE_ref_path = './TE_intronic.csv'
+    else:
+        TE_ref_path = ref_path
+
+    # Check if the necessary files exist
+    check_file_exists(TE_ref_path)
+    check_file_exists(sample_list_file)
+    if bc_path_file:
+        check_file_exists(bc_path_file)
+
+    if not os.path.isdir('MU_Stats'):
+        raise ValueError("Please training MATES on intergenetic TE first.")
+
+    if data_mode == "10X":
+        sample_names = read_file_lines(sample_list_file)
+        barcodes_paths = read_file_lines(bc_path_file)
+        for sample, barcodes_path in zip(sample_names, barcodes_paths):
+            generate_Prediction(data_mode, sample, bin_size, proportion, TE_ref_path, barcodes_path, TE_mode='intronic')
+
+    elif data_mode == 'Smart_seq':
+        generate_Prediction(data_mode, sample_list_file, bin_size, proportion, TE_ref_path, TE_mode='intronic')
+
+def quantify_locus_U_TE_MTX(data_mode, sample_list_file):
+    if data_mode not in ["10X", "Smart_seq"]:
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    # Check if the necessary files exist
+    check_file_exists(sample_list_file)
+    unique_locus_TE_MTX('intronic', data_mode, sample_list_file, long_read = False)

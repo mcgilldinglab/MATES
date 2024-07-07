@@ -3,14 +3,22 @@ from scipy import sparse
 from scipy.io import mmwrite
 import os
 
-def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False, bc_path_file=None):
+def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False):
+    if data_mode != "10X" and data_mode != "Smart_seq":
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    if TE_mode not in ["inclusive", "exclusive", "intronic"]:
+        raise ValueError("Invalid TE mode. Supported formats mode 'inclusive', 'exlusive' or 'intronic'.")
+
+    if long_read:
+        coverage_stored_dir = './count_long_reads'
+    elif TE_mode in ["inclusive", "exclusive"]:
+        coverage_stored_dir = './count_coverage'
+    elif TE_mode == 'intronic':
+        coverage_stored_dir = './count_coverage_intron'
+
     if data_mode == 'Smart_seq':
-        if long_read:
-            cells = os.listdir('./count_long_reads')
-            cell_files = ['./count_long_reads/'+i+'/TE_unique_Info.csv' for i in cells]
-        else:
-            cells = os.listdir('./count_coverage')
-            cell_files = ['./count_coverage/'+i+'/TE_unique_Info.csv' for i in cells]
+        cells = os.listdir(coverage_stored_dir)
+        cell_files = [os.path.join(coverage_stored_dir,i,'TE_unique_Info.csv') for i in cells]
         combined_df = pd.DataFrame()
 
         for cell_idx, cell_file in enumerate(cell_files):
@@ -34,14 +42,12 @@ def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False,
     elif data_mode == '10X':
         with open(sample_list_file) as sample_file:
             sample_name = [line.rstrip('\n') for line in sample_file]
-        with open(bc_path_file) as bc_file:
-            barcodes_paths = [line.rstrip('\n') for line in bc_file]
+
         for idx, sample in enumerate(sample_name):
-
-            cells = os.listdir('count_coverage/short_read')
-            cell_files = ['count_coverage/short_read/'+i+'/TE_unique_Info.csv' for i in cells]
+            cells = os.listdir(coverage_stored_dir)
+            cell_files = [os.path.join(coverage_stored_dir,i,'TE_unique_Info.csv') for i in cells]
+        
             combined_df = pd.DataFrame()
-
             for cell_idx, cell_file in enumerate(cell_files):
                 cell_df = pd.read_csv(cell_file)
                 cell_id = cells[cell_idx]
@@ -53,36 +59,14 @@ def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False,
 
             # Convert the DataFrame to a sparse matrix
             sparse_matrix = sparse.csr_matrix(pivot_df.values)
+            os.mkdir('locus_MTX_U')
+            os.mkdir('locus_MTX_U/'+sample)
 
             # Write to MTX file
-            mmwrite('10X_locus/Unique/matrix.mtx', sparse_matrix)
+            mmwrite('locus_MTX_U/'+sample+'/matrix.mtx', sparse_matrix)
 
             # Write the 'TE_index' and 'Cell ID' to CSV files
-            pivot_df.index.to_series().to_csv('10X_locus/Unique/features.csv', index=False)
-            pd.Series(pivot_df.columns).to_csv('10X_locus/Unique/barcodes.csv', index=False)
+            pivot_df.index.to_series().to_csv('locus_MTX_U/'+sample+'/features.csv', index=False)
+            pd.Series(pivot_df.columns).to_csv('locus_MTX_U/'+sample+'/barcodes.csv', index=False)
 
-
-
-            for i in range(threads_num):
-                command = f"python MATES/scripts/quant_unique_TE.py {sample} {i} {sample_per_batch} {TE_ref_path} {data_mode} {barcodes_paths[idx]}"
-                
-                process = subprocess.Popen(command, shell=True)
-                processes.append(process)
-
-            for process in processes:
-                process.wait()
-
-            print("Combining batchly quntified Unique TE MTX...")
-            unique_file_list = os.listdir('Unique_TE/'+sample)
-            Unique_TE = pd.read_csv('Unique_TE/'+sample+'/' + unique_file_list[0], index_col = 0)
-            i = 1
-            while len(unique_file_list[1:]) > 0:
-                Unique_TE_tmp = pd.read_csv('Unique_TE/' +sample+'/' + unique_file_list[i], index_col = 0)
-                Unique_TE = pd.concat([Unique_TE, Unique_TE_tmp], axis=0, ignore_index=False)
-                i += 1
-
-            Unique_TE = Unique_TE.fillna(0)
-            Unique_TE = Unique_TE.groupby(Unique_TE.index).sum()
-            Unique_TE = Unique_TE.drop_duplicates()
-            Unique_TE.to_csv('Unique_TE/'+sample+'/Unique_All_MTX.csv')
-            print("Finish finalizing Unique TE MTX.")
+            print("Finish finalizing Unique TE MTX for"+sample)

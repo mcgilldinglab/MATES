@@ -56,12 +56,13 @@ bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path
 ## bc_path_file(optional) : <str> path to file contains matching barcodes list address of sample in sample list
 ```
 ```python
-bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None)
+bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, ref_path = "Default", bc_path_file=None)
 # Parameters
-## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
+## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene (for intronic, refer to below section)
 ## data_mode : <str> 10X or Smart_seq
 ## threads_num : <int>
 ## sample_list_file : <str> path to file conatins sample IDs
+## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default, exclusive have reference 'TE_nooverlap.csv' and inclusive have reference 'TE_full.csv'.
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
 If you want to perform TE quantification on Long Reads data, you can use **bam_processor.split_bam_files** based on your sequencing plantform. **Instead** of using **bam_processor.count_coverage_vec**, use below function:
@@ -69,7 +70,7 @@ If you want to perform TE quantification on Long Reads data, you can use **bam_p
 
 
 ```python
-bam_processor.count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir, bc_path_file=None):
+bam_processor.count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir, ref_path = "Default", bc_path_file=None):
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
@@ -81,7 +82,7 @@ bam_processor.count_long_reads(TE_mode, data_mode, threads_num, sample_list_file
 * **data_processor**
 	The data_processor module assists in computing Unique and Multi Regions, generating training samples, and summarizing the expression of multi-mapping reads for prediction.
 ```python
-data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
+data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, ref_path = "Default", bc_path_file=None)
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
@@ -99,7 +100,7 @@ data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, p
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
 ```
 ```python
-data_processor.generate_prediction_sample(TE_mode, data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
+data_processor.generate_prediction_sample(TE_mode, data_mode,sample_list_file, bin_size, proportion, ref_path = "Default",bc_path_file=None)
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
@@ -154,15 +155,15 @@ TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
 ## data_mode : <str> 10X or Smart_seq
 ## sample_list_file(optional) : <str> only needed for 10X data, path to file conatins sample IDs
 ```
-* **TE_locus_quantifier**
-	TE_locus_quantifier module facilitates the quantification of TE expression from unique mapping reads at locus level.
+* **TE_quantifier_LongRead**
+	TE_quantifier_LongRead module facilitates the quantification of TE expression from unique mapping reads at locus level for Long Read data.
 ```python
-TE_locus_quantifier.unique_locus_TE_MTX(data_mode, sample_list_file, long_read = False, bc_path_file=None)
+TE_quantifier_LongRead.quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file)
 # Parameters
+## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene
 ## data_mode : <str> 10X or Smart_seq
 ## sample_list_file : <str> path to file conatins sample IDs
 ## long_read : <bool> whether you're quantifying long read data
-## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
 ### Step 0: Alignment/TE Reference
 #### Alignment

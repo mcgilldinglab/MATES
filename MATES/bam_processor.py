@@ -55,16 +55,16 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
     if bc_path_file:
         remove_directory("./bc_tmp")
 
-def count_coverage_vec(TE_mode, ref_path, data_mode, threads_num, sample_list_file, building_mode='5prime', bc_path_file=None):
+def count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, ref_path = 'Default', bc_path_file=None):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
-    if building_mode not in ["3prime", "5prime"]:
-        raise ValueError("Invalid building mode. Supported formats are building coverage vector from '3prime' or '5prime'.")
+    # if building_mode not in ["3prime", "5prime"]:
+    #     raise ValueError("Invalid building mode. Supported formats are building coverage vector from '3prime' or '5prime'.")
     if TE_mode not in ["inclusive", "exclusive"]:
         raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
 
     if ref_path == 'Default':
-        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_Full.csv'
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
     else:
         TE_ref_path = ref_path
 
@@ -101,7 +101,7 @@ def count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, ref_path
         raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
 
     if ref_path == 'Default':
-        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_Full.csv'
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
     else:
         TE_ref_path = ref_path
 

@@ -8,13 +8,15 @@ from pathlib import Path
 from os.path import join
 from tqdm import tqdm
 
-def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barcodes_file=None):
+def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, TE_mode = None, barcodes_file=None):
+    Multi_TE_dir = 'Multi_TE_intron' if TE_mode == 'intronic' else 'Multi_TE'
+    coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'intronic' else 'count_coverage'
     cur_path = os.getcwd()
     TEs = pd.read_csv(path_to_TE_ref, header = None)
-    if not os.path.isdir(cur_path + '/Multi_TE'):
-            os.mkdir(cur_path + '/Multi_TE')
+    if not os.path.isdir(join(cur_path ,Multi_TE_dir)):
+            os.mkdir(join(cur_path, Multi_TE_dir))
     if data_mode == 'Smart_seq':
-        TE_fam_path = cur_path + '/MU_Stats/'+str(bin_size)+'_'+str(prop)+'_stat.csv'
+        TE_fam_path = join(cur_path,Multi_TE_dir,str(bin_size)+'_'+str(prop)+'_stat.csv')
         tmp = pd.read_csv(TE_fam_path)
         tmp.columns=['TE_fam', 'count']
         tmp = tmp[tmp['count']>50]
@@ -24,16 +26,15 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barc
         if Path(file_name).is_file():
             with open(file_name, "r") as fh:
                 barcodes = [l.rstrip() for l in fh.readlines()]
-        path = cur_path+'/count_coverage/'
-        if not os.path.isdir(cur_path + '/Multi_TE'):
-            os.mkdir(cur_path + '/Multi_TE')
-        p3 = cur_path + '/Multi_TE/Multi_TE_full_'+str(bin_size)+'_'+str(prop)+'.npz'
-        p4 = cur_path + '/Multi_TE/Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz'
-        p5 = cur_path + '/Multi_TE/Multi_meta_full_'+str(bin_size)+'_'+str(prop)+'.pkl'
+        path = join(cur_path, coverage_stored_dir)
+
+        p3 = join(cur_path,Multi_TE_dir,'Multi_TE_full_'+str(bin_size)+'_'+str(prop)+'.npz')
+        p4 = join(cur_path,Multi_TE_dir,'Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz')
+        p5 = join(cur_path,Multi_TE_dir,'Multi_meta_full_'+str(bin_size)+'_'+str(prop)+'.pkl')
     
     elif data_mode == '10X':
         sample = file_name
-        TE_fam_path = cur_path + '/MU_Stats/'+sample+'/'+str(bin_size)+'_'+str(prop)+'_stat.csv'
+        TE_fam_path = join(cur_path,Multi_TE_dir,str(bin_size)+'_'+str(prop)+'_stat.csv')
         tmp = pd.read_csv(TE_fam_path)
         tmp.columns=['TE_fam', 'count']
         tmp = tmp[tmp['count']>50]
@@ -43,12 +44,13 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barc
         if Path(barcodes_file).is_file():
             with open(barcodes_file, "r") as fh:
                 barcodes = [l.rstrip() for l in fh.readlines()]
-        path = cur_path+'/count_coverage/'+sample+'/'
-        if not os.path.isdir(cur_path + '/Multi_TE/'+sample):
-            os.mkdir(cur_path + '/Multi_TE/'+sample)
-        p3 = cur_path + '/Multi_TE/'+sample+'/Multi_TE_full_'+str(bin_size)+'_'+str(prop)+'.npz'
-        p4 = cur_path + '/Multi_TE/'+sample+'/Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz'
-        p5 = cur_path + '/Multi_TE/'+sample+'/Multi_meta_full_'+str(bin_size)+'_'+str(prop)+'.pkl'
+        path = join(cur_path, coverage_stored_dir, sample)
+        if not os.path.isdir(join(cur_path, Multi_TE_dir, sample)):
+            os.mkdir(join(cur_path, Multi_TE_dir, sample))
+
+        p3 = join(cur_path,Multi_TE_dir,sample,'Multi_TE_full_'+str(bin_size)+'_'+str(prop)+'.npz')
+        p4 = join(cur_path,Multi_TE_dir,sample,'Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz')
+        p5 = join(cur_path,Multi_TE_dir,sample,'Multi_meta_full_'+str(bin_size)+'_'+str(prop)+'.pkl')
         
     multi_vec_matrix = []
     multi_TE_matrix = []
@@ -124,13 +126,13 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, barc
         print("Finish analyse full prediciton data of multi read.")
 
         if data_mode == 'Smart_seq':
-            multi_path = 'Multi_TE/Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz'
+            multi_path = join(Multi_TE_dir, 'Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz')
             unique_path = 'MU_Stats/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl'
-            p = 'Multi_TE/Multi_Batch_full_encode_'+str(bin_size)+'_'+str(prop)+'.npz'
+            p = join(Multi_TE_dir, 'Multi_Batch_full_encode_'+str(bin_size)+'_'+str(prop)+'.npz')
         elif data_mode == '10X':
-            multi_path = 'Multi_TE/' + sample + '/Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz'
-            unique_path = 'MU_Stats/' + sample + '/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl'
-            p = 'Multi_TE/' + sample + '/Multi_Batch_full_encode_'+str(bin_size)+'_'+str(prop)+'.npz'
+            multi_path = join(Multi_TE_dir, sample , 'Multi_Batch_full_'+str(bin_size)+'_'+str(prop)+'.npz')
+            unique_path = join('MU_Stats', sample, 'Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl')
+            p = join(Multi_TE_dir, sample, 'Multi_Batch_full_encode_'+str(bin_size)+'_'+str(prop)+'.npz')
         meta_dict = np.load(unique_path,allow_pickle=True)
         Fam_Idx_map = {f:i for i, f in enumerate(list(meta_dict.keys())) }
         multi_TE = np.load(multi_path, allow_pickle = True)
