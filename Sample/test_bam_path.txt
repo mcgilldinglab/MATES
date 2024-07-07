@@ -1,0 +1,1 @@
+/mnt/md0/ruohan/test/sorted_final_merged.bam
