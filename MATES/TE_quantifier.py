@@ -36,7 +36,7 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_fil
         Unique_TE = pd.read_csv('Unique_TE/' + unique_file_list[0], index_col = 0)
 
         i = 1
-        while len(unique_file_list[1:]) > 0:
+        while len(unique_file_list[1:]) > i:
             Unique_TE_tmp = pd.read_csv('Unique_TE/' + unique_file_list[i], index_col = 0)
             Unique_TE = pd.concat([Unique_TE, Unique_TE_tmp], axis=0, ignore_index=False)
             i += 1
@@ -72,7 +72,7 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_fil
             unique_file_list = os.listdir('Unique_TE/'+sample)
             Unique_TE = pd.read_csv('Unique_TE/'+sample+'/' + unique_file_list[0], index_col = 0)
             i = 1
-            while len(unique_file_list[1:]) > 0:
+            while len(unique_file_list[1:]) > i:
                 Unique_TE_tmp = pd.read_csv('Unique_TE/' +sample+'/' + unique_file_list[i], index_col = 0)
                 Unique_TE = pd.concat([Unique_TE, Unique_TE_tmp], axis=0, ignore_index=False)
                 i += 1
