@@ -13,9 +13,10 @@ def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False)
         coverage_stored_dir = './count_long_reads'
     elif TE_mode in ["inclusive", "exclusive"]:
         coverage_stored_dir = './count_coverage'
+        save_dir = 'locus_MTX_U'
     elif TE_mode == 'intronic':
         coverage_stored_dir = './count_coverage_intron'
-
+        save_dir = 'locus_MTX_U_intron'
     if data_mode == 'Smart_seq':
         cells = os.listdir(coverage_stored_dir)
         cell_files = [os.path.join(coverage_stored_dir,i,'TE_unique_Info.csv') for i in cells]
@@ -32,12 +33,12 @@ def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False)
 
         # Convert the DataFrame to a sparse matrix
         sparse_matrix = sparse.csr_matrix(pivot_df.values)
-        os.mkdir('locus_MTX_U')
+        os.mkdir(save_dir)
         # Write to MTX file
-        mmwrite('locus_MTX_U/matrix.mtx', sparse_matrix)
+        mmwrite(os.path.join(save_dir,'matrix.mtx'), sparse_matrix)
         # Write the 'TE_index' and 'Cell ID' to CSV files
-        pivot_df.index.to_series().to_csv('locus_MTX_U/features.csv', index=False)
-        pd.Series(pivot_df.columns).to_csv('locus_MTX_U/barcodes.csv', index=False)
+        pivot_df.index.to_series().to_csv(os.path.join(save_dir,'features.csv'), index=False)
+        pd.Series(pivot_df.columns).to_csv(os.path.join(save_dir,'barcodes.csv'), index=False)
         
     elif data_mode == '10X':
         with open(sample_list_file) as sample_file:
@@ -59,14 +60,14 @@ def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False)
 
             # Convert the DataFrame to a sparse matrix
             sparse_matrix = sparse.csr_matrix(pivot_df.values)
-            os.mkdir('locus_MTX_U')
-            os.mkdir('locus_MTX_U/'+sample)
+            os.mkdir(save_dir)
+            os.mkdir(os.path.join(save_dir,sample))
 
             # Write to MTX file
-            mmwrite('locus_MTX_U/'+sample+'/matrix.mtx', sparse_matrix)
+            mmwrite(os.path.join(save_dir,sample,'matrix.mtx'), sparse_matrix)
 
             # Write the 'TE_index' and 'Cell ID' to CSV files
-            pivot_df.index.to_series().to_csv('locus_MTX_U/'+sample+'/features.csv', index=False)
-            pd.Series(pivot_df.columns).to_csv('locus_MTX_U/'+sample+'/barcodes.csv', index=False)
+            pivot_df.index.to_series().to_csv(os.path.join(save_dir,sample, 'features.csv'), index=False)
+            pd.Series(pivot_df.columns).to_csv(os.path.join(save_dir,sample, 'barcodes.csv'), index=False)
 
             print("Finish finalizing Unique TE MTX for"+sample)

@@ -5,6 +5,8 @@ from MATES.scripts.Intronic.count_unspliced import *
 from MATES.scripts.TE_locus_quantifier import unique_locus_TE_MTX
 from MATES.scripts.generatePrediction import generate_Prediction
 from MATES.scripts.helper_function import *
+from MATES.scripts.make_prediction_locus import make_prediction_locus
+from MATES.scripts.Intronic.substract_unspliced import *
 
 def create_directory(directory):
     os.makedirs(directory, exist_ok=True)
@@ -35,7 +37,7 @@ def remove_directory(directory):
     print(f"Directory {directory} removed.")
 
 ### Main function
-def implement_velocyto(data_mode, threads_num, sample_list_file, bam_path_file, gtf_path, bc_ind='CR', bc_path_file=None):
+def implement_velocyto(data_mode, threads_num, sample_list_file, bam_path_file, gtf_path, bc_path_file=None):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
@@ -89,10 +91,16 @@ def parse_velocyto_output(data_mode, threads_num, sample_list_file):
 
     remove_directory("./file_tmp")
 
-def count_unspliced_reads(data_mode, threads_num, sample_list_file, ref_path):
+def count_unspliced_reads(data_mode, threads_num, sample_list_file, ref_path='Default'):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    if ref_path == 'Default':
+        TE_ref_path = './TE_intron.csv'
+    else:
+        TE_ref_path = ref_path
 
+    # Check if the necessary files exist
+    check_file_exists(TE_ref_path)
     if data_mode == "10X":
         with open(sample_list_file, "r") as input_file:
             for sample in input_file:
@@ -111,7 +119,8 @@ def count_unspliced_reads(data_mode, threads_num, sample_list_file, ref_path):
                 
                 print(f'Finished counting unspliced reads for {sample}')
 
-def count_intornic_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, ref_path = 'Default', bc_path_file=None):
+def count_intornic_coverage_vec(data_mode, threads_num, sample_list_file, ref_path = 'Default', bc_path_file=None):
+    TE_mode = 'intronic',
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
     if TE_mode != 'intronic':
@@ -148,7 +157,8 @@ def count_intornic_coverage_vec(TE_mode, data_mode, threads_num, sample_list_fil
 
     remove_directory("./tmp")
 
-def generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, proportion, ref_path = 'Default', bc_path_file=None):
+def generate_prediction_sample(data_mode, sample_list_file, bin_size, proportion, ref_path = 'Default', bc_path_file=None):
+    TE_mode = 'introinc'
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
     if TE_mode != 'introinc':
@@ -177,9 +187,68 @@ def generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, p
     elif data_mode == 'Smart_seq':
         generate_Prediction(data_mode, sample_list_file, bin_size, proportion, TE_ref_path, TE_mode='intronic')
 
-def quantify_locus_U_TE_MTX(data_mode, sample_list_file):
+def quantify_U_TE_MTX(data_mode, sample_list_file):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
     # Check if the necessary files exist
     check_file_exists(sample_list_file)
     unique_locus_TE_MTX('intronic', data_mode, sample_list_file, long_read = False)
+
+def quantify_M_TE_MTX(data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU= True, ref_path = 'Default'):
+    if data_mode != "10X" and data_mode != "Smart_seq":
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+
+    if ref_path == 'Default':
+        TE_ref_path = './TE_intronic.csv'
+    else:
+        TE_ref_path = ref_path
+    
+    # Check if the necessary files exist
+    check_file_exists(TE_ref_path)
+    check_file_exists(sample_list_file)
+
+    if not os.path.exists('Multi_TE_intron'):
+        raise ValueError("Please generate prediction sample first.")
+
+    if data_mode == "10X":
+        with open(sample_list_file) as sample_file:
+            sample_name = [line.rstrip('\n') for line in sample_file]
+        for idx, sample in enumerate(sample_name):
+            if not os.path.exists('Multi_TE_intron/'+sample):
+                raise ValueError("Please generate prediction sample for " + sample + '.')
+            make_prediction_locus(data_mode, bin_size, proportion, TE_ref_path, AE_trained_epochs, MLP_trained_epochs, sample, USE_GPU, TE_mode = 'Intronic')
+    elif data_mode == 'Smart_seq':
+        make_prediction_locus(data_mode, bin_size, proportion, TE_ref_path, AE_trained_epochs, MLP_trained_epochs, None, USE_GPU, TE_mode = 'Intronic')
+        
+def correct_intronic_TE(data_mode, sample_list_file, ref_path = 'Default'):
+    if data_mode != "10X" and data_mode != "Smart_seq":
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+
+    if ref_path == 'Default':
+        TE_ref_path = './TE_intronic.csv'
+    else:
+        TE_ref_path = ref_path
+    
+    # Check if the necessary files exist
+    check_file_exists(TE_ref_path)
+    check_file_exists(sample_list_file)
+
+    TEs = pd.read_csv(TE_ref_path, header =None)
+    TEs.columns=['chromosome','start','end','name','TE_index','strand','fam','length']
+    TEs['locus'] = TEs['chromosome']+'_'+TEs['start'].astype(str)+'_'+TEs['end'].astype(str)
+    TEs_tmp = TEs[['TE_index', 'locus']]
+    TEs_tmp_name = TEs[['name', 'TE_index']]
+
+    if data_mode == "10X":
+        os.makedirs('Combination_intron')
+        with open(sample_list_file) as sample_file:
+            sample_name = [line.rstrip('\n') for line in sample_file]
+        for idx, sample in enumerate(sample_name):
+            process_sample(sample,TEs_tmp_name, TEs_tmp)
+            df_empty = pd.read_csv('prediction_locus_intron/'+sample+'/Multi_MTX.csv', index_col = 0)
+            df_unique = pd.read_csv('unique_locus_intron/'+sample+'/Unique_Processed_MTX.csv', index_col = 0)
+            df_unique = df_unique.fillna(0)
+            df_full = pd.concat([df_unique,df_empty], ignore_index=False)
+            df_full = df_full.groupby(df_full.index).sum()
+            os.makedirs('Combination_intron/'+sample, exist_ok = True)
+            df_full.to_csv('Combination_intron/'+sample+'/TE_Corrected_MTX.csv')

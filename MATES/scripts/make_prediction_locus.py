@@ -73,7 +73,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
 
 
 
-def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_epochs, MLP_trained_epochs, sample = None, USE_GPU= torch.cuda.is_available()):
+def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_epochs, MLP_trained_epochs, sample = None, USE_GPU= torch.cuda.is_available(), TE_mode = None):
     TE_ref = pd.read_csv(path_to_TE_ref,header = None)
     TE_ref.columns = ['Chrom', 'start', 'end','group', 'TE_index', 'strand', 'tefam', 'length']
     TE_ref = TE_ref[['TE_index','group']]
@@ -89,9 +89,12 @@ def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_tr
     else:
         DEVICE = torch.device('cpu')
 
+    
+    Multi_TE_dir = 'Multi_TE_intron' if TE_mode == 'intronic' else 'Multi_TE'
+    locus_TE_dir = 'prediction_locus_intron' if TE_mode == 'intronic' else 'prediction_locus'
     if data_mode =='Smart_seq':
         print("start calculating")
-        p = cur_path + '/Multi_TE'
+        p = join(cur_path, Multi_TE_dir)
         MLP_TE_full = scipy.sparse.load_npz(join(p,"Multi_TE_full_"+BIN_SIZE + '_' + PROP +".npz")).toarray()
         MLP_Batch_full = scipy.sparse.load_npz(join(p,"Multi_Batch_full_encode_" +BIN_SIZE + '_' + PROP +".npz")).toarray()
         with open(join(p,'Multi_meta_full_'+BIN_SIZE + '_' + PROP +'.pkl'), 'rb') as f:
@@ -105,33 +108,32 @@ def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_tr
             'Aligned_Multimapping_reads': np.array(Meta_Data_full[2], dtype=int),
             'Calculated_Multimapping_reads': calculated_multimapping_reads
         })
+
         if not os.path.isdir('Smartseq_locus'):
             os.mkdir('Smartseq_locus')
-        if not os.path.isdir('Smartseq_locus/Multi'):
-            os.mkdir('Smartseq_locus/Multi')
-        df[['cell','TE_index','Calculated_Multimapping_reads']].to_csv(os.path.join("prediction_locus", 'Multi_MTX_locus.csv'))
+
+        locus_multi_mtx_dir = 'Multi_intron' if TE_mode == 'intronic' else 'Multi'
+        if not os.path.isdir(join('Smartseq_locus', locus_multi_mtx_dir)):
+            os.mkdir(join('Smartseq_locus', locus_multi_mtx_dir))
+        df[['cell','TE_index','Calculated_Multimapping_reads']].to_csv(os.path.join(locus_TE_dir, 'Multi_MTX_locus.csv'))
         matrix_df = df.pivot_table(index='TE_index', columns='cell', values='Calculated_Multimapping_reads', fill_value=0)
 
         sparse_matrix = sparse.csr_matrix(matrix_df)
 
-        mtx_filename = os.path.join("Smartseq_locus", 'Multi', 'matrix.mtx')
+        mtx_filename = os.path.join("Smartseq_locus", locus_multi_mtx_dir, 'matrix.mtx')
         mmwrite(mtx_filename, sparse_matrix)
 
-        features_filename = os.path.join("Smartseq_locus", 'Multi', 'features.csv')
-        cells_filename = os.path.join("Smartseq_locus", 'Multi', 'barcodes.csv')
+        features_filename = os.path.join("Smartseq_locus", locus_multi_mtx_dir, 'features.csv')
+        cells_filename = os.path.join("Smartseq_locus", locus_multi_mtx_dir, 'barcodes.csv')
 
         matrix_df.index.to_series().to_csv(features_filename, index=False)
         pd.Series(matrix_df.columns).to_csv(cells_filename, index=False)
-        
-#         tmp = df.merge(TE_ref, on='TE_index', how='left')
-#         tmp_2 = tmp.groupby(['cell', 'group'])['Calculated_Multimapping_reads'].sum().unstack(fill_value=0)
-#         tmp_2.to_csv(os.path.join("prediction_locus", sample, 'Multi_MTX.csv'))
         print('Finish quantify Multi TE')
        
 
     elif data_mode == '10X':
         print("start calculating")
-        p = os.path.join(cur_path, 'Multi_TE', sample)
+        p = os.path.join(cur_path, Multi_TE_dir, sample)
         MLP_TE_full = scipy.sparse.load_npz(os.path.join(p, f"Multi_TE_full_{BIN_SIZE}_{PROP}.npz")).toarray()
         MLP_Batch_full = scipy.sparse.load_npz(os.path.join(p, f"Multi_Batch_full_encode_{BIN_SIZE}_{PROP}.npz")).toarray()
         with open(os.path.join(p, f'Multi_meta_full_{BIN_SIZE}_{PROP}.pkl'), 'rb') as f:
@@ -151,25 +153,28 @@ def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_tr
             'Aligned_Multimapping_reads': np.array(Meta_Data_full[2], dtype=int),
             'Calculated_Multimapping_reads': calculated_multimapping_reads
         })
-        if not os.path.isdir('prediction_locus'):
-            os.mkdir('prediction_locus')
-        if not os.path.exists('prediction_locus/'+sample):
-            os.mkdir('prediction_locus/'+sample)
-        df[['cell','TE_index','Calculated_Multimapping_reads']].to_csv(os.path.join("prediction_locus", sample, 'Multi_MTX_locus.csv'))
+        if not os.path.isdir(locus_TE_dir):
+            os.mkdir(locus_TE_dir)
+        if not os.path.exists(os.path.join(locus_TE_dir,sample)):
+            os.mkdir(os.path.join(locus_TE_dir,sample))
+        df[['cell','TE_index','Calculated_Multimapping_reads']].to_csv(os.path.join(locus_TE_dir, sample, 'Multi_MTX_locus.csv'))
         matrix_df = df.pivot_table(index='TE_index', columns='cell', values='Calculated_Multimapping_reads', fill_value=0)
 
         sparse_matrix = sparse.csr_matrix(matrix_df)
+        locus_multi_mtx_dir = 'Multi_intron' if TE_mode == 'intronic' else 'Multi'
+        if not os.path.isdir(join('10X_locus', locus_multi_mtx_dir)):
+            os.mkdir(join('10X_locus', locus_multi_mtx_dir))
 
-        mtx_filename = os.path.join("10X_locus", 'Multi', 'matrix.mtx')
+        mtx_filename = os.path.join("10X_locus", locus_multi_mtx_dir, sample, 'matrix.mtx')
         mmwrite(mtx_filename, sparse_matrix)
 
-        features_filename = os.path.join("10X_locus", 'Multi', 'features.csv')
-        cells_filename = os.path.join("10X_locus", 'Multi', 'barcodes.csv')
+        features_filename = os.path.join("10X_locus", locus_multi_mtx_dir, sample, 'features.csv')
+        cells_filename = os.path.join("10X_locus", locus_multi_mtx_dir, sample, 'barcodes.csv')
 
         matrix_df.index.to_series().to_csv(features_filename, index=False)
         pd.Series(matrix_df.columns).to_csv(cells_filename, index=False)
         
         tmp = df.merge(TE_ref, on='TE_index', how='left')
         tmp_2 = tmp.groupby(['cell', 'group'])['Calculated_Multimapping_reads'].sum().unstack(fill_value=0)
-        tmp_2.to_csv(os.path.join("prediction_locus", sample, 'Multi_MTX.csv'))
+        tmp_2.to_csv(os.path.join(locus_TE_dir, sample, 'Multi_MTX.csv'))
         print('Finish quantify Multi TE')

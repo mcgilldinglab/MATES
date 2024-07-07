@@ -77,6 +77,7 @@ bam_processor.count_long_reads(TE_mode, data_mode, threads_num, sample_list_file
 ## threads_num : <int>
 ## sample_list_file : <str> path to file conatins sample IDs
 ## bam_dir: <str> path to director conatins sample bam files
+## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default, exclusive have reference 'TE_nooverlap.csv' and inclusive have reference 'TE_full.csv'.
 ## bc_path_file(optional) : <str> only needed for data using barcodes to distinguish data, path to file contains matching barcodes list address of sample in sample list
 ```
 * **data_processor**
@@ -89,6 +90,7 @@ data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_siz
 ## sample_list_file : <str> path to file conatins sample IDs
 ## bin_size : <int> size of U/M Region, default = 5
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default, exclusive have reference 'TE_nooverlap.csv' and inclusive have reference 'TE_full.csv'.
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
 ```python
@@ -107,6 +109,7 @@ data_processor.generate_prediction_sample(TE_mode, data_mode,sample_list_file, b
 ## sample_list_file : <str> path to file conatins sample IDs
 ## bin_size : <int> size of U/M Region, default = 5
 ## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default, exclusive have reference 'TE_nooverlap.csv' and inclusive have reference 'TE_full.csv'.
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
 * **MATES_model**
@@ -165,6 +168,78 @@ TE_quantifier_LongRead.quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_fil
 ## sample_list_file : <str> path to file conatins sample IDs
 ## long_read : <bool> whether you're quantifying long read data
 ```
+* **TE_quantifier_Intronic**
+	TE_quantifier_Intronic module facilitates the quantification of TE expression in Intronic TEs.
+```python
+implement_velocyto(data_mode, threads_num, sample_list_file, bam_path_file, gtf_path, bc_path_file=None)
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## threads_num : <int>
+## sample_list_file : <str> path to file conatins sample IDs
+## bam_path_file : <str> path to file conatins matching bam file address of sample in sample list
+## gtf_path : <str> path to the gene gtf file, this is mandatory to implement velocyto
+## bc_path_file(optional) : <str> path to file contains matching barcodes list address of sample in sample list
+```
+
+```python
+parse_velocyto_output(data_mode, threads_num, sample_list_file)
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## threads_num : <int> threads to use (CPU number)
+## sample_list_file : <str> path to file conatins sample IDs
+```
+```python
+count_unspliced_reads(data_mode, threads_num, sample_list_file, ref_path='Default')
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## threads_num : <int>
+## sample_list_file : <str> path to file conatins sample IDs
+## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default TE reference is of name 'TE_intronic.csv'.  
+```
+```python
+count_intornic_coverage_vec(data_mode, threads_num, sample_list_file, ref_path = 'Default',bc_path_file=None)
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## threads_num : <int> threads to use (CPU number)
+## sample_list_file : <str> path to file conatins sample IDs
+## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default TE reference is of name 'TE_intronic.csv'.  
+## bc_path_file(optional) : <str> path to file contains matching barcodes list address of sample in sample list
+```
+```python
+generate_prediction_sample(data_mode, sample_list_file, bin_size, proportion, ref_path = 'Default', bc_path_file=None)
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample IDs
+## bin_size : <int> size of U/M Region, default = 5
+## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80 
+## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default TE reference is of name 'TE_intronic.csv'. 
+## bc_path_file(optional) : <str> path to file contains matching barcodes list address of sample in sample list
+```
+```python
+quantify_U_TE_MTX(data_mode, sample_list_file)
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample IDs
+```
+```python
+quantify_M_TE_MTX(data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU= True, ref_path = 'Default')
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample IDs
+## bin_size : <int> size of U/M Region, default = 5
+## proportion : <int> proportion of dominated unique reads in U Region / multi reads in M Region, default = 80 
+## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default TE reference is of name 'TE_intronic.csv'. 
+## AE_EPOCHS : <int> training epochs for AutoEncoder, default = 200
+## MLP_EPOCHS : <int> training epochs for MLP, default = 200
+## USE_GPU : <bool> whether use GU to train the model, default = Truet
+```
+```python
+correct_intronic_TE(data_mode, sample_list_file, ref_path = 'Default')
+# Parameters
+## data_mode : <str> 10X or Smart_seq
+## sample_list_file : <str> path to file conatins sample IDs
+## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default TE reference is of name 'TE_intronic.csv'. 
+``` 
 ### Step 0: Alignment/TE Reference
 #### Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
