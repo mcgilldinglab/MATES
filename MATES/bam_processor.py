@@ -1,193 +1,132 @@
 import subprocess
 import os
 import math
+from MATES.scripts.helper_function import *
 
-def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind = 'CR', long_read = False, bc_path_file=None):
-    if data_mode != "10X" and data_mode != "Smart_seq":
+def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind='CR', long_read=False, bc_path_file=None):
+    if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
-    # Calculate batch size and number of batches
+    # Check if the necessary files exist
+    check_file_exists(sample_list_file)
+    check_file_exists(bam_path_file)
+    if bc_path_file:
+        check_file_exists(bc_path_file)
+
     sample_count = sum(1 for line in open(sample_list_file))
-    file_batch = threads_num
-    batch_size = math.ceil(sample_count / file_batch)
-    # Split the file into batches
-    os.makedirs("./file_tmp", exist_ok=True)
-    os.makedirs("./bam_tmp", exist_ok=True)
-    if bc_path_file != None:
-        os.makedirs("./bc_tmp", exist_ok=True)
-    with open(sample_list_file, "r") as input_file:
-        for i, line in enumerate(input_file):
-            if i % batch_size == 0:
-                batch_number = i // batch_size
-                batch_file_name = f"./file_tmp/{batch_number}"
-            with open(batch_file_name, "a") as batch_file:
-                batch_file.write(line)
+    batch_size = math.ceil(sample_count / threads_num)
+    
+    # Create and split files into batches
+    split_file_into_batches(sample_list_file, batch_size, "./file_tmp")
+    split_file_into_batches(bam_path_file, batch_size, "./bam_tmp")
+    if bc_path_file:
+        split_file_into_batches(bc_path_file, batch_size, "./bc_tmp")
 
-    with open(bam_path_file, "r") as input_file:
-        for i, line in enumerate(input_file):
-            if i % batch_size == 0:
-                batch_number = i // batch_size
-                batch_bam_name = f"./bam_tmp/{batch_number}"
-            with open(batch_bam_name, "a") as bam_batch_file:
-                bam_batch_file.write(line)
-                
-
-    if bc_path_file != None:
-        with open(bc_path_file, "r") as input_file:
-            for i, line in enumerate(input_file):
-                if i % batch_size == 0:
-                    batch_number = i // batch_size
-                    batch_bc_name = f"./bc_tmp/{batch_number}"
-                with open(batch_bc_name, "a") as bc_batch_file:
-                    bc_batch_file.write(line)
     if long_read and data_mode == "10X":
-        os.makedirs("./long_read", exist_ok=True)
-        processes = []
-        for i in range(len(os.listdir('./file_tmp'))):
-            command = f"sh MATES/scripts/split_bc_long.sh ./file_tmp/{i} ./bam_tmp/{i} ./bc_tmp/{i} {bc_ind}"
-            process = subprocess.Popen(command, shell=True)
-            processes.append(process)
-        for process in processes:
-            process.wait()
+        create_directory("./long_read")
+        command_template = "sh MATES/scripts/split_bc_long.sh ./file_tmp/{i} ./bam_tmp/{i} ./bc_tmp/{i} " + bc_ind
+        num_batches = len(os.listdir('./file_tmp'))
+        run_command_in_batches(command_template, num_batches)
         print("Finish splitting sub-bam for long read data.")
-    elif not long_read:
+    else:
         print("Start splitting bam files into unique/multi reads sub-bam files ...")
-        os.makedirs("./unique_read", exist_ok=True)
-        os.makedirs("./multi_read", exist_ok=True)
-        processes = []
-        for i in range(len(os.listdir('./file_tmp'))):
-            command = f"sh MATES/scripts/split_u_m.sh ./file_tmp/{i} ./bam_tmp/{i}"
-            process = subprocess.Popen(command, shell=True)
-            processes.append(process)
-        for process in processes:
-            process.wait()
+        create_directory("./unique_read")
+        create_directory("./multi_read")
+        command_template = "sh MATES/scripts/split_u_m.sh ./file_tmp/{i} ./bam_tmp/{i}"
+        num_batches = len(os.listdir('./file_tmp'))
+        run_command_in_batches(command_template, num_batches)
         print("Finish splitting bam files into unique reads and multi reads sub-bam files.")
 
         if data_mode == "10X":
-            if bc_path_file == None:
-                raise ValueError('bc_path_file == None. Please provide barcodes file for 10X data!')
+            if not bc_path_file:
+                raise ValueError('Please provide barcodes file for 10X data!')
 
             print("Start splitting multi sub-bam based on cell barcodes...")
-            
-            processes = []
-            for i in range(len(os.listdir('./file_tmp'))):
-                command = f"sh MATES/scripts/split_bc_u.sh ./file_tmp/{i} ./bc_tmp/{i} {bc_ind}"
-                process = subprocess.Popen(command, shell=True)
-                processes.append(process)
-            for process in processes:
-                process.wait()
+            command_template = "sh MATES/scripts/split_bc_u.sh ./file_tmp/{i} ./bc_tmp/{i} " + bc_ind
+            run_command_in_batches(command_template, num_batches)
             print("Finish splitting unique sub-bam.")
-            
-            processes = []
-            for i in range(len(os.listdir('./file_tmp'))):
-                command = f"sh MATES/scripts/split_bc_m.sh ./file_tmp/{i} ./bc_tmp/{i} {bc_ind}"
-                process = subprocess.Popen(command, shell=True)
-                processes.append(process)
 
-            for process in processes:
-                process.wait()
-
+            command_template = "sh MATES/scripts/split_bc_m.sh ./file_tmp/{i} ./bc_tmp/{i} " + bc_ind
+            run_command_in_batches(command_template, num_batches)
             print("Finish splitting multi sub-bam.")
 
-    subprocess.run(["rm", "-r", "./file_tmp"], check=True)
-    subprocess.run(["rm", "-r", "./bam_tmp"], check=True)
-    if bc_path_file != None:
-        subprocess.run(["rm", "-r", "./bc_tmp"], check=True)
-    ## Call the function to split bam files
-    #split_bam_files(data_mode, threads_num, file_name, path_to_bam)
+    remove_directory("./file_tmp")
+    remove_directory("./bam_tmp")
+    if bc_path_file:
+        remove_directory("./bc_tmp")
 
-##### Count coverage vector #####
-def count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None):
-    if data_mode != "10X" and data_mode != "Smart_seq":
+def count_coverage_vec(TE_mode, ref_path, data_mode, threads_num, sample_list_file, building_mode='5prime', bc_path_file=None):
+    if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    if building_mode not in ["3prime", "5prime"]:
+        raise ValueError("Invalid building mode. Supported formats are building coverage vector from '3prime' or '5prime'.")
+    if TE_mode not in ["inclusive", "exclusive"]:
+        raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
 
+    if ref_path == 'Default':
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_Full.csv'
+    else:
+        TE_ref_path = ref_path
 
-    if TE_mode == "exclusive":
-        TE_ref_path = 'TE_nooverlap.csv'
-    else: 
-        TE_ref_path = 'TE_Full.csv'
-    os.makedirs("./tmp", exist_ok=True)
+    # Check if the necessary files exist
+    check_file_exists(TE_ref_path)
+    check_file_exists(sample_list_file)
+    if bc_path_file:
+        check_file_exists(bc_path_file)
+
+    create_directory("./tmp")
+    create_directory("./count_coverage")
+
     if data_mode == "Smart_seq":
         sample_count = sum(1 for line in open(sample_list_file)) + 1
-        file_batch = threads_num
-
-        result = sample_count / file_batch
-        sample_per_batch = int(result + 0.5)
-        os.makedirs("./count_coverage", exist_ok=True)
-        processes = []
-        for i in range(file_batch):
-            command = f"python MATES/scripts/count_coverage_Smartseq.py {sample_list_file} {i} {sample_per_batch} {TE_ref_path}"
-            process = subprocess.Popen(command, shell=True)
-            processes.append(process)
-
-        for process in processes:
-            process.wait()
-
+        batch_size = math.ceil(sample_count / threads_num)
+        command_template = f"python MATES/scripts/count_coverage_Smartseq.py {sample_list_file} {{i}} {batch_size} {TE_ref_path} {TE_mode}"
+        run_command_in_batches(command_template, threads_num)
     elif data_mode == "10X":
-        with open(sample_list_file) as sample_file:
-            sample_name = [line.rstrip('\n') for line in sample_file]
-        with open(bc_path_file) as bc_file:
-            barcodes_paths = [line.rstrip('\n') for line in bc_file]
-        os.makedirs("./count_coverage", exist_ok=True)
-        for idx, sample in enumerate(sample_name):
+        sample_names = read_file_lines(sample_list_file)
+        barcodes_paths = read_file_lines(bc_path_file)
+
+        for idx, sample in enumerate(sample_names):
             sample_count = sum(1 for line in open(barcodes_paths[idx])) + 1
-            file_batch = threads_num
+            batch_size = math.ceil(sample_count / threads_num)
+            command_template = f"python MATES/scripts/count_coverage_10X.py {sample} {{i}} {batch_size} {barcodes_paths[idx]} {TE_ref_path} {TE_mode}"
+            run_command_in_batches(command_template, threads_num)
 
-            result = sample_count / file_batch
-            sample_per_batch = int(result + 0.5)
+    remove_directory("./tmp")
 
-            processes = []
-            for i in range(file_batch):
-                command = f"python MATES/scripts/count_coverage_10X.py {sample} {i} {sample_per_batch} {barcodes_paths[idx]} {TE_ref_path}"
-                process = subprocess.Popen(command, shell=True)
-                processes.append(process)
-
-            for process in processes:
-                process.wait()
-    subprocess.run(["rm", "-r", "./tmp"], check=True)
-    
-def count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None):
-    if data_mode != "10X" and data_mode != "Smart_seq":
+def count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, ref_path='Default', bc_path_file=None):
+    if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    if TE_mode not in ["inclusive", "exclusive"]:
+        raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
 
-    if TE_mode == "exclusive":
-        TE_ref_path = 'TE_nooverlap.csv'
-    else: 
-        TE_ref_path = 'TE_Full.csv'
-    os.makedirs("./tmp", exist_ok=True)
+    if ref_path == 'Default':
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_Full.csv'
+    else:
+        TE_ref_path = ref_path
+
+    # Check if the necessary files exist
+    check_file_exists(TE_ref_path)
+    check_file_exists(sample_list_file)
+    if bc_path_file:
+        check_file_exists(bc_path_file)
+
+    create_directory("./tmp")
+    create_directory("./count_coverage")
+
     if data_mode == "Smart_seq":
         sample_count = sum(1 for line in open(sample_list_file)) + 1
-        file_batch = threads_num
-        result = sample_count / file_batch
-        sample_per_batch = int(result + 0.5)
-        os.makedirs("./count_coverage", exist_ok=True)
-        processes = []
-        for i in range(file_batch):
-            command = f"python MATES/scripts/count_Uread_Smartseq.py {sample_list_file} {i} {sample_per_batch} {bam_dir} {TE_ref_path}"
-            process = subprocess.Popen(command, shell=True)
-            processes.append(process)
-        for process in processes:
-            process.wait()
-            
+        batch_size = math.ceil(sample_count / threads_num)
+        command_template = f"python MATES/scripts/count_Uread_Smartseq.py {sample_list_file} {{i}} {batch_size} {TE_ref_path}"
+        run_command_in_batches(command_template, threads_num)
     elif data_mode == "10X":
-        ## TODO
-        with open(sample_list_file) as sample_file:
-            sample_name = [line.rstrip('\n') for line in sample_file]
-        with open(bc_path_file) as bc_file:
-            barcodes_paths = [line.rstrip('\n') for line in bc_file]
-        os.makedirs("./count_coverage", exist_ok=True)
-        for idx, sample in enumerate(sample_name):
+        sample_names = read_file_lines(sample_list_file)
+        barcodes_paths = read_file_lines(bc_path_file)
+
+        for idx, sample in enumerate(sample_names):
             sample_count = sum(1 for line in open(barcodes_paths[idx])) + 1
-            file_batch = threads_num
+            batch_size = math.ceil(sample_count / threads_num)
+            command_template = f"python MATES/scripts/count_Uread_10X.py {sample} {{i}} {batch_size} {barcodes_paths[idx]} {TE_ref_path}"
+            run_command_in_batches(command_template, threads_num)
 
-            result = sample_count / file_batch
-            sample_per_batch = int(result + 0.5)
-
-            processes = []
-            for i in range(file_batch):
-                command = f"python MATES/scripts/count_Uread_10X.py {sample} {i} {sample_per_batch} {barcodes_paths[idx]} {TE_ref_path}"
-                process = subprocess.Popen(command, shell=True)
-                processes.append(process)
-            for process in processes:
-                process.wait()
-    subprocess.run(["rm", "-r", "./tmp"], check=True)
+    remove_directory("./tmp")

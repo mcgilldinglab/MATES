@@ -74,7 +74,7 @@ def get_coverage_vector(aligned_file,chromosome,start,end,total_reads):
     coverage_vector = coverage_vector/(total_reads)
     return coverage_vector, coverage_vector_igv
 
-def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, sav_vec = True):
+def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir, sav_vec = True):
     TE_index_list = []
     TE_region_read_num = []
     IGV_vecs = []   
@@ -84,7 +84,7 @@ def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, sav_vec = True):
     sample_name = samp_bc[0]
     bc = samp_bc[1]
     cur_path = os.getcwd()
-    path = join(cur_path, 'count_coverage/'+sample_name)
+    path = join(cur_path, coverage_stored_dir, sample_name)
     if not os.path.exists(path):
         os.mkdir(path)
     path = join(path, bc)
@@ -147,7 +147,7 @@ def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, sav_vec = True):
     aligned_file.close() 
     return TE_index_list
 
-def generate_multi_matric(samp_bc, path_to_bam, TE_ref_bed):
+def generate_multi_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir):
     TE_index_list = []
     TE_region_read_num = []
     
@@ -157,7 +157,7 @@ def generate_multi_matric(samp_bc, path_to_bam, TE_ref_bed):
     sample_name = samp_bc[0]
     bc = samp_bc[1]
     cur_path = os.getcwd()
-    path = join(cur_path, 'count_coverage/' + sample_name)
+    path = join(cur_path, coverage_stored_dir, sample_name)
     path = join(path, bc)
     if not os.path.exists(path):
         os.mkdir(path)
@@ -215,20 +215,15 @@ batch = int(sys.argv[2])
 batch_size = int(sys.argv[3])
 barcodes_file = sys.argv[4]
 TE_ref_path = sys.argv[5]
+TE_mode = sys.argv[6]
 
-
-# def build_coverage_vector(file_name, batch, batch_size) :
-# with open('./'+file_name) as file:
-#     sample_list = file.readlines()
-# for i in range(len(sample_list)):
-#     sample_list[i] = sample_list[i][:-1]
+coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'Intronic' else 'count_coverage'
 cur_path = os.getcwd()
-if not os.path.exists(join(cur_path,'count_coverage')):
-    os.mkdir(join(cur_path,'count_coverage'))
+if not os.path.exists(join(cur_path,coverage_stored_dir)):
+    os.mkdir(join(cur_path,coverage_stored_dir))
 
-# for sample in sample_list:
-if not os.path.exists(join(cur_path,'count_coverage/'+sample)):
-    os.mkdir(join(cur_path,'count_coverage/'+sample))
+if not os.path.exists(join(cur_path,join(coverage_stored_dir,sample))):
+    os.mkdir(join(cur_path,join(coverage_stored_dir,sample)))
 unique_path = join(cur_path,'unique_read/'+sample)
 unique_path = join(unique_path, 'by_barcode')
 multi_path = join(cur_path, 'multi_read/'+sample)
@@ -260,27 +255,28 @@ for bc in barcodes[start_idx: end_idx]:
 
     ## if the sample do not have multi mapping reads, save unique info, continue
     if not os.path.exists(path_to_multi_bam):
-        TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, sav_vec = False)
-        k_path = cur_path+'/count_coverage/'+sample+'/'+bc
+        TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, coverage_stored_dir,sav_vec = False)
+        k_path = join(cur_path, coverage_stored_dir, sample, bc)
         k_path_u = k_path + '/unique_vec'
         os.rmdir(k_path_u)        
         continue
-
     
-    TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, sav_vec = True)
-    TE_index_list_multi = generate_multi_matric(samp_bc, path_to_multi_bam, TE_ref_bed)
+    TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, coverage_stored_dir, sav_vec = True)
+    TE_index_list_multi = generate_multi_matric(samp_bc, path_to_multi_bam, TE_ref_bed, coverage_stored_dir)
     overlap = list(set(TE_index_list_unique) & set(TE_index_list_multi))
     
     ## remove unique reads coverage vector not in overlap list
-    for rname in os.listdir(cur_path+'/count_coverage/'+sample+'/'+bc+'/unique_vec'):
+    k_path = join(cur_path, coverage_stored_dir, sample, bc)
+    k_path_u = join(k_path, 'unique_vec')
+    k_path_m = join(k_path, 'multi_vec')
+    
+    for rname in os.listdir(k_path_u):
         if int(rname[:-4]) not in overlap:
-            r_path = cur_path+'/count_coverage/'+sample+'/'+bc+'/unique_vec/'+str(rname)
+            r_path = join(k_path_u, str(rname))
             if os.path.isfile(r_path):
                 os.remove(r_path)
 
     ## save full multi TE for prediction    
-    k_path = cur_path+'/count_coverage/'+sample+'/'+bc
-    k_path_m = k_path + '/multi_vec'
     k_m = []
     k_meta = TE_index_list_multi
     for kname in k_meta:
@@ -292,20 +288,21 @@ for bc in barcodes[start_idx: end_idx]:
     with open(join(k_path,"meta_multi_full.npz"),'wb') as f:
         pickle.dump(k_meta,f)
 
-    for rname in os.listdir(cur_path+'/count_coverage/'+sample+'/'+bc+'/multi_vec'):
+    for rname in os.listdir(k_path_m):
         if int(rname[:-4]) not in overlap:
-            h_path = cur_path+'/count_coverage/'+sample+'/'+bc+'/multi_vec/'+str(rname)
+            h_path = join(k_path_m, str(rname))
             if os.path.isfile(h_path):
                 os.remove(h_path)        
 
     ## save samples could use for training
-    k_path = cur_path+'/count_coverage/'+sample+'/'+bc
-    k_path_u = k_path + '/unique_vec'
-    k_path_m = k_path + '/multi_vec'
+    k_path = join(cur_path, coverage_stored_dir, sample, bc)
+    k_path_u = join(k_path, 'unique_vec')
+    k_path_m = join(k_path, 'multi_vec')
+    
     k_u = []
     k_m = []
-    k_meta = overlap
-    for kname in k_meta:
+    k_overlap = overlap
+    for kname in k_overlap:
         data_u = scipy.sparse.load_npz(join(k_path_u, str(kname)+'.npz'))
         k_u.append(data_u.toarray()[0])
         if os.path.isfile(join(k_path_u, str(kname)+'.npz')):
@@ -322,11 +319,11 @@ for bc in barcodes[start_idx: end_idx]:
     scipy.sparse.save_npz(join(k_path,"unique.npz"), unique_mtx)
     scipy.sparse.save_npz(join(k_path,"multi.npz"), multi_mtx)
     with open(join(k_path,"meta.npz"),'wb') as f:
-        pickle.dump(k_meta,f)
+        pickle.dump(k_overlap,f)
     
     shutil.rmtree(k_path_u)
     shutil.rmtree(k_path_m)
-    os.remove(cur_path+'/count_coverage/'+sample+'/'+bc+'/count.txt')
+    os.remove(join(k_path,'count.txt'))
 
     counted += 1
     if counted % 10 == 0 or counted == batch_size:

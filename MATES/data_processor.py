@@ -2,58 +2,72 @@ import os
 from MATES.scripts.calculate_MU import calculate_MU
 from MATES.scripts.generateTraining import generate_Training
 from MATES.scripts.generatePrediction import generate_Prediction
+from MATES.scripts.helper_function import *
 
-
-def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None):
-    if TE_mode == "exclusive":
-        TE_ref_path = './TE_nooverlap.csv'
-    else: 
-        TE_ref_path = './TE_Full.csv'
-    if data_mode != "10X" and data_mode != "Smart_seq":
+def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, ref_path = 'Default', bc_path_file=None):
+    if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    if TE_mode not in ["inclusive", "exclusive"]:
+        raise ValueError("Invalid TE mode. Supported formats mode 'inclusive' or 'exlusive'.")
 
-    os.makedirs("MU_Stats", exist_ok=True)
+    if ref_path == 'Default':
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_Full.csv'
+    else:
+        TE_ref_path = ref_path
+
+    create_directory("MU_Stats")
+
+    # Check if the necessary files exist
+    check_file_exists(TE_ref_path)
+    check_file_exists(sample_list_file)
+    if bc_path_file:
+        check_file_exists(bc_path_file)
 
     if data_mode == "10X":
-        with open(sample_list_file) as sample_file:
-            sample_name = [line.rstrip('\n') for line in sample_file]
-        with open(bc_path_file) as bc_file:
-            barcodes_paths = [line.rstrip('\n') for line in bc_file]
-        for idx, sample in enumerate(sample_name):
-            calculate_MU(data_mode, sample, bin_size, proportion, TE_ref_path, barcodes_paths[idx])
+        sample_names = read_file_lines(sample_list_file)
+        barcodes_paths = read_file_lines(bc_path_file)
+        
+        for sample, barcodes_path in zip(sample_names, barcodes_paths):
+            calculate_MU(data_mode, sample, bin_size, proportion, TE_ref_path, barcodes_path)
     elif data_mode == 'Smart_seq':
-         calculate_MU(data_mode, sample_list_file, bin_size, proportion, TE_ref_path)
-
+        calculate_MU(data_mode, sample_list_file, bin_size, proportion, TE_ref_path)
 
 def generate_training_sample(data_mode, sample_list_file, bin_size, proportion):
-    if data_mode != "10X" and data_mode != "Smart_seq":
+    if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
-
     
-    if data_mode == "10X":
-        with open(sample_list_file) as sample_file:
-            sample_name = [line.rstrip('\n') for line in sample_file]
-        for idx, sample in enumerate(sample_name):
-            generate_Training(data_mode, sample, bin_size, proportion)
-    elif data_mode == 'Smart_seq':
-        generate_Training(data_mode, sample_list_file, bin_size, proportion)
-        
-def generate_prediction_sample(TE_mode, data_mode,sample_list_file, bin_size, proportion, bc_path_file=None):
-    if TE_mode == "exclusive":
-        TE_ref_path = './TE_nooverlap.csv'
-    else: 
-        TE_ref_path = './TE_Full.csv'
-    if data_mode != "10X" and data_mode != "Smart_seq":
+    # Check if the necessary files exist
+    check_file_exists(sample_list_file)
+
+    sample_names = read_file_lines(sample_list_file) if data_mode == "10X" else [sample_list_file]
+    
+    for sample in sample_names:
+        generate_Training(data_mode, sample, bin_size, proportion)
+
+def generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, proportion, ref_path = 'Default', bc_path_file=None):
+    if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
+    if TE_mode not in ["inclusive", "exclusive"]:
+        raise ValueError("Invalid TE mode. Supported formats mode 'inclusive' or 'exlusive'.")
 
-    os.makedirs("MU_Stats", exist_ok=True)
+    if ref_path == 'Default':
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_Full.csv'
+    else:
+        TE_ref_path = ref_path
+    
+    create_directory("MU_Stats")
+
+    # Check if the necessary files exist
+    check_file_exists(TE_ref_path)
+    check_file_exists(sample_list_file)
+    if bc_path_file:
+        check_file_exists(bc_path_file)
 
     if data_mode == "10X":
-        with open(sample_list_file) as sample_file:
-            sample_name = [line.rstrip('\n') for line in sample_file]
-        with open(bc_path_file) as bc_file:
-            barcodes_paths = [line.rstrip('\n') for line in bc_file]
-        for idx, sample in enumerate(sample_name):
-            generate_Prediction(data_mode,sample,bin_size, proportion, TE_ref_path, barcodes_paths[idx])
+        sample_names = read_file_lines(sample_list_file)
+        barcodes_paths = read_file_lines(bc_path_file)
+        
+        for sample, barcodes_path in zip(sample_names, barcodes_paths):
+            generate_Prediction(data_mode, sample, bin_size, proportion, TE_ref_path, barcodes_path)
     elif data_mode == 'Smart_seq':
-        generate_Prediction(data_mode,sample_list_file,bin_size, proportion, TE_ref_path)
+        generate_Prediction(data_mode, sample_list_file, bin_size, proportion, TE_ref_path)
