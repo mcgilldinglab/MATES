@@ -128,8 +128,8 @@ def read_sample_list(file_path):
         return [line.strip() for line in file]
 
 def setup_directories(base_folder):
-    dump_folder = os.path.join(base_folder, 'pickle_dump')
-    parsed_folder = os.path.join(base_folder, 'pickle_parsed')
+    dump_folder = os.path.join('Velocyto', base_folder, 'pickle_dump')
+    parsed_folder = os.path.join('Velocyto', base_folder, 'pickle_parsed')
     
     os.makedirs(parsed_folder, exist_ok=True)
     
@@ -177,7 +177,7 @@ def main(sample_list_file):
     sample_list = read_sample_list(sample_list_file)
     
     for folder in sample_list:
-        print(folder)
+        print("Parsing output of velocyto for sample " + folder)
         dump_folder, f_spliced, f_unspliced, f_ambiguous = setup_directories(folder)
         process_files(dump_folder, f_spliced, f_unspliced, f_ambiguous)
         

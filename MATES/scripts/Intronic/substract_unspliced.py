@@ -4,9 +4,9 @@ import os
 from scipy.io import mmread
 
 def get_sample_tedf(sample_name,batch, TEs_tmp):
-    mtx_tmp = mmread('unique_locus_intron/'+sample_name+'/matrix_'+str(batch)+'.mtx').toarray()
-    obs_tmp = pd.read_csv('unique_locus_intron/'+sample_name+'/barcodes_'+str(batch)+'.csv').squeeze()
-    var_tmp = pd.read_csv('unique_locus_intron/'+sample_name+'/features_'+str(batch)+'.csv').squeeze()
+    mtx_tmp = mmread('10X_intron/Unique/'+sample_name+'/matrix.mtx').toarray()
+    obs_tmp = pd.read_csv('10X_intron/Unique/'+sample_name+'/barcodes.csv').squeeze()
+    var_tmp = pd.read_csv('10X_intron/Unique/'+sample_name+'/features.csv').squeeze()
     df_tmp = pd.DataFrame(mtx_tmp, index=var_tmp, columns=obs_tmp)
     df_tmp = df_tmp.merge(TEs_tmp, on ='TE_index')
     df_tmp.index = df_tmp['TE_index']
@@ -21,7 +21,7 @@ def subtract_unspliced(te_df,unspliced_df):
 
 def process_sample(sample_name,TEs_tmp_name, TEs_tmp):
     unspliced_df = pd.read_csv('Velocyto/'+sample_name+'/velocyto_unspliced.csv', skiprows=[0,2], header=0, index_col = 0)
-    batches = len(os.listdir('unique_locus_intron/'+sample_name))
+    batches = len(os.listdir('10X_intron/Unique/'+sample_name))
     batches = batches//3
     print('Processing ' + sample_name + ', containing '+str(batches) + ' batches...')
     for batch in tqdm(range(batches), total = batches):
@@ -37,4 +37,4 @@ def process_sample(sample_name,TEs_tmp_name, TEs_tmp):
     Unique_TE = Unique_TE.fillna(0)
     Unique_TE = Unique_TE.groupby(Unique_TE.index).sum()
     Unique_TE = Unique_TE.drop_duplicates()
-    Unique_TE.to_csv('unique_locus_intron/'+sample_name+'/Unique_Processed_MTX.csv')
+    Unique_TE.to_csv('10X_intron/Unique/'+sample_name+'/Unique_Processed_MTX.csv')
