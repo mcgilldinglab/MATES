@@ -30,4 +30,4 @@ pip install velocyto
 conda install ipykernel
 python -m ipykernel install --user --name=mates_env
 ```
-For a detailed implementation example, refer to [this Jupyter Notebook.](https://github.com/mcgilldinglab/MATES/blob/main/Sample/sample_pipeline.ipynb)
+## For a detailed implementation example, refer to [this Jupyter Notebook.](https://github.com/mcgilldinglab/MATES/blob/main/Sample/sample_pipeline.ipynb)
