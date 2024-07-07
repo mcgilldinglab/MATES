@@ -271,10 +271,14 @@ The processed TE refernce can be found in TE_ref folder with two different speci
 
 To generate TE reference, simply run:
 ```sh
-python build_reference.py Mouse
-python build_reference.py Human
+## build_reference.py requires three arguments:
+## '--species', type=str, choices=['Mouse', 'Human', 'Other']
+## '--cut_mode', type=str, default='5prime', choices=['5prime', '3prime']
+## '--cut_length', type=int, default=1000
+python build_reference.py --species Mouse 
+python build_reference.py --species Human
 ```
-If you have speciese other than human/mouse, downloaded TE reference in csv format and gene refrence in GTF format from UCSC table browser, run:
+If you have species other than human/mouse, downloaded TE reference in csv format and gene refrence in GTF format from UCSC table browser, run:
 ```sh
 python build_reference.py Other path_to_TE_reference path_to_Gene_reference
 ```
