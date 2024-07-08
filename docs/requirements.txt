@@ -38,7 +38,6 @@ PyJWT==2.3.0
 pylint==2.9.6
 pymc3==3.11.4
 pynndescent==0.5.4
-pyodbc==4.0.32
 pyOpenSSL==21.0.0
 pyparsing==3.0.6
 PyQt5-sip==12.9.0
