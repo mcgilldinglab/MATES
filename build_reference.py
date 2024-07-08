@@ -59,8 +59,11 @@ def main():
     for chromsome in Gene_chr:
         if chromsome not in TE_chr:
             diff_list.append(chromsome)
-    cur_path = os.path.abspath(os.getcwd())
-    chr_name = pd.read_csv(cur_path+"/hg38.chromAlias.txt",sep = '\t')
+    script_path = pkg_resources.resource_filename('MATES', 'hg38.chromAlias.txt')
+    parent_dir = os.path.dirname(os.path.dirname(script_path))
+    # Construct the correct path to the file
+    correct_path = os.path.join(parent_dir, 'hg38.chromAlias.txt')
+    chr_name = pd.read_csv(correct_path,sep = '\t')
     diff_ref = chr_name[chr_name['genbank'].isin(diff_list)].iloc[:,[0,3]]
     diff_ref.columns = ['TE_chrom','Gene_chrom']
 

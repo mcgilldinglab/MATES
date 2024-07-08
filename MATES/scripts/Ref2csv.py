@@ -63,7 +63,7 @@ def download_and_process_files(species, ref_mode):
 
     genes = pr.read_gtf(gtf_file)
     Genes = genes[['Chromosome', 'Feature', 'Start', 'End', 'Strand', 'gene_id', 'gene_name']]
-    Genes.to_csv(f'{species.lower()}_Genes.csv', index=False)
+    Genes.to_csv(f'{species.lower()}_Genes.csv')
 
 if __name__ == "__main__":
     species = sys.argv[1]
