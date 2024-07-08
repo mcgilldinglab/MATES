@@ -15,7 +15,7 @@ setup(
         "pybedtools==0.10.0",
         "pysam==0.22.1",
         "scipy==1.11.2",
-        "torch==2.0.1",
+        "torch==2.0.0",
         "tqdm==4.66.1",
         "pyranges==0.0.129"
     ],
