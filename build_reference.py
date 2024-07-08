@@ -30,25 +30,15 @@ def main():
     cut_length = args.cut_length
     build_intronic = args.intronic
 
-    if species == 'Mouse':
+    if species in ['Mouse', 'Human']:
         script_path = pkg_resources.resource_filename('MATES', 'scripts/Ref2csv.py')
         command = f"python {script_path} {species} {ref_mode} {build_intronic}" 
         os.system(command)
-        TEs = pd.read_csv('mm_TEs.csv')
-        TE_ref = TEs.rename(columns={'Unnamed: 0':'index'})
-        TE_ref = TE_ref.iloc[1:]
+        TEs = pd.read_csv(f'{species.lower()}_TEs.csv')
+        TE_ref = TEs
+        TE_ref['index'] = TE_ref.index
         TE = TE_ref[['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']]
-        genes = pd.read_csv("mm_Genes.csv") 
-
-    elif species == 'Human':
-        script_path = pkg_resources.resource_filename('MATES', 'scripts/Ref2csv.py')
-        command = f"python {script_path} {species} {ref_mode} {build_intronic}" 
-        os.system(command)
-        TEs = pd.read_csv('hg_TEs.csv')
-        TE_ref = TEs.rename(columns={'Unnamed: 0':'index'})
-        TE_ref = TE_ref.iloc[1:]
-        TE = TE_ref[['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']]
-        genes = pd.read_csv("hg_Genes.csv")
+        genes = pd.read_csv(f"{species.lower()}_Genes.csv")
         
     elif species == 'Other':
         TEs = pd.read_csv(args.other_species_TE)

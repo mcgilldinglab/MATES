@@ -1,1 +1,1 @@
-./sample_data/test/sorted_final_merged.bam
+./sample_data/sorted_final_merged.bam

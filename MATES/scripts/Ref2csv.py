@@ -32,6 +32,7 @@ def download_and_process_files(species, ref_mode):
     os.system(f"gzip -d {gtf_file}")
 
     repeatmasker_file = repeatmasker_file.replace('.gz', '')
+    gtf_file =  gtf_file.replace('.gz', '')
     new_out_file = repeatmasker_file.replace('.fa.out', '.new.out')
 
     with open(repeatmasker_file, 'r') as infile:
