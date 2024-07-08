@@ -31,9 +31,11 @@ pip install velocyto
 conda install ipykernel
 python -m ipykernel install --user --name=mates_env
 ```
+
+## Sample workflow template
+
 ### For a detailed implementation example, refer to [this Jupyter Notebook.](https://github.com/mcgilldinglab/MATES/blob/main/Sample/sample_pipeline.ipynb)
 
-### Sample workflow template
 ### Step 0: Alignment/TE Reference
 #### Alignment
 The raw fastq files are aligned using STAR-Solo for 10X scRNA-seq / scATAC-seq Data and STAR for Smart-Seq2 scRNA-seq Data to reserve multimapping reads. 
