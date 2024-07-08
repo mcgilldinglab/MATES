@@ -6,11 +6,13 @@ build:
   tools:
     python: "3.9"
   
-  python:
-    install:
-    - method: pip
-      path: .
-
+python:
+  install:
+  - method: pip
+    path: .
+    extra_requirements:
+    - doc
+    
 sphinx:
   configuration: docs/conf.py
 
