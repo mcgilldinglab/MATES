@@ -3,26 +3,26 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to MATES's documentation!
+MATES documentations
 =================================
+**MATES** is A Deep Learning-Based Model for Quantifying Transposable Elements in Single-Cell Sequencing Data. It is developed and maintained by the `Ding Lab <https://junding.lab.mcgill.ca/>`_  at McGill University. 
 
-Contents:
+.. image:: _static/Model-figure.pdf
+   :width: 800
+   :alt: Model piepline
+
+Check out the :doc:`usage` section for further information, including
+how to :ref:`installation` the project.
+
+.. note::
+
+   This project is under active development.
+
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Getting started with UNAGI:
 
+   api
    usage
-   bam_processor
-   data_processor
-   MATES_model
-   TE_quantifier
-   TE_quantifier_LongRead
-   TE_quantifier_Intronic
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

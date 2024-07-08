@@ -12,41 +12,94 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
+import MATES
+# sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'MATES'
-copyright = '2024, Ruohan Wang'
+copyright = 'Ding Lab at McGill University'
 author = 'Ruohan Wang'
 
 
 # -- General configuration ---------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
 extensions = [
+    'recommonmark',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.mathjax',
+    'sphinx_autodoc_typehints',
+    'sphinx_copybutton',
+    'nbsphinx','myst_nb'
 ]
+html_theme = 'sphinx_rtd_theme'
+html_favicon = '_static/icon.png'
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
+}
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+html_show_sourcelink = True
+set_type_checking_flag = True
+typehints_fully_qualified = True
+napoleon_use_rtype = False
+autosummary_generate = True
+autosummary_generate_overwrite = True
+autodoc_preserve_defaults = True
+autodoc_inherit_docstrings = True
+autodoc_default_options = {
+    'autosummary': True
+}
+
+nb_output_stderr = "remove"
+nb_execution_mode = "off"
+nbsphinx_execute = 'never'
+
+# -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = 'alabaster'
+# Readthedocs theme
+# on_rtd is whether on readthedocs.org, this line of code grabbed from docs.readthedocs.org...
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    import sphinx_rtd_theme
+    html_theme = "sphinx_rtd_theme"
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_css_files = ["readthedocs-custom.css"] # Override some CSS settings
+
+# Pydata theme
+#html_theme = "pydata_sphinx_theme"
+#html_logo = "_static/logo-company.png"
+#html_theme_options = { "show_prev_next": False}
+#html_css_files = ['pydata-custom.css']
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+myst_enable_extensions = [
+    "amsmath",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "html_image",
+    "html_admonition",
+]
+
+myst_commonmark_only = False  # or True, depending on your preference
+templates_path = ['_templates']
+html_static_path = ['_static']
+source_suffix = {".rst": "restructuredtext", ".ipynb": "myst-nb"}
+master_doc = 'index'
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']

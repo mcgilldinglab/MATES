@@ -11,6 +11,10 @@ from MATES import TE_quantifier
 from MATES import TE_quantifier_LongRead
 from MATES import TE_quantifier_Intronic
 ```
+.. autosummary::
+   :toctree: generated
+
+   lumache
 
 Documentaions for the MATES package.
 
