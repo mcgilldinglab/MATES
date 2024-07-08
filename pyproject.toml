@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "MATES"
 authors = [{name = "Ruohan Wang", email = "ruohan_wang@brown.edu"}]
-
+version = "1.2.0"
 license = {file = "LICENSE.txt"}
 readme = "README.md"
 
