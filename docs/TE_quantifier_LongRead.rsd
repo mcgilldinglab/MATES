@@ -1,0 +1,18 @@
+TE_quantifier_LongRead
+======================
+
+The `TE_quantifier_LongRead` module facilitates the quantification of TE expression from unique mapping reads at the locus level for Long Read data.
+
+Functions
+---------
+
+.. function:: quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file)
+
+    Quantifies TE expression at the locus level.
+
+    **Parameters:**
+
+    - **TE_mode** : `<str>` exclusive or inclusive, represents whether to remove TE instances overlapping with genes
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **long_read** : `<bool>` whether you're quantifying long read data

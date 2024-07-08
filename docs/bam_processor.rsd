@@ -1,0 +1,56 @@
+bam_processor
+=============
+
+The `bam_processor` module efficiently manages input BAM files by partitioning them into sub-BAM files for individual cells, distinguishing unique mapping from multi-mapping reads. It also constructs TE-specific coverage vectors, shedding light on read distributions around TE instances at the single-cell level, enabling accurate TE quantification and comprehensive cellular characterization.
+
+Functions
+---------
+
+.. function:: split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind=None, bc_path_file=None)
+
+    Splits BAM files into sub-BAM files for individual cells.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **threads_num** : `<int>` thread numbers to process bam file (CPU number). Note for 10X data with only one sample, you only need 1 thread here.
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bam_path_file** : `<str>` path to file containing matching BAM file addresses of samples in sample list
+    - **bc_ind** : `<str>` barcode field indicator in BAM files, e.g., CB/CR
+    - **bc_path_file** (optional) : `<str>` path to file containing matching barcodes list addresses of samples in sample list
+
+.. function:: count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, ref_path="Default", bc_path_file=None)
+
+    Constructs TE-specific coverage vectors.
+
+    **Parameters:**
+
+    - **TE_mode** : `<str>` exclusive or inclusive, represents whether to remove TE instances overlapping with genes (for intronic, refer to below section)
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **threads_num** : `<int>` thread numbers to process bam file (CPU number)
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **ref_path** (optional) : `<str>` only needed for self-generated reference; provide path to reference. By default, exclusive has reference `TE_nooverlap.csv` and inclusive has reference `TE_full.csv`.
+    - **bc_path_file** (optional) : `<str>` only needed for 10X data; path to file containing matching barcodes list addresses of samples in sample list
+
+TE Quantification on Long Reads
+-------------------------------
+
+To perform TE quantification on Long Reads data, use `split_bam_files` based on your sequencing platform. Instead of using `count_coverage_vec`, use the following function:
+
+.. function:: count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir, ref_path="Default", bc_path_file=None)
+
+    Counts long reads for TE quantification.
+
+    **Parameters:**
+
+    - **TE_mode** : `<str>` exclusive or inclusive, represents whether to remove TE instances overlapping with genes
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **threads_num** : `<int>` thread numbers to process bam file (CPU number)
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bam_dir** : `<str>` path to directory containing sample BAM files
+    - **ref_path** (optional) : `<str>` only needed for self-generated reference; provide path to reference. By default, exclusive has reference `TE_nooverlap.csv` and inclusive has reference `TE_full.csv`.
+    - **bc_path_file** (optional) : `<str>` only needed for data using barcodes to distinguish data; path to file containing matching barcodes list addresses of samples in sample list
+
+.. note::
+
+    For simplicity, in `data_mode`, use `10X` to indicate data using barcodes to distinguish data (i.e., you may have a barcode file to separate the data in the BAM file) or `Smart_seq` to indicate data that does not use barcodes to distinguish data (i.e., one BAM file per cell).

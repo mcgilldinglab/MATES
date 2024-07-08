@@ -1,0 +1,110 @@
+Usage
+=====
+
+The MATES package contains six modules:
+
+.. code-block:: python
+
+    import MATES
+    from MATES import bam_processor
+    from MATES import data_processor
+    from MATES import MATES_model
+    from MATES import TE_quantifier
+    from MATES import TE_quantifier_LongRead
+    from MATES import TE_quantifier_Intronic
+
+bam_processor
+-------------
+
+The `bam_processor` module efficiently manages input BAM files by partitioning them into sub-BAM files for individual cells, distinguishing unique mapping from multi-mapping reads. It also constructs TE-specific coverage vectors, shedding light on read distributions around TE instances at the single-cell level, enabling accurate TE quantification and comprehensive cellular characterization.
+
+Example:
+
+.. code-block:: python
+
+    bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind=None, bc_path_file=None)
+
+    bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, ref_path="Default", bc_path_file=None)
+
+To perform TE quantification on Long Reads data:
+
+.. code-block:: python
+
+    bam_processor.count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir, ref_path="Default", bc_path_file=None)
+
+data_processor
+--------------
+
+The `data_processor` module assists in computing Unique and Multi Regions, generating training samples, and summarizing the expression of multi-mapping reads for prediction.
+
+Example:
+
+.. code-block:: python
+
+    data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, ref_path="Default", bc_path_file=None)
+
+    data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
+
+    data_processor.generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, proportion, ref_path="Default", bc_path_file=None)
+
+MATES_model
+-----------
+
+The `MATES_model` module serves as the core of the MATES framework, encompassing both training and prediction functions. It is responsible for training a neural network model to accurately predict multi-mapping rates of transposable element (TE) instances based on their read coverage vectors.
+
+Example:
+
+.. code-block:: python
+
+    MATES_model.train(data_mode, sample_list_file, bin_size=5, proportion=80, BATCH_SIZE=4096, AE_LR=1e-4, MLP_LR=1e-6, AE_EPOCHS=200, MLP_EPOCHS=200, USE_GPU=True)
+
+    MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU=True)
+
+TE_quantifier
+-------------
+
+The `TE_quantifier` module facilitates the quantification of TE expression from unique mapping reads and organizes the generation of finalized TE matrix output files.
+
+Example:
+
+.. code-block:: python
+
+    TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
+
+    TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
+
+TE_quantifier_LongRead
+----------------------
+
+The `TE_quantifier_LongRead` module facilitates the quantification of TE expression from unique mapping reads at the locus level for Long Read data.
+
+Example:
+
+.. code-block:: python
+
+    TE_quantifier_LongRead.quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file)
+
+TE_quantifier_Intronic
+----------------------
+
+The `TE_quantifier_Intronic` module facilitates the quantification of TE expression in Intronic TEs.
+
+Example:
+
+.. code-block:: python
+
+    implement_velocyto(data_mode, threads_num, sample_list_file, bam_path_file, gtf_path, bc_path_file=None)
+
+    parse_velocyto_output(data_mode, threads_num, sample_list_file)
+
+    count_unspliced_reads(data_mode, threads_num, sample_list_file, ref_path='Default')
+
+    count_intronic_coverage_vec(data_mode, threads_num, sample_list_file, ref_path='Default', bc_path_file=None)
+
+    generate_prediction_sample(data_mode, sample_list_file, bin_size, proportion, ref_path='Default', bc_path_file=None)
+
+    quantify_U_TE_MTX(data_mode, sample_list_file)
+
+    quantify_M_TE_MTX(data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU=True, ref_path='Default')
+
+    correct_intronic_TE(data_mode, sample_list_file, ref_path='Default')

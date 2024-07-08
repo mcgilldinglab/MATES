@@ -1,0 +1,46 @@
+data_processor
+==============
+
+The `data_processor` module assists in computing Unique and Multi Regions, generating training samples, and summarizing the expression of multi-mapping reads for prediction.
+
+Functions
+---------
+
+.. function:: calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, ref_path="Default", bc_path_file=None)
+
+    Computes Unique and Multi Regions.
+
+    **Parameters:**
+
+    - **TE_mode** : `<str>` exclusive or inclusive, represents whether to remove TE instances overlapping with genes
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bin_size** : `<int>` size of U/M Region, default = 5
+    - **proportion** : `<int>` proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+    - **ref_path** (optional) : `<str>` only needed for self-generated reference; provide path to reference. By default, exclusive has reference `TE_nooverlap.csv` and inclusive has reference `TE_full.csv`.
+    - **bc_path_file** (optional) : `<str>` only needed for 10X data; path to file containing matching barcodes list addresses of samples in sample list
+
+.. function:: generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
+
+    Generates training samples for the model.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bin_size** : `<int>` size of U/M Region, default = 5
+    - **proportion** : `<int>` proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+
+.. function:: generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, proportion, ref_path="Default", bc_path_file=None)
+
+    Generates prediction samples for the model.
+
+    **Parameters:**
+
+    - **TE_mode** : `<str>` exclusive or inclusive, represents whether to remove TE instances overlapping with genes
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bin_size** : `<int>` size of U/M Region, default = 5
+    - **proportion** : `<int>` proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+    - **ref_path** (optional) : `<str>` only needed for self-generated reference; provide path to reference. By default, exclusive has reference `TE_nooverlap.csv` and inclusive has reference `TE_full.csv`.
+    - **bc_path_file** (optional) : `<str>` only needed for 10X data; path to file containing matching barcodes list addresses of samples in sample list

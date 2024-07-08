@@ -1,0 +1,100 @@
+TE_quantifier_Intronic
+======================
+
+The `TE_quantifier_Intronic` module facilitates the quantification of TE expression in Intronic TEs.
+
+Functions
+---------
+
+.. function:: implement_velocyto(data_mode, threads_num, sample_list_file, bam_path_file, gtf_path, bc_path_file=None)
+
+    Implements Velocyto for intronic TE quantification.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **threads_num** : `<int>`
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bam_path_file** : `<str>` path to file containing matching BAM file addresses of samples in sample list
+    - **gtf_path** : `<str>` path to the gene GTF file, this is mandatory to implement Velocyto
+    - **bc_path_file** (optional) : `<str>` path to file containing matching barcodes list addresses of samples in sample list
+
+.. function:: parse_velocyto_output(data_mode, threads_num, sample_list_file)
+
+    Parses the output from Velocyto.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **threads_num** : `<int>` threads to use (CPU number)
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+
+.. function:: count_unspliced_reads(data_mode, threads_num, sample_list_file, ref_path='Default')
+
+    Counts unspliced reads.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **threads_num** : `<int>`
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **ref_path** (optional) : `<str>` only needed for self-generated reference; provide path to reference. By default, TE reference is named `TE_intronic.csv`.
+
+.. function:: count_intronic_coverage_vec(data_mode, threads_num, sample_list_file, ref_path='Default', bc_path_file=None)
+
+    Constructs intronic TE-specific coverage vectors.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **threads_num** : `<int>` threads to use (CPU number)
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **ref_path** (optional) : `<str>` only needed for self-generated reference; provide path to reference. By default, TE reference is named `TE_intronic.csv`.
+    - **bc_path_file** (optional) : `<str>` path to file containing matching barcodes list addresses of samples in sample list
+
+.. function:: generate_prediction_sample(data_mode, sample_list_file, bin_size, proportion, ref_path='Default', bc_path_file=None)
+
+    Generates prediction samples for the model.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bin_size** : `<int>` size of U/M Region, default = 5
+    - **proportion** : `<int>` proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+    - **ref_path** (optional) : `<str>` only needed for self-generated reference; provide path to reference. By default, TE reference is named `TE_intronic.csv`.
+    - **bc_path_file** (optional) : `<str>` path to file containing matching barcodes list addresses of samples in sample list
+
+.. function:: quantify_U_TE_MTX(data_mode, sample_list_file)
+
+    Quantifies unique TE expression.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+
+.. function:: quantify_M_TE_MTX(data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU=True, ref_path='Default')
+
+    Quantifies multi-mapping TE expression.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bin_size** : `<int>` size of U/M Region, default = 5
+    - **proportion** : `<int>` proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+    - **ref_path** (optional) : `<str>` only needed for self-generated reference; provide path to reference. By default, TE reference is named `TE_intronic.csv`.
+    - **AE_trained_epochs** : `<int>` training epochs for AutoEncoder, default = 200
+    - **MLP_trained_epochs** : `<int>` training epochs for MLP, default = 200
+    - **USE_GPU** : `<bool>` whether to use GPU to train the model, default = True
+
+.. function:: correct_intronic_TE(data_mode, sample_list_file, ref_path='Default')
+
+    Corrects intronic TE quantification.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **ref_path** (optional) : `<str>` only needed for self-generated reference; provide path to reference. By default, TE reference is named `TE_intronic.csv`.

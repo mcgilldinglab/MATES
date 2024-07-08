@@ -1,0 +1,39 @@
+MATES_model
+===========
+
+The `MATES_model` module serves as the core of the MATES framework, encompassing both training and prediction functions. It is responsible for training a neural network model to accurately predict multi-mapping rates of transposable element (TE) instances based on their read coverage vectors.
+
+Functions
+---------
+
+.. function:: train(data_mode, sample_list_file, bin_size=5, proportion=80, BATCH_SIZE=4096, AE_LR=1e-4, MLP_LR=1e-6, AE_EPOCHS=200, MLP_EPOCHS=200, USE_GPU=True)
+
+    Trains the neural network model.
+
+    **Parameters:**
+
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bin_size** : `<int>` size of U/M Region, default = 5
+    - **proportion** : `<int>` proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+    - **BATCH_SIZE** : `<int>` default = 4096
+    - **AE_LR** : `<float>` learning rate of AutoEncoder, default = 1e-4
+    - **MLP_LR** : `<float>` learning rate of MLP, default = 1e-6
+    - **AE_EPOCHS** : `<int>` training epochs for AutoEncoder, default = 200
+    - **MLP_EPOCHS** : `<int>` training epochs for MLP, default = 200
+    - **USE_GPU** : `<bool>` whether to use GPU to train the model, default = True
+
+.. function:: prediction(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU=True)
+
+    Generates predictions using the trained model.
+
+    **Parameters:**
+
+    - **TE_mode** : `<str>` exclusive or inclusive, represents whether to remove TE instances overlapping with genes
+    - **data_mode** : `<str>` 10X or Smart_seq
+    - **sample_list_file** : `<str>` path to file containing sample IDs
+    - **bin_size** : `<int>` size of U/M Region, default = 5
+    - **proportion** : `<int>` proportion of dominated unique reads in U Region / multi reads in M Region, default = 80
+    - **AE_trained_epochs** : `<int>` training epochs for AutoEncoder, default = 200
+    - **MLP_trained_epochs** : `<int>` training epochs for MLP, default = 200
+    - **USE_GPU** : `<bool>` whether to use GPU to generate predictions, default = True
