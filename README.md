@@ -263,7 +263,7 @@ correct_intronic_TE(data_mode, sample_list_file, ref_path = 'Default')
 ``` 
 ## Tutorials
 ### Walkthrough Example
-From loading data to downstream analysis. Please refer to [Sample Section for deatils.](https://github.com/mcgilldinglab/MATES/blob/main/Sample)
+From loading data to downstream analysis. Please refer to [Sample](https://github.com/mcgilldinglab/MATES/blob/main/Sample) Section for deatils.
 
 ### Pipeline implementation sample script on different type of single cell data
 * [MATES implementation procedures on Smart-seq2 scRNA and 10X scRNA/scATAC/Multi-Omics data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/pipeline_tutorial.ipynb)
