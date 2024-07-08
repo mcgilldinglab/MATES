@@ -1,4 +1,4 @@
-<img width="953" alt="image" src="https://github.com/mcgilldinglab/MATES/assets/88182421/a7f1a359-0bc5-46ff-9f1b-f2545a12ac27"># Example
+# Example
 
 We provide an example dataset containing 50 cells from 10X scRNA 2CLCs mouse data. This example will guide you through the process of using MATES to quantify TE expression in this sample data. The sample data can be downloaded [here](https://mcgill-my.sharepoint.com/:u:/g/personal/ruohan_wang4_mail_mcgill_ca/EdwyzdHz1KtLr9G_c503mwsB6Y4-lawnqEQ1NBx_1Mn9tQ?e=YkcH1B).
 
