@@ -15,26 +15,30 @@ def get_gene_name(TE_chrom_new, diff_ref):
 def main():
     parser = argparse.ArgumentParser(description="Process TE data")
     parser.add_argument('--species', type=str, choices=['Mouse', 'Human', 'Other'], help='Species type')
+    parser.add_argument('--ref_mode', type=str, default=['repeats', 'TE'], help='TE reference type')
     parser.add_argument('--cut_mode', type=str, default='5prime', choices=['5prime', '3prime'], help='Cut mode')
     parser.add_argument('--cut_length', type=int, default=1000, help='Cut length')
-
+    parser.add_argument('--other_species_TE', type = str, required=False, help = 'Path to TE reference')
+    parser.add_argument('--other_species_GTF', type = str, required=False, help = 'Path to GTF reference')
     args = parser.parse_args()
 
     species = args.species
+    ref_mode = args.ref_mode
     cut_mode = args.cut_mode
     cut_length = args.cut_length
 
     if species == 'Mouse':
-        command = "python MATES/scripts/Ref2csv.py Mouse" 
+        command = f"python MATES/scripts/Ref2csv.py {species} {ref_mode}" 
         os.system(command)
         TEs = pd.read_csv('mm_TEs.csv')
         TE_ref = TEs.rename(columns={'Unnamed: 0':'index'})
         TE_ref = TE_ref.iloc[1:]
         TE = TE_ref[['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']]
         genes = pd.read_csv("mm_Genes.csv") 
+        
 
     elif species == 'Human':
-        command = "python MATES/scripts/Ref2csv.py Human"
+        command = f"python MATES/scripts/Ref2csv.py {species} {ref_mode}"
         os.system(command)
         TEs = pd.read_csv('hg_TEs.csv')
         TE_ref = TEs.rename(columns={'Unnamed: 0':'index'})
@@ -43,11 +47,11 @@ def main():
         genes = pd.read_csv("hg_Genes.csv")
 
     elif species == 'Other':
-        TEs = pd.read_csv(sys.argv[2])
+        TEs = pd.read_csv(args.other_species_TE)
         TEs['index'] = TEs.index
         TEs = TEs[["genoName","genoStart","genoEnd", "strand","index", "repName","repClass"]]
         TEs.columns = ['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']
-        genes = pr.read_gtf(sys.argv[3])
+        genes = pr.read_gtf(args.other_species_GTF)
         genes = genes[['Chromosome','Feature','Start','End','Strand','gene_id','gene_name']]
 
     TE = TE.dropna()
