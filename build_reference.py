@@ -4,6 +4,7 @@ import os
 import sys
 import pyranges as pr
 import argparse
+import pkg_resources
 
 def get_gene_name(TE_chrom_new, diff_ref):
     if TE_chrom_new in (diff_ref['TE_chrom'].tolist()):
@@ -18,6 +19,7 @@ def main():
     parser.add_argument('--ref_mode', type=str, default=['repeats', 'TE'], help='TE reference type')
     parser.add_argument('--cut_mode', type=str, default='5prime', choices=['5prime', '3prime'], help='Cut mode')
     parser.add_argument('--cut_length', type=int, default=1000, help='Cut length')
+    parser.add_argument('--intronic', type=bool, default=False, help='Build reference for intronic TE')
     parser.add_argument('--other_species_TE', type = str, required=False, help = 'Path to TE reference')
     parser.add_argument('--other_species_GTF', type = str, required=False, help = 'Path to GTF reference')
     args = parser.parse_args()
@@ -26,26 +28,28 @@ def main():
     ref_mode = args.ref_mode
     cut_mode = args.cut_mode
     cut_length = args.cut_length
+    build_intronic = args.intronic
 
     if species == 'Mouse':
-        command = f"python MATES/scripts/Ref2csv.py {species} {ref_mode}" 
+        script_path = pkg_resources.resource_filename('MATES', 'scripts/Ref2csv.py')
+        command = f"python {script_path} {species} {ref_mode} {build_intronic}" 
         os.system(command)
         TEs = pd.read_csv('mm_TEs.csv')
         TE_ref = TEs.rename(columns={'Unnamed: 0':'index'})
         TE_ref = TE_ref.iloc[1:]
         TE = TE_ref[['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']]
         genes = pd.read_csv("mm_Genes.csv") 
-        
 
     elif species == 'Human':
-        command = f"python MATES/scripts/Ref2csv.py {species} {ref_mode}"
+        script_path = pkg_resources.resource_filename('MATES', 'scripts/Ref2csv.py')
+        command = f"python {script_path} {species} {ref_mode} {build_intronic}" 
         os.system(command)
         TEs = pd.read_csv('hg_TEs.csv')
         TE_ref = TEs.rename(columns={'Unnamed: 0':'index'})
         TE_ref = TE_ref.iloc[1:]
         TE = TE_ref[['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']]
         genes = pd.read_csv("hg_Genes.csv")
-
+        
     elif species == 'Other':
         TEs = pd.read_csv(args.other_species_TE)
         TEs['index'] = TEs.index
@@ -53,6 +57,7 @@ def main():
         TEs.columns = ['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']
         genes = pr.read_gtf(args.other_species_GTF)
         genes = genes[['Chromosome','Feature','Start','End','Strand','gene_id','gene_name']]
+
 
     TE = TE.dropna()
     TE['length'] = TE['end']-TE['start']
@@ -64,8 +69,8 @@ def main():
     for chromsome in Gene_chr:
         if chromsome not in TE_chr:
             diff_list.append(chromsome)
-
-    chr_name = pd.read_csv("hg38.chromAlias.txt",sep = '\t')
+    cur_path = os.path.abspath(os.getcwd())
+    chr_name = pd.read_csv(cur_path+"/hg38.chromAlias.txt",sep = '\t')
     diff_ref = chr_name[chr_name['genbank'].isin(diff_list)].iloc[:,[0,3]]
     diff_ref.columns = ['TE_chrom','Gene_chrom']
 

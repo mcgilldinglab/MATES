@@ -67,4 +67,5 @@ def download_and_process_files(species, ref_mode):
 if __name__ == "__main__":
     species = sys.argv[1]
     ref_mode = sys.argv[2]
+    build_intronic = sys.argv[3]
     download_and_process_files(species, ref_mode)
