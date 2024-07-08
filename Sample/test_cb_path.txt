@@ -1,1 +1,1 @@
-/mnt/md0/ruohan/test/test_cb.tsv
+./test_cb.tsv
