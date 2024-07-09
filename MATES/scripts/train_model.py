@@ -288,6 +288,7 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
         check_cuda_device(DEVICE) 
     except RuntimeError as e:
         print(e)
+    DEVICE = torch.device(DEVICE)
     # if USE_GPU and torch.cuda.is_available():
     #     DEVICE = torch.device('cuda:0')
     #     torch.cuda.empty_cache()
