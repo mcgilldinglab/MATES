@@ -269,17 +269,31 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
     
 
 def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, 
-                 AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= torch.cuda.is_available()):
+                 AE_EPOCHS = 200, MLP_EPOCHS = 200, DEVICE = 'cude:0'):
     cur_path = os.getcwd()
     torch.manual_seed(3407)
     BIN_SIZE = str(bin_size)
     PROP = str(prop)
-    if USE_GPU:
-        DEVICE = torch.device('cuda:0')
-        torch.cuda.empty_cache()
-        torch.cuda.memory_allocated()
-    else:
-        DEVICE = torch.device('cpu')
+
+    def check_cuda_device(device='cuda:0'):
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA is not available.")
+        if device != 'cpu' and torch.cuda.device_count() == 0:
+            raise RuntimeError("No CUDA devices available.")
+        if device != 'cpu' and device not in [f'cuda:{i}' for i in range(torch.cuda.device_count())]:
+            raise RuntimeError(f"CUDA device '{device}' is not available.")
+        print(f"CUDA device '{device}' is available.")
+
+    try:
+        check_cuda_device(DEVICE) 
+    except RuntimeError as e:
+        print(e)
+    # if USE_GPU and torch.cuda.is_available():
+    #     DEVICE = torch.device('cuda:0')
+    #     torch.cuda.empty_cache()
+    #     torch.cuda.memory_allocated()
+    # else:
+    #     DEVICE = torch.device('cpu')
     
     print('Data Mode: ',data_mode)
     print('AE Settings:  Epoch: {:6d}, Learning Rate: {:.6f}'.format(AE_EPOCHS,AE_LR))

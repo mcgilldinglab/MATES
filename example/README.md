@@ -34,7 +34,7 @@ python -m ipykernel install --user --name=mates_env
 
 ## Sample workflow template
 
-### For a detailed implementation example, refer to [this Jupyter Notebook.](https://github.com/mcgilldinglab/MATES/blob/main/Sample/sample_pipeline.ipynb)
+### For a detailed implementation example, refer to [this Jupyter Notebook.](https://github.com/mcgilldinglab/MATES/blob/main/example/sample_pipeline.ipynb)
 
 ### Step 0: Alignment/TE Reference
 #### Alignment

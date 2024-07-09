@@ -73,7 +73,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
 
 
 
-def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_epochs, MLP_trained_epochs, sample = None, USE_GPU= torch.cuda.is_available(), TE_mode = None):
+def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_epochs, MLP_trained_epochs, sample, DEVICE, TE_mode = None):
     TE_ref = pd.read_csv(path_to_TE_ref,header = None)
     TE_ref.columns = ['Chrom', 'start', 'end','group', 'TE_index', 'strand', 'tefam', 'length']
     TE_ref = TE_ref[['TE_index','group']]
@@ -82,13 +82,20 @@ def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_tr
     BIN_SIZE = str(bin_size)
     PROP = str(proportion)
     cur_path = os.getcwd()
-    if USE_GPU:
-        DEVICE = torch.device('cuda:0')
-        torch.cuda.empty_cache()
-        torch.cuda.memory_allocated()
-    else:
-        DEVICE = torch.device('cpu')
 
+    def check_cuda_device(device='cuda:0'):
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA is not available.")
+        if device != 'cpu' and torch.cuda.device_count() == 0:
+            raise RuntimeError("No CUDA devices available.")
+        if device != 'cpu' and device not in [f'cuda:{i}' for i in range(torch.cuda.device_count())]:
+            raise RuntimeError(f"CUDA device '{device}' is not available.")
+        print(f"CUDA device '{device}' is available.")
+
+    try:
+        check_cuda_device(DEVICE) 
+    except RuntimeError as e:
+        print(e)
     
     Multi_TE_dir = 'Multi_TE_intron' if TE_mode == 'intronic' else 'Multi_TE'
     locus_TE_dir = 'prediction_locus_intron' if TE_mode == 'intronic' else 'prediction_locus'

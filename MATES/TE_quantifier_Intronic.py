@@ -200,7 +200,7 @@ def quantify_U_TE_MTX(data_mode, sample_list_file):
     check_file_exists(sample_list_file)
     unique_locus_TE_MTX('intronic', data_mode, sample_list_file, long_read = False)
 
-def quantify_M_TE_MTX(data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200, USE_GPU= True, ref_path = 'Default'):
+def quantify_M_TE_MTX(data_mode, sample_list_file, bin_size=5, proportion=80, AE_trained_epochs=200, MLP_trained_epochs=200,  DEVICE= 'cude:0', ref_path = 'Default'):
     if data_mode != "10X" and data_mode != "Smart_seq":
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
@@ -222,9 +222,9 @@ def quantify_M_TE_MTX(data_mode, sample_list_file, bin_size=5, proportion=80, AE
         for idx, sample in enumerate(sample_name):
             if not os.path.exists('Multi_TE_intron/'+sample):
                 raise ValueError("Please generate prediction sample for " + sample + '.')
-            make_prediction_locus(data_mode, bin_size, proportion, TE_ref_path, AE_trained_epochs, MLP_trained_epochs, sample, USE_GPU, TE_mode = 'intronic')
+            make_prediction_locus(data_mode, bin_size, proportion, TE_ref_path, AE_trained_epochs, MLP_trained_epochs, sample,  DEVICE, TE_mode = 'intronic')
     elif data_mode == 'Smart_seq':
-        make_prediction_locus(data_mode, bin_size, proportion, TE_ref_path, AE_trained_epochs, MLP_trained_epochs, None, USE_GPU, TE_mode = 'Intronic')
+        make_prediction_locus(data_mode, bin_size, proportion, TE_ref_path, AE_trained_epochs, MLP_trained_epochs, None,  DEVICE, TE_mode = 'Intronic')
         
 def correct_intronic_TE(data_mode, sample_list_file, ref_path = 'Default'):
     if data_mode != "10X" and data_mode != "Smart_seq":
