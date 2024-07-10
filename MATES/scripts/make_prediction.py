@@ -99,18 +99,25 @@ def make_prediction(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_
     cur_path = os.getcwd()
 
     def check_cuda_device(device='cuda:0'):
+        if device == 'cpu':
+            print("Running on CPU.")
+        return
+
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA is not available.")
-        if device != 'cpu' and torch.cuda.device_count() == 0:
-            raise RuntimeError("No CUDA devices available.")
-        if device != 'cpu' and device not in [f'cuda:{i}' for i in range(torch.cuda.device_count())]:
-            raise RuntimeError(f"CUDA device '{device}' is not available.")
-        print(f"CUDA device '{device}' is available.")
 
+        if device not in [f'cuda:{i}' for i in range(torch.cuda.device_count())]:
+            raise RuntimeError(f"CUDA device '{device}' is not available.")
+
+        print(f"Device '{device}' is available.")
+
+    
     try:
         check_cuda_device(DEVICE) 
     except RuntimeError as e:
         print(e)
+    
+    DEVICE = torch.device(DEVICE)
 
     if data_mode =='Smart_seq':
         print("start calculating")
