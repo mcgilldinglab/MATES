@@ -26,7 +26,7 @@ def pretrain_AE(EPOCHS, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER
         path_dir = join(path_dir, sample)  
     elif data_mode == 'Smart_seq':
         path_dir = join(os.getcwd(), 'training_'+ str(bin_size) + '_' + str(prop))
-    AENet = AutoEncoder(2001, 128, TE_FAM_NUMBER)
+    AENet = AutoEncoder(2001, 128, TE_FAM_NUMBER, device)
     ##optimizer  & loss
     optimizer = torch.optim.Adam(AENet.parameters(), lr=AE_LR)
     loss_f = nn.MSELoss()
@@ -64,7 +64,7 @@ def pretrain_AE(EPOCHS, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER
                     TE_data.data.copy_(TE_vecs)
                     Batch_info  = Batch_ids.clone().detach().view(BATCH_SIZE,1)
                     BATCH_data.data.copy_(Batch_info)
-                    hidden, reconstruct = AENet(TE_data*1e6, BATCH_data, BATCH_SIZE)
+                    hidden, reconstruct = AENet(TE_data*1e6, BATCH_data, BATCH_SIZE, device)
                     loss = loss_f(reconstruct, TE_data*1e6)
                     if epoch+1 == EPOCHS:
                         Batch_Info = np.append(Batch_Info,(BATCH_data.cpu().detach().numpy().reshape(1,BATCH_SIZE)))
@@ -98,7 +98,7 @@ def get_AE_embedding(data_mode, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FA
         path_dir = join(path_dir, sample)  
     elif data_mode == 'Smart_seq':
         path_dir = join(os.getcwd(), 'training_'+ str(bin_size) + '_' + str(prop))
-    AENet = AutoEncoder(2001, 128, TE_FAM_NUMBER)
+    AENet = AutoEncoder(2001, 128, TE_FAM_NUMBER, device)
     AENet = torch.load(join(path_dir, 'AE_pretrain/AE_'+str(EPOCHS)+'_pretrained.pt'))
              
     MLP_meta_train_tmp = MLP_meta_train.tolist()
@@ -146,7 +146,7 @@ def get_AE_embedding(data_mode, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FA
                 MLP_Region_data.data.copy_(TE_region)
                 Batch_info  = Batch_ids.clone().detach().view(BATCH_SIZE,1)
                 MLP_BATCH_data.data.copy_(Batch_info)
-                embedding, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, BATCH_SIZE)
+                embedding, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, BATCH_SIZE, device)
                 loss = loss_f(reconstruct, MLP_TE_data*1000000)
                 optimizer.zero_grad()
                 loss.backward()
@@ -189,7 +189,7 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
         path_dir = join(path_dir, sample)  
     elif data_mode == 'Smart_seq':
         path_dir = join(os.getcwd(), 'training_'+str(bin_size) + '_' + str(prop))
-    MLP = MultiLayerPerceptron(TE_FAM_NUMBER,128)   
+    MLP = MultiLayerPerceptron(TE_FAM_NUMBER,128, device)   
     # PATH = join(path_dir,'MLP/MLP_state.pth')
     # torch.save(MLP.state_dict(), PATH)
     # MLP = torch.load(PATH)
@@ -233,7 +233,7 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
                 MLP_BATCH_data_2.data.copy_(Batch_info)
                 MLP_Region_data_2.data.copy_(TE_region)
                 
-                alpha = MLP(embeddings, MLP_BATCH_data_2, BATCH_SIZE)
+                alpha = MLP(embeddings, MLP_BATCH_data_2, BATCH_SIZE, device)
 
                 Loss = criterion(alpha, MLP_Region_data_2, BATCH_SIZE,bin_size)
                 MLP_optimizer.zero_grad()
@@ -276,19 +276,25 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
     PROP = str(prop)
 
     def check_cuda_device(device='cuda:0'):
-        if not torch.cuda.is_available() and not device == 'cpu':
+        if device == 'cpu':
+            print("Running on CPU.")
+        return
+    
+        if not torch.cuda.is_available():
             raise RuntimeError("CUDA is not available.")
-        if device != 'cpu' and torch.cuda.device_count() == 0:
-            raise RuntimeError("No CUDA devices available.")
-        if device != 'cpu' and device not in [f'cuda:{i}' for i in range(torch.cuda.device_count())]:
+
+        if device not in [f'cuda:{i}' for i in range(torch.cuda.device_count())]:
             raise RuntimeError(f"CUDA device '{device}' is not available.")
+
         print(f"Device '{device}' is available.")
 
-    DEVICE = torch.device(DEVICE)
+    
     try:
         check_cuda_device(DEVICE) 
     except RuntimeError as e:
         print(e)
+    
+    DEVICE = torch.device(DEVICE)
     
     # if USE_GPU and torch.cuda.is_available():
     #     DEVICE = torch.device('cuda:0')

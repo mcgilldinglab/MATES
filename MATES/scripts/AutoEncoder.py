@@ -29,10 +29,10 @@ class AutoEncoder(nn.Module):
             nn.ReLU(), 
         )
   
-    def forward(self, TE_data, BATCH_data, BATCH_SIZE, ):
-        reshaped_TE=torch.reshape(TE_data, (BATCH_SIZE,2001)).to('cuda:0')
+    def forward(self, TE_data, BATCH_data, BATCH_SIZE, device):
+        reshaped_TE=torch.reshape(TE_data, (BATCH_SIZE,2001)).to(device)
         ##one-hot encoding TE Fam info
-        batch_id_encode = torch.eye(self.n_fam)[BATCH_data.type(torch.LongTensor)].view(BATCH_SIZE, self.n_fam).to('cuda:0')
+        batch_id_encode = torch.eye(self.n_fam)[BATCH_data.type(torch.LongTensor)].view(BATCH_SIZE, self.n_fam).to(device)
               
         new_reshaped_TE = torch.cat([reshaped_TE, batch_id_encode],axis = 1).reshape(BATCH_SIZE,1,self.n_input+self.n_fam)
         embedding = self.encoder(new_reshaped_TE).reshape(BATCH_SIZE,self.n_output)

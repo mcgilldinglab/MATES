@@ -14,9 +14,9 @@ class MultiLayerPerceptron(nn.Module):
             nn.Sigmoid(),
         )
         
-    def forward(self, embedding, BATCH_data, BATCH_SIZE):
+    def forward(self, embedding, BATCH_data, BATCH_SIZE, device):
         embedding = embedding.reshape(BATCH_SIZE,self.n_input)
-        batch_id_encode = torch.eye(self.n_fam)[BATCH_data.type(torch.LongTensor)].view(BATCH_SIZE, self.n_fam).to('cuda:0')
+        batch_id_encode = torch.eye(self.n_fam)[BATCH_data.type(torch.LongTensor)].view(BATCH_SIZE, self.n_fam).to(device)
         Y = torch.cat([embedding,batch_id_encode],axis = 1).reshape(BATCH_SIZE,1,embedding.shape[1]+self.n_fam)
         alpha = self.mlp(Y)
         return alpha
