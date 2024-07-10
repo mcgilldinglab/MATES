@@ -70,7 +70,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
                 Batch_info  = Batch_ids.clone().detach().view(current_batch_size,1)
                 MLP_BATCH_data.data.copy_(Batch_info)
                 ##AE Part
-                embeddings, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, BATCH_SIZE)
+                embeddings, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, BATCH_SIZE, device)
                 ##MLP Part
                 # alpha = MLP(embeddings, MLP_BATCH_data, BATCH_SIZE)
                 # Meta_Data_full[0] = Meta_Data_full[0]+(list(metainfo[0]))
@@ -79,7 +79,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
                 # Batch_Info_full = np.append(Batch_Info_full,(Batch_info.cpu().detach().numpy().reshape(1,BATCH_SIZE)))
                 # problist_full = np.append(problist_full, alpha.cpu().detach().numpy().reshape(BATCH_SIZE))
                 # pbar.update(1)
-                alpha = MLP(embeddings, MLP_BATCH_data, current_batch_size)
+                alpha = MLP(embeddings, MLP_BATCH_data, current_batch_size, device)
                 Meta_Data_full[0] = Meta_Data_full[0]+(list(metainfo[0]))
                 Meta_Data_full[1] = Meta_Data_full[1]+(list(metainfo[1]))
                 Meta_Data_full[2] = Meta_Data_full[2]+(list(metainfo[2]))

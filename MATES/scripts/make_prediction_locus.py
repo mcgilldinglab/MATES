@@ -60,9 +60,9 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
                 MLP_BATCH_data.data.copy_(Batch_info)
                 # AE Part
                 ##AE Part
-                embeddings, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, current_batch_size)
+                embeddings, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, current_batch_size,device)
                 ##MLP Part
-                alpha = MLP(embeddings, MLP_BATCH_data, current_batch_size)
+                alpha = MLP(embeddings, MLP_BATCH_data, current_batch_size, device)
                 Meta_Data_full[0] = Meta_Data_full[0]+(list(metainfo[0]))
                 Meta_Data_full[1] = Meta_Data_full[1]+(list(metainfo[1]))
                 Meta_Data_full[2] = Meta_Data_full[2]+(list(metainfo[2]))
