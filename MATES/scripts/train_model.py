@@ -276,19 +276,20 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
     PROP = str(prop)
 
     def check_cuda_device(device='cuda:0'):
-        if not torch.cuda.is_available():
+        if not torch.cuda.is_available() and not device == 'cpu':
             raise RuntimeError("CUDA is not available.")
         if device != 'cpu' and torch.cuda.device_count() == 0:
             raise RuntimeError("No CUDA devices available.")
         if device != 'cpu' and device not in [f'cuda:{i}' for i in range(torch.cuda.device_count())]:
             raise RuntimeError(f"CUDA device '{device}' is not available.")
-        print(f"CUDA device '{device}' is available.")
+        print(f"Device '{device}' is available.")
 
+    DEVICE = torch.device(DEVICE)
     try:
         check_cuda_device(DEVICE) 
     except RuntimeError as e:
         print(e)
-    DEVICE = torch.device(DEVICE)
+    
     # if USE_GPU and torch.cuda.is_available():
     #     DEVICE = torch.device('cuda:0')
     #     torch.cuda.empty_cache()

@@ -158,7 +158,6 @@ def count_intornic_coverage_vec(data_mode, threads_num, sample_list_file, ref_pa
             batch_size = math.ceil(sample_count / threads_num)
             script_path = pkg_resources.resource_filename('MATES', 'scripts/count_coverage_10X.py')
             command_template = f"python {script_path} {sample} {{i}} {batch_size} {barcodes_paths[idx]} {TE_ref_path} {TE_mode}"
-            print(command_template)
             run_command_in_batches(command_template, threads_num)
 
     remove_directory("./tmp")

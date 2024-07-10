@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import pyranges as pr
 
-def download_and_process_files(species, ref_mode):
+def download_and_process_files(species, ref_mode, build_intronic):
     urls = {
         'Mouse': {
             'repeatmasker': "https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz",
@@ -21,15 +21,27 @@ def download_and_process_files(species, ref_mode):
 
     repeatmasker_url = urls[species]['repeatmasker']
     gtf_url = urls[species]['gtf']
-
-    os.system(f"wget {repeatmasker_url}")
-    os.system(f"wget {gtf_url}")
+    
+#     os.system(f"wget {repeatmasker_url}")
+#     os.system(f"wget {gtf_url}")
 
     repeatmasker_file = repeatmasker_url.split('/')[-1]
     gtf_file = gtf_url.split('/')[-1]
 
-    os.system(f"gzip -d {repeatmasker_file}")
-    os.system(f"gzip -d {gtf_file}")
+    if not os.path.exists(repeatmasker_file) and not os.path.exists(repeatmasker_file.replace('.gz', '')):
+        os.system(f"wget {repeatmasker_url}")
+        os.system(f"gzip -d {repeatmasker_file}")
+    else:
+        print(f"{repeatmasker_file} already exists, skipping download and unzip.")
+    
+    if not os.path.exists(gtf_file) and not os.path.exists(gtf_file.replace('.gz', '')):
+        os.system(f"wget {gtf_url}")
+        os.system(f"gzip -d {gtf_file}")
+    else:
+        print(f"{gtf_file} already exists, skipping download and unzip.")
+    
+    # os.system(f"gzip -d {repeatmasker_file}")
+    # os.system(f"gzip -d {gtf_file}")
 
     repeatmasker_file = repeatmasker_file.replace('.gz', '')
     gtf_file =  gtf_file.replace('.gz', '')
@@ -60,13 +72,26 @@ def download_and_process_files(species, ref_mode):
     TEs.to_csv(f'{species.lower()}_TEs.csv', index=False)
     os.remove(te_csv)
     os.remove(new_out_file)
+    
+    if not build_intronic:
+        genes = pr.read_gtf(gtf_file)
+        Genes = genes[['Chromosome', 'Feature', 'Start', 'End', 'Strand', 'gene_id', 'gene_name']]
+        Genes.to_csv(f'{species.lower()}_Genes.csv')
+    elif build_intronic:
+        genes = pr.read_gtf(gtf_file)
+        exons = genes[genes.Feature == "exon"]
+        transcripts = genes[genes.Feature == "transcript"]
+        # Subtract exons from transcripts to get introns
+        introns = genes.features.introns(by="gene")
+        # Save introns to a CSV file
+        introns.df.to_csv(f'{species.lower()}_introns.csv', index=False)
+        introns = pd.read_csv(f'{species.lower()}_introns.csv')
+        bed_introns = introns[['Chromosome', 'Start', 'End']]
+        bed_introns.to_csv(f'{species.lower()}_introns.bed', sep='\t', index=False, header=False)
 
-    genes = pr.read_gtf(gtf_file)
-    Genes = genes[['Chromosome', 'Feature', 'Start', 'End', 'Strand', 'gene_id', 'gene_name']]
-    Genes.to_csv(f'{species.lower()}_Genes.csv')
 
 if __name__ == "__main__":
     species = sys.argv[1]
     ref_mode = sys.argv[2]
     build_intronic = sys.argv[3]
-    download_and_process_files(species, ref_mode)
+    download_and_process_files(species, ref_mode, build_intronic)

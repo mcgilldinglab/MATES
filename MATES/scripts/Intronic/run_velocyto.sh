@@ -25,6 +25,7 @@ if [ ! -d Velocyto ]; then
     mkdir -p Velocyto
 fi
 gtf_path=$(readlink -f "$4")
+
 # Check if all input files exist
 
 if [ -f "$1" ] && [ -f "$2" ] && [ -f "$3" ] && [ -f "$gtf_path" ]; then
@@ -37,9 +38,13 @@ if [ -f "$1" ] && [ -f "$2" ] && [ -f "$3" ] && [ -f "$gtf_path" ]; then
             echo "Directory ${line1} already exists."
         fi
 
+        line2_path=$(readlink -f "${line2}")
+        line3_path=$(readlink -f "${line3}")
         echo "Start Running Velocyto for ${line1}"
         cd "Velocyto/${line1}"
-        velocyto run -b "${line3}" "${line2}" "$gtf_path" --dump p1 > velocyto_progress.log
+        echo "Path to cell barcode file: ${line3_path}"
+        echo "Path to bam file: ${line2_path}"
+        velocyto run -b "${line3_path}" "${line2_path}" "$gtf_path" --dump p1 > velocyto_progress.log
         echo "End Running Velocyto for ${line1}"
         cd ../..
     done

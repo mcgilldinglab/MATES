@@ -77,87 +77,77 @@ def main():
     TE['index'] = TE.index
     TE = TE[['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']]
     TE.to_csv('TE_full.csv',index = False,header=False)
-    genes = genes[['Chromosome', 'Start', 'End']]
-    genes = genes.drop_duplicates()
-    genes.to_csv('gene_bed.csv', header = None, index = False)
-    os.system("cat TE_full.csv | tr ',' '\t' > TE_full.bed")
-    os.system("cat gene_bed.csv | tr ',' '\t' > gene_bed.bed")
-    cur_path = os.getcwd()
-    a = pybedtools.example_bedtool(cur_path+'/gene_bed.bed')
-    b = pybedtools.example_bedtool(cur_path+'/TE_full.bed')
-    tmp = b.subtract(a,A = True,nonamecheck=True)
-    tmp.saveas('removed_TE.txt')
-    removed_TE = pd.read_csv('removed_TE.txt',sep='\t', header=None, low_memory=False)
-    removed_TE.columns = TE.columns
-    removed_TE['length'] = removed_TE['end']-removed_TE['start']
-    for index, row in removed_TE.iterrows():
-        if removed_TE.loc[index,'length'] > cut_length:
-            removed_TE.loc[index,'length'] = cut_length
-            if cut_mode == '5prime':
-                removed_TE.loc[index,'end'] = removed_TE.loc[index,'start']+cut_length
-            elif cut_mode == '3prime':
-                removed_TE.loc[index,'start'] = removed_TE.loc[index,'end']-cut_length
-    removed_TE = removed_TE[removed_TE['length'] <=cut_length]
-    removed_TE['index'] = removed_TE.index
-    removed_TE.to_csv("TE_nooverlap.csv",index = False,header=False)
-    os.system("cat TE_nooverlap.csv | tr ',' '\t' > TE_nooverlap.bed")
+    if not build_intronic:
+        genes = genes[['Chromosome', 'Start', 'End']]
+        genes = genes.drop_duplicates()
+        genes.to_csv('gene_bed.csv', header = None, index = False)
+        os.system("cat TE_full.csv | tr ',' '\t' > TE_full.bed")
+        os.system("cat gene_bed.csv | tr ',' '\t' > gene_bed.bed")
+        cur_path = os.getcwd()
+        a = pybedtools.example_bedtool(cur_path+'/gene_bed.bed')
+        b = pybedtools.example_bedtool(cur_path+'/TE_full.bed')
+        tmp = b.subtract(a,A = True,nonamecheck=True)
+        tmp.saveas('removed_TE.txt')
+        removed_TE = pd.read_csv('removed_TE.txt',sep='\t', header=None, low_memory=False)
+        removed_TE.columns = TE.columns
+        removed_TE['length'] = removed_TE['end']-removed_TE['start']
+        for index, row in removed_TE.iterrows():
+            if removed_TE.loc[index,'length'] > cut_length:
+                removed_TE.loc[index,'length'] = cut_length
+                if cut_mode == '5prime':
+                    removed_TE.loc[index,'end'] = removed_TE.loc[index,'start']+cut_length
+                elif cut_mode == '3prime':
+                    removed_TE.loc[index,'start'] = removed_TE.loc[index,'end']-cut_length
+        removed_TE = removed_TE[removed_TE['length'] <=cut_length]
+        removed_TE['index'] = removed_TE.index
+        removed_TE.to_csv("TE_nooverlap.csv",index = False,header=False)
+        os.system("cat TE_nooverlap.csv | tr ',' '\t' > TE_nooverlap.bed")
 
-    for index, row in TE.iterrows():
-        if TE.loc[index,'length'] > cut_length:
-            TE.loc[index,'length'] = cut_length
-            if cut_mode == '5prime':
-                TE.loc[index,'end'] = TE.loc[index,'start']+cut_length
-            elif cut_mode == '3prime':
-                TE.loc[index,'start'] = TE.loc[index,'end']-cut_length
-    TE = TE[TE['length'] <=cut_length]
-    TE['index'] = TE.index
-    TE.to_csv("TE_full.csv",index = False,header=False)
-    os.system("cat TE_full.csv | tr ',' '\t' > TE_full.bed")
+        for index, row in TE.iterrows():
+            if TE.loc[index,'length'] > cut_length:
+                TE.loc[index,'length'] = cut_length
+                if cut_mode == '5prime':
+                    TE.loc[index,'end'] = TE.loc[index,'start']+cut_length
+                elif cut_mode == '3prime':
+                    TE.loc[index,'start'] = TE.loc[index,'end']-cut_length
+        TE = TE[TE['length'] <=cut_length]
+        TE['index'] = TE.index
+        TE.to_csv("TE_full.csv",index = False,header=False)
+        os.system("cat TE_full.csv | tr ',' '\t' > TE_full.bed")
 
-    os.remove("gene_bed.bed")
-    os.remove('removed_TE.txt')
+        os.remove("gene_bed.bed")
+        os.remove('removed_TE.txt')
+        
+    elif build_intronic:
+        TE.to_csv('TEs_tmp.bed', sep='\t', index=False, header=False)
+        # Load introns and TEs as pybedtools objects
+        introns = pd.read_csv(f'{species.lower()}_introns.csv')
+        introns = pybedtools.BedTool(f'{species.lower()}_introns.bed')
+        te_reference = pybedtools.BedTool('TEs_tmp.bed')
 
+        # Find TEs within introns
+        te_in_introns = te_reference.intersect(introns, u=True, f=1.0)
+        # Save the result to a file
+        te_in_introns.saveas('te_in_introns.bed')
+
+        intronic_te = pd.read_csv('te_in_introns.bed', sep = '\t', header = None)
+        
+        intronic_te.columns = ['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']
+        intronic_te['index'] = intronic_te.index
+        # intronic_te['length'] = intronic_te['end'] - intronic_te['start']
+        intronic_te = intronic_te[['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']]
+        
+        for index, row in intronic_te.iterrows():
+            if intronic_te.loc[index,'length'] > cut_length:
+                intronic_te.loc[index,'length'] = cut_length
+                if cut_mode == '5prime':
+                    intronic_te.loc[index,'end'] = intronic_te.loc[index,'start']+cut_length
+                elif cut_mode == '3prime':
+                    intronic_te.loc[index,'start'] = intronic_te.loc[index,'end']-cut_length
+        intronic_te = intronic_te[intronic_te['length'] <=cut_length]
+        
+        intronic_te.to_csv('TE_intron.csv', header = False, index=False)
+        os.system("cat TE_intron.csv | tr ',' '\t' > TE_intron.bed")
+        
 if __name__ == "__main__":
     main()
-
-### Step 1: Separate Exons and Transcripts
-# exons = genes[genes.Feature == "exon"]
-# transcripts = genes[genes.Feature == "transcript"]
-# # Step 2: Subtract Exons from Transcripts to get Introns
-# # Subtract exons from transcripts to get introns
-# introns = genes.features.introns(by="gene")
-# # Save introns to a CSV file
-# introns.df.to_csv('introns.csv', index=False)
-# introns = pd.read_csv('introns.csv')
-# bed_introns = introns[['Chromosome', 'Start', 'End']]
-# bed_introns.to_csv('introns.bed', sep='\t', index=False, header=False)
-
-# introns = pd.read_csv('introns.csv')
-# tes = pd.read_csv('mm10_TEs.csv',header = None)
-# tes = tes.iloc[:,[0,5,6,7,9,10,11]]
-# tes.columns = ['index', 'Chromosome', 'Start', 'End', 'Starnd', 'TE_name', 'TE_Fam']
-# bed_tes = tes[['Chromosome', 'Start', 'End', 'index','Starnd', 'TE_name', 'TE_Fam']]
-# bed_tes.to_csv('TEs_tmp.bed', sep='\t', index=False, header=False)
-# import pybedtools
-# # Load introns and TEs as pybedtools objects
-# introns = pybedtools.BedTool('introns.bed')
-# te_reference = pybedtools.BedTool('TEs_tmp.bed')
-
-# # Find TEs within introns
-# te_in_introns = te_reference.intersect(introns, u=True, f=1.0)
-# # Save the result to a file
-# te_in_introns.saveas('te_in_introns.bed')
-
-# import pandas as pd
-# intronic_te = pd.read_csv('te_in_introns.bed', sep = '\t', header = None)
-# intronic_te.columns = ['chromsome','start','end','index','strand','name','TE_fam']
-# intronic_te['index'] = intronic_te.index
-# intronic_te['length'] = intronic_te['end'] - intronic_te['start']
-# intronic_te = intronic_te[['chromsome','start','end','name','index','strand','TE_fam', 'length']]
-# for index, row in intronic_te.iterrows():
-#     if intronic_te.loc[index,'length'] > 1000:
-#         intronic_te.loc[index,'length'] = 1000
-#         intronic_te.loc[index,'end'] = intronic_te.loc[index,'start']+1000
-# intronic_te = intronic_te[intronic_te['length'] <=1000]
-# intronic_te.to_csv('TE_intronic.csv', header = False, index=False)
-# os.system("cat TE_intronic.csv | tr ',' '\t' > TE_intronic.bed")
