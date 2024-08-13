@@ -24,7 +24,7 @@ def count_region_read(aligned_file, chromosome, start, end):
     return len(read_name)
 
 def get_region_count(aligned_file, chromosome,start,end):
-    coverage_tuples = aligned_file.count_coverage(chromosome,start,end)
+    coverage_tuples = aligned_file.count_coverage(chromosome,start,end,quality_threshold = 0)
     coverage_vector=[0]*(end-start)
     for element in coverage_tuples:
         coverage_vector = np.array(coverage_vector) + np.array(element)
