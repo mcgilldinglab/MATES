@@ -43,7 +43,7 @@ def get_read_num(sample_name):
     return total_reads 
 
 def get_region_count(aligned_file, chromosome,start,end):
-    coverage_tuples = aligned_file.count_coverage(chromosome,start,end)
+    coverage_tuples = aligned_file.count_coverage(chromosome,start,end, quality_threshold = 0)
     coverage_vector=[0]*(end-start)
     for element in coverage_tuples:
         coverage_vector = np.array(coverage_vector) + np.array(element)
@@ -56,7 +56,7 @@ def get_coverage_vector(aligned_file,chromosome,start,end,total_reads):
         diff = - start
         start = 0
         prefix = True
-    coverage_tuples = aligned_file.count_coverage(chromosome,start,end)
+    coverage_tuples = aligned_file.count_coverage(chromosome,start,end, quality_threshold = 0)
     coverage_vector=[0]*(len(coverage_tuples[0]))
 
     for element in coverage_tuples:
