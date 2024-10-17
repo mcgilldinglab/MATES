@@ -38,8 +38,6 @@ pip install pybedtools
 
 # Install MATES
 cd MATES
-pip3 install -r requirements.txt
-python setup.py install
 pip install .
 pip install velocyto
 
