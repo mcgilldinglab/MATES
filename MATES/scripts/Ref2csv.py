@@ -14,7 +14,7 @@ def download_and_process_files(species, ref_mode, build_intronic):
             'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz"
         }
     }
-    
+    build_intronic = (build_intronic=='True')
     if species not in urls:
         print("Please enter valid reference species Mouse/Human.")
         return
