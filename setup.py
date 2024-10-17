@@ -17,6 +17,7 @@ setup(
         "scipy==1.11.2",
         "torch==2.0.0",
         "tqdm==4.66.1",
-        "pyranges==0.0.129"
+        "pyranges==0.0.129",
+        "anndata==0.8.0"
     ],
 )
