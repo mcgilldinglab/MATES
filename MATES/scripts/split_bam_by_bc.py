@@ -41,8 +41,8 @@ def main(barcode_field, input_bam, barcodes_file, output_prefix):
             for rec in region:
                 try:
                     barcode = rec.get_tag(barcode_field)
-                    if (barcode[-1] == '1'):
-                        barcode = barcode[:-2]
+                    #if (barcode[-1] == '1'):
+                       # barcode = barcode[:-2]
                     writer.write_record_to_barcode(rec=rec, barcode=barcode)
                 except KeyError:
                     print("error")
@@ -63,8 +63,8 @@ def main(barcode_field, input_bam, barcodes_file, output_prefix):
                 for rec in region:
                     try:
                         barcode = rec.get_tag(barcode_field)
-                        if (barcode[-1] == '1'):
-                            barcode = barcode[:-2]
+                        #if (barcode[-1] == '1'):
+                        #    barcode = barcode[:-2]
                         writer.write_record_to_barcode(rec=rec, barcode=barcode)
                     except KeyError:
                         print("error")
