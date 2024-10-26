@@ -29,7 +29,7 @@ def get_unique_sample(cell_ana, stat, data_mode, sample=None):
         if os.path.isdir(cb_path):
             meta_path = join(cb_path, 'meta.npz')
             unique_path = join(cb_path,'unique.npz')
-            if os.stat(unique_path).st_size != 0 and os.path.isfile(unique_path):
+            if os.path.isfile(unique_path) and os.stat(unique_path).st_size != 0:
                 unique_matrix = scipy.sparse.load_npz(unique_path).toarray()
                 meta_matrix = np.load(meta_path,allow_pickle=True)
                 uniq_count_path = join(cb_path, 'TE_unique_Info.csv')
