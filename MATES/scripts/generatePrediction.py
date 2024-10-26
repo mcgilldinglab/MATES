@@ -62,7 +62,7 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, TE_m
             if os.path.isdir(cb_path):
                 meta_path = join(cb_path, 'meta_multi_full.npz')
                 multi_path = join(cb_path,'multi_full.npz')
-                if os.stat(multi_path).st_size != 0 and os.path.isfile(multi_path):
+                if os.path.isfile(multi_path) and os.stat(multi_path).st_size != 0:
                     multi_matrix = scipy.sparse.load_npz(multi_path).toarray()
                     Multi_meta = np.load(meta_path,allow_pickle=True)
                     multi_count_path = join(cb_path, 'TE_multi_Info.csv')
