@@ -36,17 +36,13 @@ def pretrain_AE(EPOCHS, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER
     train_data = []
     for i in range(len(TE_train)):
         train_data.append([TE_train[i],  Batch_train[i]])
-    train_loader = DataLoader(train_data, BATCH_SIZE, shuffle = True, drop_last=True)
+    train_loader = DataLoader(train_data, BATCH_SIZE, shuffle = True, drop_last=False)
 
-    TE_data = torch.Tensor(BATCH_SIZE,1*2001)
-    TE_data = Variable(TE_data)
-    BATCH_data = torch.Tensor(BATCH_SIZE,1*1)
-    BATCH_data = Variable(BATCH_data)
+    
     ##load to device
     if torch.cuda.is_available():
         AENet = AENet.to(device)
-        TE_data = TE_data.to(device)
-        BATCH_data = BATCH_data.to(device)
+        
     loss_list = []
     AE_log = open(join(path_dir,'AE_pretrain_loss.txt'), 'w')
     with tqdm(total = EPOCHS) as pbar:
@@ -61,13 +57,20 @@ def pretrain_AE(EPOCHS, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER
                 Batch_Info = np.array([])
 
             for step, (TE_vecs, Batch_ids) in enumerate(train_loader):
+                    TE_data = torch.Tensor(len(Batch_ids),1*2001)
+                    TE_data = Variable(TE_data)
+                    BATCH_data = torch.Tensor(len(Batch_ids),1*1)
+                    BATCH_data = Variable(BATCH_data)
+                    if torch.cuda.is_available():
+                        TE_data = TE_data.to(device)
+                        BATCH_data = BATCH_data.to(device)
                     TE_data.data.copy_(TE_vecs)
-                    Batch_info  = Batch_ids.clone().detach().view(BATCH_SIZE,1)
+                    Batch_info  = Batch_ids.clone().detach().view(len(Batch_ids),1)
                     BATCH_data.data.copy_(Batch_info)
-                    hidden, reconstruct = AENet(TE_data*1e6, BATCH_data, BATCH_SIZE, device)
+                    hidden, reconstruct = AENet(TE_data*1e6, BATCH_data, len(Batch_ids), device)
                     loss = loss_f(reconstruct, TE_data*1e6)
                     if epoch+1 == EPOCHS:
-                        Batch_Info = np.append(Batch_Info,(BATCH_data.cpu().detach().numpy().reshape(1,BATCH_SIZE)))
+                        Batch_Info = np.append(Batch_Info,(BATCH_data.cpu().detach().numpy().reshape(1,len(Batch_ids))))
                         hidden_sparse = sparse.csr_matrix(hidden.cpu().detach().numpy())
                         hidden_info = scipy.sparse.vstack([hidden_info,hidden_sparse])
                         tmp_input_sparse = sparse.csr_matrix(TE_data.cpu().detach().numpy())
@@ -106,16 +109,9 @@ def get_AE_embedding(data_mode, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FA
     for i in range(len(MLP_TE_train)):
         MLP_train_data.append([MLP_TE_train[i],  MLP_Batch_train[i], MLP_Region_train[i],MLP_meta_train_tmp[i]])
 
-    MLP_train_loader = DataLoader(MLP_train_data, BATCH_SIZE, shuffle = True, drop_last=True)
+    MLP_train_loader = DataLoader(MLP_train_data, BATCH_SIZE, shuffle = True, drop_last=False)
 
-    MLP_TE_data = torch.Tensor(BATCH_SIZE,1*2001)
-    MLP_TE_data = Variable(MLP_TE_data)
-    MLP_BATCH_data = torch.Tensor(BATCH_SIZE,1*1)
-    MLP_BATCH_data = Variable(MLP_BATCH_data)
-    MLP_Region_data = torch.Tensor(BATCH_SIZE,1*5)
-    MLP_Region_data = Variable(MLP_Region_data)
-    MLP_meta_data = torch.Tensor(BATCH_SIZE,1*2)
-    MLP_meta_data = Variable(MLP_meta_data)
+    
 
     # ##load to device
     # if torch.cuda.is_available():
@@ -125,10 +121,6 @@ def get_AE_embedding(data_mode, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FA
     #     MLP_Region_data = MLP_Region_data.to(device)
 
     AENet.to(device)
-    MLP_TE_data = MLP_TE_data.to(device)
-    MLP_BATCH_data = MLP_BATCH_data.to(device)
-    MLP_Region_data = MLP_Region_data.to(device)
-
 
     #optimizer  & loss
     loss_f = nn.MSELoss()
@@ -142,11 +134,21 @@ def get_AE_embedding(data_mode, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FA
         hidden_info = scipy.sparse.coo_matrix((0, 0))
         Meta_Data = [[],[],[]]
         for step, (TE_vecs, Batch_ids, TE_region, metainfo) in enumerate(MLP_train_loader):
+                MLP_TE_data = torch.Tensor(len(Batch_ids),1*2001)
+                MLP_TE_data = Variable(MLP_TE_data)
+                MLP_BATCH_data = torch.Tensor(len(Batch_ids),1*1)
+                MLP_BATCH_data = Variable(MLP_BATCH_data)
+                MLP_Region_data = torch.Tensor(len(Batch_ids),1*5)
+                MLP_Region_data = Variable(MLP_Region_data)
+                if torch.cuda.is_available():
+                    MLP_TE_data = MLP_TE_data.to(device)
+                    MLP_BATCH_data = MLP_BATCH_data.to(device)
+                    MLP_Region_data = MLP_Region_data.to(device)
                 MLP_TE_data.data.copy_(TE_vecs)
                 MLP_Region_data.data.copy_(TE_region)
-                Batch_info  = Batch_ids.clone().detach().view(BATCH_SIZE,1)
+                Batch_info  = Batch_ids.clone().detach().view(len(Batch_ids),1)
                 MLP_BATCH_data.data.copy_(Batch_info)
-                embedding, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, BATCH_SIZE, device)
+                embedding, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, len(Batch_ids), device)
                 loss = loss_f(reconstruct, MLP_TE_data*1000000)
                 optimizer.zero_grad()
                 loss.backward()
@@ -158,7 +160,7 @@ def get_AE_embedding(data_mode, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FA
                     Meta_Data[1] = Meta_Data[1]+(list(metainfo[1]))
                     Meta_Data[2] = Meta_Data[2]+(list(metainfo[2]))
 
-                    Batch_Info = np.append(Batch_Info,(Batch_info.cpu().detach().numpy().reshape(1,BATCH_SIZE)))
+                    Batch_Info = np.append(Batch_Info,(Batch_info.cpu().detach().numpy().reshape(1,len(Batch_ids))))
                     Region_Info = Region_Info+(MLP_Region_data.cpu().detach().numpy().tolist())
                     hidden_sparse = sparse.csr_matrix(embedding.cpu().detach().numpy())
                     hidden_info = scipy.sparse.vstack([hidden_info,hidden_sparse])
@@ -177,7 +179,7 @@ def get_MLP_input(BATCH_SIZE, Meta_Data, hidden_info, Batch_Info, Region_Info):
     for i in range(len(MLP_TE_trained)):
         MLP_trained_data.append([MLP_TE_trained[i],  MLP_Batch_trained[i], MLP_Region_trained[i],MLP_meta_trained[i]])
 #     print(len(MLP_TE_trained))
-    MLP_trained_loader = DataLoader(MLP_trained_data, BATCH_SIZE, shuffle = True, drop_last=True)
+    MLP_trained_loader = DataLoader(MLP_trained_data, BATCH_SIZE, shuffle = True, drop_last=False)
 
 
 
@@ -201,18 +203,7 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
     #     embeddings = embeddings.to(device)
     #     MLP_BATCH_data_2 = MLP_BATCH_data_2.to(device)
     #     MLP_Region_data_2= MLP_Region_data_2.to(device)
-    embeddings = torch.Tensor(BATCH_SIZE,1*128)
-    embeddings = Variable(embeddings)
-    MLP_BATCH_data_2 = torch.Tensor(BATCH_SIZE,1*1)
-    MLP_BATCH_data_2 = Variable(MLP_BATCH_data_2)
-    MLP_Region_data_2 = torch.Tensor(BATCH_SIZE,1*5)
-    MLP_Region_data_2 = Variable(MLP_Region_data_2)
-    MLP_meta_data_2 = torch.Tensor(BATCH_SIZE,1*2)
-    MLP_meta_data_2 = Variable(MLP_meta_data_2)
-    MLP = MLP.to(device)
-    embeddings = embeddings.to(device)
-    MLP_BATCH_data_2 = MLP_BATCH_data_2.to(device)
-    MLP_Region_data_2= MLP_Region_data_2.to(device)
+    
     #optimizer  & loss
     MLP_optimizer = torch.optim.Adam(MLP.parameters(), lr=MLP_LR)
     MLP_Loss_list = []
@@ -228,14 +219,26 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
                 Region_Info = []
                 Meta_Data = [[],[],[]]
             for step, (embedding, Batch_ids, TE_region, metainfo) in enumerate(MLP_trained_loader):
+                embeddings = torch.Tensor(len(Batch_ids),1*128)
+                embeddings = Variable(embeddings)
+                MLP_BATCH_data_2 = torch.Tensor(len(Batch_ids),1*1)
+                MLP_BATCH_data_2 = Variable(MLP_BATCH_data_2)
+                MLP_Region_data_2 = torch.Tensor(len(Batch_ids),1*5)
+                MLP_Region_data_2 = Variable(MLP_Region_data_2)
+                MLP_meta_data_2 = torch.Tensor(len(Batch_ids),1*2)
+                MLP_meta_data_2 = Variable(MLP_meta_data_2)
+                MLP = MLP.to(device)
+                embeddings = embeddings.to(device)
+                MLP_BATCH_data_2 = MLP_BATCH_data_2.to(device)
+                MLP_Region_data_2= MLP_Region_data_2.to(device)
                 embeddings.data.copy_(embedding)
-                Batch_info  = Batch_ids.clone().detach().view(BATCH_SIZE,1)
+                Batch_info  = Batch_ids.clone().detach().view(len(Batch_ids),1)
                 MLP_BATCH_data_2.data.copy_(Batch_info)
                 MLP_Region_data_2.data.copy_(TE_region)
                 
-                alpha = MLP(embeddings, MLP_BATCH_data_2, BATCH_SIZE, device)
+                alpha = MLP(embeddings, MLP_BATCH_data_2, len(Batch_ids), device)
 
-                Loss = criterion(alpha, MLP_Region_data_2, BATCH_SIZE,bin_size)
+                Loss = criterion(alpha, MLP_Region_data_2, len(Batch_ids),bin_size)
                 MLP_optimizer.zero_grad()
                 Loss.mean().backward()
                 MLP_optimizer.step()
@@ -243,9 +246,9 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
                     Meta_Data[0] = Meta_Data[0]+(list(metainfo[0]))
                     Meta_Data[1] = Meta_Data[1]+(list(metainfo[1]))
                     Meta_Data[2] = Meta_Data[2]+(list(metainfo[2]))
-                    Batch_Info = np.append(Batch_Info,(Batch_info.cpu().detach().numpy().reshape(1,BATCH_SIZE)))
+                    Batch_Info = np.append(Batch_Info,(Batch_info.cpu().detach().numpy().reshape(1,len(Batch_ids))))
                     Region_Info = Region_Info+(MLP_Region_data_2.cpu().detach().numpy().tolist())
-                    problist = np.append(problist, alpha.cpu().detach().numpy().reshape(BATCH_SIZE))
+                    problist = np.append(problist, alpha.cpu().detach().numpy().reshape(len(Batch_ids)))
                 MLP_Loss_val = np.append(MLP_Loss_val,Loss.cpu().detach())
             MLP_Loss_list.append(np.mean(MLP_Loss_val))
             endtime = datetime.datetime.now()

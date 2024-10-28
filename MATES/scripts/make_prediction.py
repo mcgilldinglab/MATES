@@ -22,7 +22,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
         MLP_full_data.append([MLP_TE_full[i],  MLP_Batch_full[i], MLP_meta_full_tmp[i]])
 
     BATCH_SIZE = 1000
-    MLP_full_loader = DataLoader(MLP_full_data, BATCH_SIZE, shuffle = True, drop_last=True)
+    MLP_full_loader = DataLoader(MLP_full_data, BATCH_SIZE, shuffle = True, drop_last=False)
 
 
     MLP_TE_data = torch.Tensor(BATCH_SIZE,1*2001)
@@ -70,7 +70,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
                 Batch_info  = Batch_ids.clone().detach().view(current_batch_size,1)
                 MLP_BATCH_data.data.copy_(Batch_info)
                 ##AE Part
-                embeddings, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, BATCH_SIZE, device)
+                embeddings, reconstruct = AENet(MLP_TE_data*1000000, MLP_BATCH_data, current_batch_size, device)
                 ##MLP Part
                 # alpha = MLP(embeddings, MLP_BATCH_data, BATCH_SIZE)
                 # Meta_Data_full[0] = Meta_Data_full[0]+(list(metainfo[0]))
