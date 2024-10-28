@@ -4,7 +4,7 @@ from MATES.scripts.generateTraining import generate_Training
 from MATES.scripts.generatePrediction import generate_Prediction
 from MATES.scripts.helper_function import *
 
-def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, ref_path = 'Default', bc_path_file=None):
+def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, cut_off=50,ref_path = 'Default', bc_path_file=None):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
     if TE_mode not in ["inclusive", "exclusive"]:
@@ -14,7 +14,7 @@ def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, propor
         TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
     else:
         TE_ref_path = ref_path
-
+    print(TE_ref_path)
     create_directory("MU_Stats")
 
     # Check if the necessary files exist
@@ -28,9 +28,9 @@ def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, propor
         barcodes_paths = read_file_lines(bc_path_file)
         
         for sample, barcodes_path in zip(sample_names, barcodes_paths):
-            calculate_MU(data_mode, sample, bin_size, proportion, TE_ref_path, barcodes_path)
+            calculate_MU(data_mode, sample, bin_size, proportion, TE_ref_path, cut_off,barcodes_path)
     elif data_mode == 'Smart_seq':
-        calculate_MU(data_mode, sample_list_file, bin_size, proportion, TE_ref_path)
+        calculate_MU(data_mode, sample_list_file, bin_size, proportion, TE_ref_path,cut_off)
 
 def generate_training_sample(data_mode, sample_list_file, bin_size, proportion):
     if data_mode not in ["10X", "Smart_seq"]:
