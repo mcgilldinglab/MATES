@@ -14,7 +14,7 @@ def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, propor
         TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
     else:
         TE_ref_path = ref_path
-    print(TE_ref_path)
+
     create_directory("MU_Stats")
 
     # Check if the necessary files exist
