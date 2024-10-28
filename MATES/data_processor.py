@@ -30,9 +30,8 @@ def calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, propor
         for sample, barcodes_path in zip(sample_names, barcodes_paths):
             calculate_MU(data_mode, sample, bin_size, proportion, TE_ref_path, cut_off,barcodes_path)
     elif data_mode == 'Smart_seq':
-        calculate_MU(data_mode, sample_list_file, bin_size, proportion, TE_ref_path,cut_off)
-
-def generate_training_sample(data_mode, sample_list_file, bin_size, proportion):
+        calculate_MU(data_mode, sample_list_file, bin_size, proportion,TE_ref_path, cut_off)
+def generate_training_sample(data_mode, sample_list_file, bin_size, proportion,cut_off=50):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
     
@@ -42,9 +41,9 @@ def generate_training_sample(data_mode, sample_list_file, bin_size, proportion):
     sample_names = read_file_lines(sample_list_file) if data_mode == "10X" else [sample_list_file]
     
     for sample in sample_names:
-        generate_Training(data_mode, sample, bin_size, proportion)
+        generate_Training(data_mode, sample, bin_size, proportion, cut_off)
 
-def generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, proportion, ref_path = 'Default', bc_path_file=None):
+def generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, proportion, cut_off=50,ref_path = 'Default', bc_path_file=None):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
     if TE_mode not in ["inclusive", "exclusive"]:
@@ -68,6 +67,6 @@ def generate_prediction_sample(TE_mode, data_mode, sample_list_file, bin_size, p
         barcodes_paths = read_file_lines(bc_path_file)
         
         for sample, barcodes_path in zip(sample_names, barcodes_paths):
-            generate_Prediction(data_mode, sample, bin_size, proportion, TE_ref_path, TE_mode, barcodes_path)
+            generate_Prediction(data_mode, sample, bin_size, proportion, TE_ref_path, cut_off,TE_mode, barcodes_path)
     elif data_mode == 'Smart_seq':
-        generate_Prediction(data_mode, sample_list_file, bin_size, proportion, TE_ref_path, TE_mode)
+        generate_Prediction(data_mode, sample_list_file, bin_size, proportion, TE_ref_path,cut_off, TE_mode)
