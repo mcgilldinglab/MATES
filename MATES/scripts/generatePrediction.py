@@ -8,7 +8,7 @@ from pathlib import Path
 from os.path import join
 from tqdm import tqdm
 
-def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, TE_mode = None, barcodes_file=None):
+def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, cut_off=50,TE_mode = None, barcodes_file=None):
     Multi_TE_dir = 'Multi_TE_intron' if TE_mode == 'intronic' else 'Multi_TE'
     coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'intronic' else 'count_coverage'
     cur_path = os.getcwd()
@@ -19,7 +19,7 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, TE_m
         TE_fam_path = join(cur_path,'MU_Stats',str(bin_size)+'_'+str(prop)+'_stat.csv')
         tmp = pd.read_csv(TE_fam_path)
         tmp.columns=['TE_fam', 'count']
-        tmp = tmp[tmp['count']>50]
+        tmp = tmp[tmp['count']>cut_off]
         selected_Fam = tmp['TE_fam'].tolist()
         Predict_TE_idx = TEs[TEs[6].isin(selected_Fam)][4].tolist()
 
@@ -37,7 +37,7 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, TE_m
         TE_fam_path = join(cur_path,'MU_Stats',sample,str(bin_size)+'_'+str(prop)+'_stat.csv')
         tmp = pd.read_csv(TE_fam_path)
         tmp.columns=['TE_fam', 'count']
-        tmp = tmp[tmp['count']>50]
+        tmp = tmp[tmp['count']>cut_off]
         selected_Fam = tmp['TE_fam'].tolist()
         Predict_TE_idx = TEs[TEs[6].isin(selected_Fam)][4].tolist()
 

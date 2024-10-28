@@ -10,10 +10,10 @@ import sys
 from os.path import join
 from tqdm import tqdm
 
-def get_unique_sample(cell_ana, stat, data_mode, sample=None):
+def get_unique_sample(cell_ana, stat, data_mode, cut_off=50, sample=None):
     cur_path = os.getcwd()
     stat.columns = ['fam','count']
-    selected_TE_fam = stat[stat['count']>50]['fam'].tolist()
+    selected_TE_fam = stat[stat['count']>cut_off]['fam'].tolist()
     unique_vec_matrix = {}
     unique_vec_meta = {}
     for fam in selected_TE_fam:
@@ -105,7 +105,7 @@ def get_multi_sample(cell_ana, data_mode, unique_vec_meta_Transform, bin_size, p
     MLP_Region_train = np.array(multi_region_info)
     return MLP_TE_train, MLP_Batch_train, MLP_meta_train, MLP_Region_train
 
-def generate_Training(data_mode, file_name, bin_size, prop):
+def generate_Training(data_mode, file_name, bin_size, prop,cut_off=50):
     cur_path = os.getcwd()
     if data_mode == 'Smart_seq':
         with open('./'+file_name) as file:
@@ -118,7 +118,7 @@ def generate_Training(data_mode, file_name, bin_size, prop):
         csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
         stat = pd.read_csv(csv)
         print('Start generating training sample for unqiue read TE...')
-        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode)
+        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode,cut_off=cut_off)
         TE_train = np.array(unique_vec_matrix)
         Batch_train = np.array(unique_TE_matrix)
         p1= cur_path + '/MU_Stats/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
@@ -128,7 +128,6 @@ def generate_Training(data_mode, file_name, bin_size, prop):
         with open(cur_path + '/MU_Stats/Unique_selected_meta_'+str(bin_size)+'_'+str(prop)+'.pkl', 'wb') as f:
             pickle.dump(unique_vec_meta_select, f)
         print("Finish generating training sample for unqiue read TE.")
-        
         unique_vec_meta_Transform = {}
         for cell in cell_ana.keys():
             unique_vec_meta_Transform[cell] = {}
