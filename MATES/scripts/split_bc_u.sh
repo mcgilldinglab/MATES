@@ -12,18 +12,24 @@ if [ -f "$1" ] && [ -f "$2" ]; then
         
         # Run the Python script
         python "$SCRIPT_DIR/split_bam_by_bc.py" "$3" ./unique_read/${line1}_uniqueread.bam \
-            ${line2} ./unique_read/${line1}/by_barcode/ >> ./unique_read/${line1}/${line1}_unique_splitting.log
+            ${line2} ./unique_read/${line1}/by_barcode/ "$4" >> ./unique_read/${line1}/${line1}_unique_splitting.log
         
         echo "End Processing ${line1}" >> ./unique_read/split_barcode.log
     done
 fi
-for line in `cat "$1"`
-    do
+# for line in `cat "$1"`
+#     do
+#     echo "Start Indexing Unique Bam in ${line}" >> ./unique_read/split_barcode.log
+#     for file in ./unique_read/${line}/by_barcode/*.bam;
+#         do
+#         samtools sort ${file} -o ${file}
+#         samtools index ${file}
+#         done
+#     echo "End Indexing Unique Bam in ${line}" >> ./unique_read/split_barcode.log
+#     done
+for line in $(cat "$1"); do
     echo "Start Indexing Unique Bam in ${line}" >> ./unique_read/split_barcode.log
-    for file in ./unique_read/${line}/by_barcode/*.bam;
-        do
-        samtools sort ${file} -o ${file}
-        samtools index ${file}
-        done
+    export line  # Export `line` so it's accessible to parallel subprocesses
+    find ./unique_read/${line}/by_barcode/*.bam | parallel -j "$4" --no-notice "samtools sort {} -o {} && samtools index {}"
     echo "End Indexing Unique Bam in ${line}" >> ./unique_read/split_barcode.log
-    done
+done
