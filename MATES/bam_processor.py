@@ -4,7 +4,7 @@ import math
 import pkg_resources
 from MATES.scripts.helper_function import *
 
-def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_ind='CR', long_read=False, bc_path_file=None):
+def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, process_num=1,bc_ind='CR', long_read=False, bc_path_file=None):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
 
@@ -25,7 +25,7 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
     
     if long_read and data_mode == "10X":
         create_directory("./long_read")
-        command_template = "bash MATES/scripts/split_bc_long.sh ./file_tmp/{i} ./bam_tmp/{i} ./bc_tmp/{i} " + bc_ind
+        command_template = "bash MATES/scripts/split_bc_long.sh ./file_tmp/{i} ./bam_tmp/{i} ./bc_tmp/{i} " + bc_ind + " " + str(process_num)
         num_batches = len(os.listdir('./file_tmp'))
         run_command_in_batches(command_template, num_batches)
         print("Finish splitting sub-bam for long read data.")
@@ -46,12 +46,12 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_
 
             print("Start splitting multi sub-bam based on cell barcodes...")
             script_path = pkg_resources.resource_filename('MATES', 'scripts/split_bc_u.sh')
-            command_template = f"bash {script_path} ./file_tmp/{{i}} ./bc_tmp/{{i}} {bc_ind}"
+            command_template = f"bash {script_path} ./file_tmp/{{i}} ./bc_tmp/{{i}} {bc_ind} {process_num}"
             run_command_in_batches(command_template, num_batches)
             print("Finish splitting unique sub-bam.")
             
             script_path = pkg_resources.resource_filename('MATES', 'scripts/split_bc_m.sh')
-            command_template = f"bash {script_path} ./file_tmp/{{i}} ./bc_tmp/{{i}} {bc_ind}"
+            command_template = f"bash {script_path} ./file_tmp/{{i}} ./bc_tmp/{{i}} {bc_ind} {process_num}"
             run_command_in_batches(command_template, num_batches)
             print("Finish splitting multi sub-bam.")
 
