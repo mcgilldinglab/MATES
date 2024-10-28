@@ -180,11 +180,10 @@ def calculate_M_U_10X(sample, TE_ref, barcodes, BIN_SIZE, PROPORTION):
     return vec_count
 
 
-def calculate_MU(data_mode, file_name, BIN_SIZE, PROPORTION, path_to_TE_ref, barcodes_file=None):
+def calculate_MU(data_mode, file_name, BIN_SIZE, PROPORTION, path_to_TE_ref, cut_off=50,barcodes_file=None):
     cur_path = os.getcwd()
     if not os.path.exists(cur_path + '/MU_Stats'):
             os.mkdir(cur_path + '/MU_Stats')
-
     TEs = pd.read_csv(path_to_TE_ref, header=None)
     TEs.columns = ['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand', 'TE_fam', 'length']
     TE_ref = TEs
@@ -220,7 +219,7 @@ def calculate_MU(data_mode, file_name, BIN_SIZE, PROPORTION, path_to_TE_ref, bar
             if key[-1]=='?' or key=='Unknown':
                 del vec_count_modif[key]
                 continue
-            if count_dict[key]<= 50:
+            if count_dict[key]<= cut_off:
                 del vec_count_modif[key]
                 continue
         vec_by_cell={}
@@ -264,7 +263,7 @@ def calculate_MU(data_mode, file_name, BIN_SIZE, PROPORTION, path_to_TE_ref, bar
             if key[-1]=='?' or key=='Unknown':
                 del vec_count_modif[key]
                 continue
-            if count_dict[key]<= 50:
+            if count_dict[key]<= cut_off:
                 del vec_count_modif[key]
                 continue
 
