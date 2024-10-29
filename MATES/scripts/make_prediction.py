@@ -101,7 +101,7 @@ def make_prediction(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_
     def check_cuda_device(device='cuda:0'):
         if device == 'cpu':
             print("Running on CPU.")
-        return
+            return
 
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA is not available.")
@@ -150,16 +150,8 @@ def make_prediction(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_
         if not os.path.isdir('prediction'):
             os.mkdir('prediction')
         df_empty.drop_duplicates().to_csv("prediction/Multi_MTX.csv")
-        print('Finish quantify Multi TE, Combinning with unique TE...')
-        df_unique = pd.read_csv('Unique_TE/Unique_All_MTX.csv', index_col = 0)
-        df_unique = df_unique.fillna(0)
-        df_full = pd.concat([df_unique,df_empty], ignore_index=False)
-        df_full = df_full.groupby(df_full.index).sum()
-        if not os.path.isdir('Combination'):
-            os.mkdir('Combination')
-        df_full.drop_duplicates().to_csv('Combination/TE_MTX.csv')
-        print("Finish Predict")
-
+        print('Finish quantify Multi TE.')
+        
     elif data_mode == '10X':
         print("start calculating")
         p = cur_path + '/Multi_TE/' + sample
