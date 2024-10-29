@@ -75,6 +75,7 @@ def get_coverage_vector(aligned_file,chromosome,start,end,total_reads):
     return coverage_vector, coverage_vector_igv
 
 def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir, sav_vec = True):
+    t = time.time()
     TE_index_list = []
     TE_region_read_num = []
     IGV_vecs = []   
@@ -97,14 +98,8 @@ def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir
     pybedtools.set_tempdir(cur_path+'/tmp')  
     b = pybedtools.example_bedtool(path_to_bam)
     a_with_b = TE_ref_bed.intersect(b, c = True, wa = True, nonamecheck=True)
-    count_path = join(path,'count.txt')
-    a_with_b.saveas(count_path)
-
-    TE_vec_count = pd.read_csv(count_path,sep='\t', header=None, low_memory=False)
-    TE_vec_count.columns = ['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length', 'count']
+    TE_vec_count = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length', 'count'])
     TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
-    
-
     for idx, row in TE_selected.iterrows():
         chrom = row['chromosome']
         start = row['start']
@@ -133,13 +128,11 @@ def generate_unique_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir
                 if sav_vec:
                     sparse_vector = sparse.csr_matrix(coverage_vector)
                     scipy.sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
-    
     # IGV_vecs = np.array(IGV_vecs)
     # unique_IGV_mtx = sparse.csr_matrix(IGV_vecs)
     # scipy.sparse.save_npz(join(path,"unique_IGV_vec.npz"), unique_IGV_mtx)
     # with open(join(path,"unique_IGV_meta.npz"),'wb') as f:
     #     pickle.dump(TE_index_list,f)
-
     count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
     count_table_TE = pd.DataFrame(count_table_TE)
     count_table_TE.to_csv(join(path,'TE_unique_Info.csv'),index = False)
@@ -169,11 +162,7 @@ def generate_multi_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir)
     pybedtools.set_tempdir(cur_path+'/tmp')  
     b = pybedtools.example_bedtool(path_to_bam)
     a_with_b = TE_ref_bed.intersect(b, c = True, wa = True, nonamecheck=True)
-    count_path = join(path,'count.txt')
-    a_with_b.saveas(count_path)
-
-    TE_vec_count = pd.read_csv(count_path,sep='\t', header=None, low_memory=False)
-    TE_vec_count.columns = ['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length', 'count']
+    TE_vec_count = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length', 'count'])
     TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
     
     for idx, row in TE_selected.iterrows():
@@ -209,13 +198,14 @@ def generate_multi_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir)
 
     aligned_file.close() 
     return TE_index_list
-
+import time
 sample = sys.argv[1]
 batch = int(sys.argv[2])
 batch_size = int(sys.argv[3])
 barcodes_file = sys.argv[4]
 TE_ref_path = sys.argv[5]
 TE_mode = sys.argv[6]
+t = time.time()
 
 coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'intronic' else 'count_coverage'
 cur_path = os.getcwd()
@@ -246,6 +236,9 @@ else:
     end_idx = (batch+1)*batch_size
 
 for bc in barcodes[start_idx: end_idx]:
+    counted += 1
+    if counted % 10 == 0 or counted == batch_size:
+        print("Processing batch " + str(batch) + ":" + str(counted) +"/"+ str(batch_size) + " for sample " + sample)
     path_to_unique_bam =  join(unique_path, bc+'.bam')
     path_to_multi_bam =  join(multi_path, bc+'.bam')
     
@@ -260,7 +253,7 @@ for bc in barcodes[start_idx: end_idx]:
         k_path_u = k_path + '/unique_vec'
         os.rmdir(k_path_u)        
         continue
-    
+
     TE_index_list_unique = generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, coverage_stored_dir, sav_vec = True)
     TE_index_list_multi = generate_multi_matric(samp_bc, path_to_multi_bam, TE_ref_bed, coverage_stored_dir)
     overlap = list(set(TE_index_list_unique) & set(TE_index_list_multi))
@@ -323,8 +316,6 @@ for bc in barcodes[start_idx: end_idx]:
     
     shutil.rmtree(k_path_u)
     shutil.rmtree(k_path_m)
-    os.remove(join(k_path,'count.txt'))
 
-    counted += 1
-    if counted % 10 == 0 or counted == batch_size:
-        print("Finish batch " + str(batch) + ":" + str(counted) +"/"+ str(batch_size) + " for sample " + sample)
+    
+print(time.time()-t)
