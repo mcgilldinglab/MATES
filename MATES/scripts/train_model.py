@@ -330,7 +330,10 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
             unique_meta = pickle.load(f)
         TE_train = unique_vec_matrix.toarray()
         i = TE_train.shape[0]
-        Batch_train = unique_TE_matrix.toarray().reshape(i,)
+        try:
+            Batch_train = unique_TE_matrix.toarray().reshape(i,)
+        except:
+            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
         p3 = path + '/Multi_TE_train_'+BIN_SIZE + '_' + PROP+'.npz'
         p4 = path + '/Multi_Batch_train_'+BIN_SIZE + '_' + PROP+'.npz'
         p5 = path + '/Multi_Region_train_'+BIN_SIZE + '_' + PROP +'.npz'
@@ -377,7 +380,10 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
             unique_meta = pickle.load(f)
         TE_train = unique_vec_matrix.toarray()
         i = TE_train.shape[0]
-        Batch_train = unique_TE_matrix.toarray().reshape(i,)
+        try:
+            Batch_train = unique_TE_matrix.toarray().reshape(i,)
+        except:
+            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
         p3 = path + '/Multi_TE_train_'+BIN_SIZE + '_' + PROP+'.npz'
         p4 = path + '/Multi_Batch_train_'+BIN_SIZE + '_' + PROP+'.npz'
         p5 = path + '/Multi_Region_train_'+BIN_SIZE + '_' + PROP +'.npz'

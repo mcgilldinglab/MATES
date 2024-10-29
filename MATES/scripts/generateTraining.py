@@ -160,7 +160,7 @@ def generate_Training(data_mode, file_name, bin_size, prop,cut_off=50):
         csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
         stat = pd.read_csv(csv)
         print('Start generating training sample for unqiue read TE in '+sample+"...")
-        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode, sample)
+        unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode, cut_off=cut_off,sample =sample)
         TE_train = np.array(unique_vec_matrix)
         Batch_train = np.array(unique_TE_matrix)
         p1= cur_path + '/MU_Stats/'+sample+'/Unique_TE_train_'+str(bin_size)+'_'+str(prop)+'.npz'
