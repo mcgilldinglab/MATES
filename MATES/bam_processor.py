@@ -2,7 +2,34 @@ import subprocess
 import os
 import math
 import pkg_resources
+from .scripts import start_split_count
 from MATES.scripts.helper_function import *
+def split_count_10X_data(TE_mode,data_mode, threads_num, sample_list_file, bam_path_file, bc_path_file, bc_ind='CR', ref_path = 'Default',long_read=False):
+    cur_pwd = os.getcwd()
+    if data_mode != "10X":
+        raise ValueError("Invalid data format. Currently this function only support '10X' format.")
+    if TE_mode not in ["inclusive", "exclusive"]:
+        raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
+    if ref_path == 'Default':
+        TE_ref_path = './TE_nooverlap.bed' if TE_mode == "exclusive" else './TE_full.bed'
+    else:
+        TE_ref_path = ref_path
+    TE_ref_path = os.path.join(cur_pwd, TE_ref_path)
+    sample_count = sum(1 for line in open(sample_list_file))
+    batch_size = math.ceil(sample_count / threads_num)
+    # Check if the necessary files exist
+    check_file_exists(TE_ref_path)
+    check_file_exists(sample_list_file)
+    if bc_path_file:
+        check_file_exists(bc_path_file)
+
+    create_directory("./count_coverage")
+    # create_directory("./count_coverage/" + sample)
+    sample_names = read_file_lines(sample_list_file)
+    barcodes_paths = read_file_lines(bc_path_file)
+    bam_files = read_file_lines(bam_path_file)
+    for sample, bam_file,barcodes in zip(sample_names, bam_files,barcodes_paths):
+        start_split_count(bc_ind, os.path.join(cur_pwd,bam_file), os.path.join(cur_pwd,barcodes), sample, TE_mode, TE_ref_path)
 
 def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, process_num=1,bc_ind='CR', long_read=False, bc_path_file=None):
     if data_mode not in ["10X", "Smart_seq"]:

@@ -85,7 +85,7 @@ def pretrain_AE(EPOCHS, bin_size, prop, BATCH_SIZE, device, AE_LR, TE_FAM_NUMBER
         #     compute the epoch training loss
             loss_list.append(np.mean(loss_val))
             endtime = datetime.datetime.now()
-            if (epoch+1) % 10 == 0:
+            if (epoch+1) % 10 == 0 or epoch+1 == EPOCHS:
                 p = join(path_dir, 'AE_pretrain/AE_'+str((epoch+1))+'_pretrained.pt')
                 torch.save(AENet,p)
             # display the epoch training loss
@@ -252,7 +252,7 @@ def training_MLP(EPOCHS, bin_size, prop, device, BATCH_SIZE, TE_FAM_NUMBER, MLP_
                 MLP_Loss_val = np.append(MLP_Loss_val,Loss.cpu().detach())
             MLP_Loss_list.append(np.mean(MLP_Loss_val))
             endtime = datetime.datetime.now()
-            if (epoch+1) % 10 == 0:
+            if (epoch+1) % 10 == 0 or epoch+1 == EPOCHS:
                 p = join(path_dir,'MLP/MLP_'+str(epoch+1)+'_'+str(EPOCHS)+'.pt')
                 torch.save(MLP,p)
             print("epoch : {}/{}, loss = {:.6f}, takes : {} seconds".format(epoch + 1, EPOCHS, np.mean(MLP_Loss_val), endtime-starttime), file = MLP_log)
