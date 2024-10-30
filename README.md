@@ -13,17 +13,6 @@ With the burgeoning field of single-cell sequencing data, the potential for in-d
 MATES is actively under development; please feel free to reach out if you encounter any issues.
 
 ## Installation
-### Prerequisites
-samtools == 1.17
-```sh
-conda install -c bioconda samtools
-pip install pysam
-```
-bedtools == 2.31.0
-```sh
-conda install -c bioconda bedtools
-pip install pybedtools
-```
 
 ### Installing MATES
 To install MATES, you can run the following command:
@@ -36,15 +25,12 @@ conda create -n mates_env python=3.9
 conda activate mates_env
 
 # Install required packages
-conda install -c bioconda samtools
-pip install pysam
-conda install -c bioconda bedtools
-pip install pybedtools
+conda install -c bioconda samtools -y
+conda install -c bioconda bedtools -y
 
 # Install MATES
 cd MATES
 pip install .
-pip install velocyto
 
 # Add environment to Jupyter Notebook
 conda install ipykernel
