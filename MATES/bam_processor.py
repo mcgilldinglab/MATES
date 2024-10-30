@@ -13,7 +13,10 @@ def split_count_10X_data(TE_mode,data_mode, threads_num, sample_list_file, bam_p
     if ref_path == 'Default':
         TE_ref_path = './TE_nooverlap.bed' if TE_mode == "exclusive" else './TE_full.bed'
     else:
+        if ref_path.split('.')[-1] == 'csv':
+            ref_path = ref_path.split('.')[0]+'.bed'
         TE_ref_path = ref_path
+        
     TE_ref_path = os.path.join(cur_pwd, TE_ref_path)
     sample_count = sum(1 for line in open(sample_list_file))
     batch_size = math.ceil(sample_count / threads_num)
