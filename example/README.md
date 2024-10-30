@@ -89,42 +89,86 @@ $ cat TE_reference.csv | head
 ```
 You can also find [UCSC table browser use guide](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/reference_downloading.md) to help with downloading reference.
 
+----
+### For 10X data
+----
 ### Step 1: Processing Bam Files
 To run the first step, you'll be required to furnish three separate .txt files containing essential information: sample names, respective BAM file addresses, and in the case of 10X data, the supplementary addresses for barcode files associated with each sample.
 ```python
 import MATES
 from MATES import bam_processor
 
-bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, bc_path_file=None)
+bam_processor.split_count_10X_data(TE_mode, '10X', threads_num, sample_list_file, bam_path_file, bc_path_file, bc_ind,TE_ref_bed_path)
+```
+
+### Step 2: Generate Training/Predicting Samples
+```python
+from MATES import data_processor
+
+data_processor.calculate_UM_region(TE_mode, '10X', sample_list_file, bin_size=5, proportion=80, bc_path_file)
+
+data_processor.generate_training_sample('10X', sample_list_file, bin_size, proportion)
+
+data_processor.generate_prediction_sample('10X',sample_list_file, bin_size, proportion, bc_path_file)
+```
+### Step 3: Training MATES Model and Make Prediction of α
+```python
+from MATES import MATES_model
+
+MATES_model.train('10X', sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
+
+MATES_model.prediction(TE_mode, '10X', sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
+```
+### Step 4: Quantify TE Expression Matrix
+```python
+from MATES import TE_quantifier
+
+TE_quantifier.unique_TE_MTX(TE_mode, '10X', sample_list_file, threads_num, bc_path_file)
+
+TE_quantifier.finalize_TE_MTX('10X', sample_list_file=None)
+```
+
+----
+For Smart-seq data
+----
+
+### Step 1: Processing Bam Files
+To run the first step, you'll be required to furnish two separate .txt files containing essential information: sample names, respective BAM file addresses. For Smart-seq data, MATES does not take barcode list files.
+
+```python
+import MATES
+from MATES import bam_processor
+
+bam_processor.split_bam_files('Smart_seq', threads_num, sample_list_file, bam_path_file, bc_path_file=None)
 ```
 ### Step 2: Build Coverage Vectors
 ```python
-bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, bc_path_file=None)
+bam_processor.count_coverage_vec(TE_mode, 'Smart_seq', threads_num, sample_list_file, bc_path_file=None)
 ```
 
 ### Step 3: Generate Training/Predicting Samples
 ```python
 from MATES import data_processor
 
-data_processor.calculate_UM_region(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
+data_processor.calculate_UM_region(TE_mode, 'Smart_seq', sample_list_file, bin_size=5, proportion=80, bc_path_file=None)
 
-data_processor.generate_training_sample(data_mode, sample_list_file, bin_size, proportion)
+data_processor.generate_training_sample('Smart_seq', sample_list_file, bin_size, proportion)
 
-data_processor.generate_prediction_sample(data_mode,sample_list_file, bin_size, proportion, bc_path_file=None)
+data_processor.generate_prediction_sample('Smart_seq',sample_list_file, bin_size, proportion, bc_path_file=None)
 ```
 ### Step 4: Training MATES Model and Make Prediction of α
 ```python
 from MATES import MATES_model
 
-MATES_model.train(data_mode, sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
+MATES_model.train('Smart_seq', sample_list_file, bin_size = 5, proportion = 80, BATCH_SIZE= 4096, AE_LR = 1e-4, MLP_LR = 1e-6, AE_EPOCHS = 200, MLP_EPOCHS = 200, USE_GPU= True)
 
-MATES_model.prediction(TE_mode, data_mode, sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
+MATES_model.prediction(TE_mode, 'Smart_seq', sample_list_file, bin_size = 5, proportion = 80, AE_trained_epochs =200, MLP_trained_epochs=200, USE_GPU= True)
 ```
 ### Step 5: Quantify TE Expression Matrix
 ```python
 from MATES import TE_quantifier
 
-TE_quantifier.unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, bc_path_file=None)
+TE_quantifier.unique_TE_MTX(TE_mode, 'Smart_seq', sample_list_file, threads_num, bc_path_file=None)
 
-TE_quantifier.finalize_TE_MTX(data_mode, sample_list_file=None)
+TE_quantifier.finalize_TE_MTX('Smart_seq', sample_list_file=None)
 ```

@@ -77,9 +77,10 @@ def generate_unique_matrix(aligned_file,dic,TE_selected_bed,cur_path, coverage_s
     TE_index_dict = {}
     
     for bc in tqdm(list(dic.keys()), desc="building unique coverage vectors"):
+        t = time.time()
         TE_index_list = []
         TE_region_read_num = []
-        
+        t = time.time()
         path = join(cur_path, coverage_stored_dir, sample_name)
     # Create a temporary file to store the BAM data
         path = join(path, bc)
@@ -95,22 +96,29 @@ def generate_unique_matrix(aligned_file,dic,TE_selected_bed,cur_path, coverage_s
                     out_bam.write(read)
             
             pysam.index(temp_bam.name)
+            # t = time.time()
             b = pybedtools.example_bedtool(temp_bam.name)
-            tt = time.time()
-            a_with_b = TE_selected_bed.intersect(b, c = True, wa = True, nonamecheck=True)
-            TE_vec_count = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length', 'count'])
-            TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
+
+            a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
+            TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
+            # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
+            # tt2 = time.time()
             with pysam.AlignmentFile(temp_bam.name, "rb") as temp_unique_bam:
 
-                for idx, row in TE_selected.iterrows():
-                    chrom = row['chromosome']
-                    start = row['start']
-                    end = row['end']
-                    strand = row['strand']
-                    TE_index = row['index']
+                # for idx, row in TE_selected.iterrows():
+                for row in TE_selected.itertuples(index=False):
+                    
+                    chrom = row.chromosome#['chromosome']
+                    start = row.start#['start']
+                    end = row.end#['end']
+                    strand = row.strand#['strand']
+                    TE_index = row.index#['index']
                     ##check if TE region has reads
+                    # tt2 = time.time()
                     if temp_unique_bam.count(chrom,start,end) != 0:
                         TE_region_count = get_region_count(temp_unique_bam, chrom,start,end)
+                        # print('tt2 ',time.time()-tt2)
+                        # tt3 = time.time()
                         if TE_region_count!=0:
                             TE_index_list.append(TE_index)
                             TE_region_read_num.append(count_region_read(temp_unique_bam,chrom,start,end))
@@ -121,12 +129,16 @@ def generate_unique_matrix(aligned_file,dic,TE_selected_bed,cur_path, coverage_s
                             elif strand == '-':
                                 region_start = end - 1000
                                 region_end = end + 1000
-                            
+                            # print('tt3 ',time.time()-tt3)
+                            # tt4 = time.time()
                             ##add coverage vector to the matrix
                             coverage_vector, coverage_vector_igv = get_coverage_vector(temp_unique_bam, chrom,region_start, region_end,total_reads[bc])
+                            # print('tt4 ',time.time()-tt4)
+                            # tt5 = time.time()
                             if sav_vec:
                                 sparse_vector = sparse.csr_matrix(coverage_vector)
                                 sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
+                            
         count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
         count_table_TE = pd.DataFrame(count_table_TE)
         count_table_TE.to_csv(join(path,'TE_unique_Info.csv'),index = False)
@@ -155,9 +167,9 @@ def generate_multi_matrix(aligned_file,dic,TE_selected_bed,cur_path, coverage_st
             pysam.index(temp_bam.name)
             b = pybedtools.example_bedtool(temp_bam.name)
             tt = time.time()
-            a_with_b = TE_selected_bed.intersect(b, c = True, wa = True, nonamecheck=True)
-            TE_vec_count = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length', 'count'])
-            TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
+            a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
+            TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
+            # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
             with pysam.AlignmentFile(temp_bam.name, "rb") as temp_multi_bam:
                 for idx, row in TE_selected.iterrows():
                     chrom = row['chromosome']
