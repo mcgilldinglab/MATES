@@ -270,6 +270,7 @@ From loading data to downstream analysis. Please refer to [Example](https://gith
 
 ### Pipeline implementation sample script on different type of single cell data
 * [MATES implementation procedures on Smart-seq2 scRNA and 10X scRNA/scATAC/Multi-Omics data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/pipeline_tutorial.ipynb)
+* [MATES pipeline on 10X Visium data](https://github.com/mcgilldinglab/MATES/blob/main/example/10X_visium_example/10X_visium_example.ipynb)
 * [MATES implementation procedures on Long Reads data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/Tut_LongRead.md)
 
 ### 10x scRNA-seq dataset
