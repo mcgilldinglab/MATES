@@ -216,6 +216,8 @@ def generate_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir, tag_f
     total_reads = {}
     for read in reads:
         count += 1
+        if read.has_tag(tag_field) == False:
+            continue
         bc = read.get_tag(tag_field)
         if bc not in dic:
             dic[bc] = {}
