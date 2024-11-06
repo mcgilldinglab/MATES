@@ -87,7 +87,7 @@ $ cat TE_reference.csv | head
 "585","416","0","0","0","chr4","0","355","-1347776","+","(TTATTATA)n","Simple_repeat","Simple_repeat","1","355","0","8"
 "585","15","134","29","29","chr4","688","723","-1347408","+","(TAA)n","Simple_repeat","Simple_repeat","1","35","0","8"
 ```
-You can also find [UCSC table browser use guide](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/reference_downloading.md) to help with downloading reference.
+Please follow the [step by step TE/Gene reference building tutorial](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/reference_downloading.md).
 
 ----
 ### For 10X data
@@ -104,7 +104,7 @@ bam_processor.split_count_10X_data(TE_mode, '10X', threads_num, sample_list_file
 These two commands could take long time to run, but it works well with large bam files.
 
 ```python
-bam_processor.split_bam_files('10X, threads_num, sample_list_file, bam_path_file, bc_ind, bc_path_file)
+bam_processor.split_bam_files('10X', threads_num, sample_list_file, bam_path_file, bc_ind, bc_path_file)
 bam_processor.count_coverage_vec(TE_mode, '10X', threads_num, sample_list_file, TE_ref_path, bc_path_file)
 ```
 
