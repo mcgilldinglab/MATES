@@ -100,6 +100,13 @@ from MATES import bam_processor
 
 bam_processor.split_count_10X_data(TE_mode, '10X', threads_num, sample_list_file, bam_path_file, bc_path_file, bc_ind,TE_ref_path)
 ```
+#### For large 10X bam files
+These two commands could take long time to run, but it works well with large bam files.
+
+```python
+bam_processor.split_bam_files('10X, threads_num, sample_list_file, bam_path_file, bc_ind, bc_path_file)
+bam_processor.count_coverage_vec(TE_mode, '10X', threads_num, sample_list_file, TE_ref_path, bc_path_file)
+```
 
 ### Step 2: Generate Training/Predicting Samples
 ```python
