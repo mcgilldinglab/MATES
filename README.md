@@ -265,6 +265,9 @@ correct_intronic_TE(data_mode, sample_list_file, ref_path = 'Default')
 ## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default TE reference is of name 'TE_intronic.csv'. 
 ``` 
 ## Tutorials
+### Customize the reference genome for the species of interest. 
+Please refer to the [tutorial of building TE and Gene reference genome](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/reference_downloading.md).
+
 ### Walkthrough Example
 From loading data to downstream analysis. Please refer to [Example](https://github.com/mcgilldinglab/MATES/blob/main/example) Section for deatils.
 
