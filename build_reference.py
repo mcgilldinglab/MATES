@@ -47,6 +47,7 @@ def main():
         TEs.columns = ['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']
         genes = pr.read_gtf(args.other_species_GTF)
         genes = genes[['Chromosome','Feature','Start','End','Strand','gene_id','gene_name']]
+        genes = genes.as_df()
         TE = TEs
 
 
