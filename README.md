@@ -8,7 +8,8 @@ MATES is a specialized tool designed for precise quantification of transposable 
 With the burgeoning field of single-cell sequencing data, the potential for in-depth TE quantification and analysis is enormous, opening avenues to gain invaluable insights into the molecular mechanisms underpinning various human diseases. MATES furnishes a powerful tool for accurately quantifying and investigating TEs at specific loci and single-cell level, thereby significantly enriching our understanding of complex biological processes. This opens a new dimension for genomics and cell biology research and holds promise for potential therapeutic breakthroughs.
 
 ## Relesae Note
-* Version 0.1.3: We added a new function `bam_processor.split_count_10X_data()` to speed-up the preprocessing step for 10X data. This function currently only supports the 10X data. We added more detailed step-by-step script for 10X and Smart-seq data in [example](example/README.md). We also fixed several bugs raised by our users. 
+* Version 0.1.4: Enhanced the build_reference.py script and the tutorial to build reference genome for species other than Human and Mouse.
+* Version 0.1.3: We added a experimental new function `bam_processor.split_count_10X_data()` to speed-up the preprocessing step for 10X data. **Note: For large bam file, this function will raise the Out-of-memory issue. If you encounter this issue, please use `bam_processor.split_bam_files()` and `bam_processor.count_coverage_vec()`.** This function currently only supports the 10X data. We added more detailed step-by-step script for 10X and Smart-seq data in [example](example/README.md). We also fixed several bugs raised by our users. 
 
 MATES is actively under development; please feel free to reach out if you encounter any issues.
 
@@ -56,7 +57,7 @@ from MATES import TE_quantifier_Intronic
 * **bam_processor**
 	The bam_processor module efficiently manages input BAM files by partitioning them into sub-BAM files for individual cells, distinguishing unique mapping from multi mapping reads. It also constructs TE-specific coverage vectors, shedding light on read distributions around TE instances at the single-cell level, enabling accurate TE quantification and comprehensive cellular characterization.
 
-**In the MATES v0.1.3, we released a new function `bam_processor.split_count_10X_data()` to speed up the preprocessing step for 10X data.**
+**In the MATES v0.1.3, we released a new function `bam_processor.split_count_10X_data()` to speed up the preprocessing step for 10X data. For large bam file, this function will raise the Out-of-memory issue.**
 ```python 
 bam_processor.split_count_10X_data(TE_mode,data_mode, threads_num, sample_list_file, bam_path_file, bc_path_file, bc_ind='CR', ref_path = 'Default')
 # Parameters
