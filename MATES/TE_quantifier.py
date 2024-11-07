@@ -11,6 +11,16 @@ import anndata as ad
 from MATES.scripts.TE_locus_quantifier import unique_locus_TE_MTX
 from MATES.scripts.make_prediction_locus import make_prediction_locus
 from MATES.scripts.helper_function import *
+def get_te_name(te_index,TE_ref):
+    a = pd.read_csv(TE_ref,header=None)
+    a.columns=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length']
+    dic = {}
+    for i in range(len(a)):
+        dic[str(int(a.loc[i,'index']))] = a.loc[i,'chromosome'] + '|' + str(a.loc[i,'start']) + '|' + str(a.loc[i,'end']) + '|' + a.loc[i,'TE_Name']
+    out_dic = {}
+    for each in te_index:
+        out_dic[each] = dic[each]
+    return out_dic
 ##### Quant Unique TE #####
 def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, ref_path = 'Default', bc_path_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
@@ -98,12 +108,15 @@ def unique_TE_MTX(TE_mode, data_mode, sample_list_file, threads_num, ref_path = 
         print('Invalid data format.')
 
 
-def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file):
+def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file,ref_path = 'Default'):
     if data_mode not in ["10X", "Smart_seq"]:
         raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
     if TE_mode not in ["inclusive", "exclusive"]:
         raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")
-
+    if ref_path == 'Default':
+        TE_ref_path = './TE_nooverlap.csv' if TE_mode == "exclusive" else './TE_full.csv'
+    else:
+        TE_ref_path = ref_path
     # Check if the necessary files exist
     check_file_exists(sample_list_file)
     unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False)
@@ -145,6 +158,10 @@ def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file):
                 # Concatenate AnnData objects along the features axis (axis=1)
                 combined_adata = ad.concat([adata_multi, adata_unique[:, adata_unique.var_names.difference(common_vars)]], axis=1)
                 combined_adata.obs = adata_unique.obs
+                temp_output_dict = get_te_name(combined_adata.var_names.tolist(),TE_ref_path)
+                combined_adata.var['info'] = [temp_output_dict[i] for i in combined_adata.var_names]
+                combined_adata.var.index = combined_adata.var['info']
+                del combined_adata.var['info']
                 os.makedirs(os.path.join("10X_locus", sample), exist_ok = True)
                 # Save the final combined AnnData object
                 combined_adata.write(os.path.join("10X_locus", sample, 'combined_matrix.h5ad'))
