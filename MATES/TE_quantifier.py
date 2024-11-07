@@ -123,10 +123,12 @@ def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file):
                 # Load the data
                 matrix_multi = mmread(mtx_filename_multi).tocsr()
                 features_multi = pd.read_csv(features_filename_multi)
+                features_multi.index = features_multi['TE_index']
                 cells_multi = pd.read_csv(cells_filename_multi)
 
                 matrix_unique = mmread(mtx_filename_unique).tocsr()
                 features_unique = pd.read_csv(features_filename_unique)
+                features_unique.index = features_unique['TE_index']
                 cells_unique = pd.read_csv(cells_filename_unique)
 
                 # Create AnnData objects
@@ -142,6 +144,7 @@ def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file):
 
                 # Concatenate AnnData objects along the features axis (axis=1)
                 combined_adata = ad.concat([adata_multi, adata_unique[:, adata_unique.var_names.difference(common_vars)]], axis=1)
+                combined_adata.obs = adata_unique.obs
                 os.makedirs(os.path.join("10X_locus", sample), exist_ok = True)
                 # Save the final combined AnnData object
                 combined_adata.write(os.path.join("10X_locus", sample, 'combined_matrix.h5ad'))
