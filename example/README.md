@@ -62,16 +62,21 @@ The processed TE refernce can be found in TE_ref folder with two different speci
 
 To generate TE reference, simply run:
 ```sh
-## build_reference.py requires three arguments:
-## '--species', type=str, choices=['Mouse', 'Human', 'Other']
-## '--cut_mode', type=str, default='5prime', choices=['5prime', '3prime']
-## '--cut_length', type=int, default=1000
+## build_reference.py requires eight arguments:
+## '--species', type=str, choices=['Mouse', 'Human', 'Other'],help='Species type'
+## '--ref_mode', type=str, default=['repeats', 'TE'], help='TE reference type'
+## '--cut_mode', type=str, default='5prime', choices=['5prime', '3prime'], help='Cut mode'
+## '--cut_length', type=int, default=1000, help='Cut length'
+## '--intronic', type=bool, default=False, help='Build reference for intronic TE'
+## 'other_species_TE', type = str, required=False, help = 'Path to TE reference'
+## '--other_species_GTF', type = str, required=False, help = 'Path to GTF of the species'
+## '--output_prefix', type = str,required=False, help = 'Output prefix'
 python build_reference.py --species Mouse 
 python build_reference.py --species Human
 ```
 If you have species other than human/mouse, downloaded TE reference in csv format and gene refrence in GTF format from UCSC table browser, run:
 ```sh
-python build_reference.py Other path_to_TE_reference path_to_Gene_reference
+python build_reference.py --species Other --other_species_TE path_to_TE_reference --other_species_GTF path_to_Gene_reference
 ```
 ```sh
 ## A sample of D.melanogaster TE refrence downloaded from UCSC table browser:
@@ -84,6 +89,12 @@ $ cat TE_reference.csv | head
 ```
 Please follow the [step by step TE/Gene reference building tutorial](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/reference_downloading.md).
 
+**Example script to generate Drosophila melanogaster TE reference files**
+
+You can follow the the tutorial to download the GTF and RepeatMasker files, or download them from this [shared folder](https://mcgill-my.sharepoint.com/:f:/g/personal/yumin_zheng_mail_mcgill_ca/EirU-9fxxLdCrFYpAbzEOjwBa1TZI9YI4Ery7p3suZoZow?e=KXCHDW). 
+```python
+python build_reference.py --species Other --other_species_TE Drosophila_TE.csv --other_species_GTF dm6.ensGene.gtf
+```
 ----
 ### For 10X data
 ----
