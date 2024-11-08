@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--intronic', type=bool, default=False, help='Build reference for intronic TE')
     parser.add_argument('--other_species_TE', type = str, required=False, help = 'Path to TE reference')
     parser.add_argument('--other_species_GTF', type = str, required=False, help = 'Path to GTF of the species')
-    parser.add_argument('--output_prefix', type = str, required=False, help = 'Output prefix')
+    parser.add_argument('--output_prefix', type = str,required=False, help = 'Output prefix')
     args = parser.parse_args()
 
     species = args.species
@@ -30,7 +30,8 @@ def main():
     cut_mode = args.cut_mode
     cut_length = args.cut_length
     build_intronic = args.intronic
-
+    if args.output_prefix is None:
+        output_prefix = ''
     if species in ['Mouse', 'Human']:
         script_path = pkg_resources.resource_filename('MATES', 'scripts/Ref2csv.py')
         command = f"python {script_path} {species} {ref_mode} {build_intronic}" 
@@ -45,10 +46,11 @@ def main():
         if args.other_species_TE is None or args.other_species_GTF is None:
             raise ValueError('Please provide the path to the TE reference and GTF file')
         if args.output_prefix is None:
-            print('The output prefix is not provided, the prefix will be set to "Other_species"')
-            args.output_prefix = 'Other_species'
+            print('The output prefix is not provided, so no prefix will be used. If you want to use a prefix, please provide it using --output_prefix YOUR_PREFIX')
         else:
-            print(f'The output prefix is set to {args.output_prefix}')
+            output_prefix = args.output_prefix
+            print(f'The output prefix is set to {output_prefix}')
+            output_prefix = output_prefix + '_'
         TEs = pd.read_csv(args.other_species_TE)
         TEs['index'] = TEs.index
         TEs = TEs[["genoName","genoStart","genoEnd", "strand","index", "repName","repClass"]]
@@ -71,13 +73,15 @@ def main():
 
     TE_chr = TE.TE_chrom.unique().tolist()
     
-    if species in ['Mouse', 'Human'] or suffix == 'gff3':
+    if species in ['Mouse', 'Human']:
         genes = genes[genes['Feature'] == 'gene']
+    else:
         if suffix == 'gff3':
+            genes = genes[genes['Feature'] == 'gene']
             genes['Chromosome'] = genes['Chromosome'].astype(str)
             genes['Chromosome'] = 'Chr'+genes['Chromosome']
-    else:
-        genes = genes[genes['Feature'] == 'transcript']
+        else:
+            genes = genes[genes['Feature'] == 'transcript']
     if len(genes) == 0:
         raise ValueError('1, Please check if the GTF/GFF3 file contains the correct feature type (\'gene\' or \'transcript\') in the third column of the file. If not, please read the tutorial of building reference carefully and use the correct GTF/GFF3 files. \n 2, If the issue still exists, please contact the authors.')
     Gene_chr = genes.Chromosome.unique().tolist()
@@ -102,19 +106,19 @@ def main():
     TE.reset_index(inplace=True)
     TE['index'] = TE.index
     TE = TE[['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']]
-    TE.to_csv(f'{args.output_prefix}_TE_full.csv',index = False,header=False)
+    TE.to_csv(f'{output_prefix}TE_full.csv',index = False,header=False)
     if not build_intronic:
         genes = genes[['Chromosome', 'Start', 'End']]
         genes = genes.drop_duplicates()
-        genes.to_csv(f'{args.output_prefix}_gene_bed.csv', header = None, index = False)
-        os.system(f"cat TE_full.csv | tr ',' '\t' > {args.output_prefix}_TE_full.bed")
-        os.system(f"cat gene_bed.csv | tr ',' '\t' > {args.output_prefix}_gene_bed.bed")
+        genes.to_csv(f'{output_prefix}gene_bed.csv', header = None, index = False)
+        os.system(f"cat {output_prefix}TE_full.csv | tr ',' '\t' > {output_prefix}TE_full.bed")
+        os.system(f"cat {output_prefix}gene_bed.csv | tr ',' '\t' > {output_prefix}gene_bed.bed")
         cur_path = os.getcwd()
-        a = pybedtools.example_bedtool(cur_path+f'/{args.output_prefix}_gene_bed.bed')
-        b = pybedtools.example_bedtool(cur_path+f'/{args.output_prefix}_TE_full.bed')
+        a = pybedtools.example_bedtool(cur_path+f'/{output_prefix}gene_bed.bed')
+        b = pybedtools.example_bedtool(cur_path+f'/{output_prefix}TE_full.bed')
         tmp = b.subtract(a,A = True,nonamecheck=True)
-        tmp.saveas(f'{args.output_prefix}_removed_TE.txt')
-        removed_TE = pd.read_csv(f'{args.output_prefix}_removed_TE.txt',sep='\t', header=None, low_memory=False)
+        tmp.saveas(f'{output_prefix}removed_TE.txt')
+        removed_TE = pd.read_csv(f'{output_prefix}removed_TE.txt',sep='\t', header=None, low_memory=False)
         removed_TE.columns = TE.columns
         removed_TE['length'] = removed_TE['end']-removed_TE['start']
         for index, row in removed_TE.iterrows():
@@ -126,8 +130,8 @@ def main():
                     removed_TE.loc[index,'start'] = removed_TE.loc[index,'end']-cut_length
         removed_TE = removed_TE[removed_TE['length'] <=cut_length]
         removed_TE['index'] = removed_TE.index
-        removed_TE.to_csv(f"{args.output_prefix}_TE_nooverlap.csv",index = False,header=False)
-        os.system(f"cat TE_nooverlap.csv | tr ',' '\t' > {args.output_prefix}_TE_nooverlap.bed")
+        removed_TE.to_csv(f"{output_prefix}TE_nooverlap.csv",index = False,header=False)
+        os.system(f"cat {output_prefix}TE_nooverlap.csv | tr ',' '\t' > {output_prefix}TE_nooverlap.bed")
 
         for index, row in TE.iterrows():
             if TE.loc[index,'length'] > cut_length:
@@ -138,25 +142,25 @@ def main():
                     TE.loc[index,'start'] = TE.loc[index,'end']-cut_length
         TE = TE[TE['length'] <=cut_length]
         TE['index'] = TE.index
-        TE.to_csv("TE_full.csv",index = False,header=False)
-        os.system(f"cat TE_full.csv | tr ',' '\t' > {args.output_prefix}_TE_full.bed")
+        TE.to_csv(f"{output_prefix}TE_full.csv",index = False,header=False)
+        os.system(f"cat {output_prefix}TE_full.csv | tr ',' '\t' > {output_prefix}TE_full.bed")
 
-        os.remove(f"{args.output_prefix}_gene_bed.bed")
-        os.remove(f'{args.output_prefix}_removed_TE.txt')
+        os.remove(f"{output_prefix}gene_bed.bed")
+        os.remove(f'{output_prefix}removed_TE.txt')
         
     elif build_intronic:
-        TE.to_csv(f'{args.output_prefix}_TEs_tmp.bed', sep='\t', index=False, header=False)
+        TE.to_csv(f'{output_prefix}TEs_tmp.bed', sep='\t', index=False, header=False)
         # Load introns and TEs as pybedtools objects
         introns = pd.read_csv(f'{species.lower()}_introns.csv')
         introns = pybedtools.BedTool(f'{species.lower()}_introns.bed')
-        te_reference = pybedtools.BedTool(f'{args.output_prefix}_TEs_tmp.bed')
+        te_reference = pybedtools.BedTool(f'{output_prefix}TEs_tmp.bed')
 
         # Find TEs within introns
         te_in_introns = te_reference.intersect(introns, u=True, f=1.0)
         # Save the result to a file
-        te_in_introns.saveas(f'{args.output_prefix}_te_in_introns.bed')
+        te_in_introns.saveas(f'{output_prefix}te_in_introns.bed')
 
-        intronic_te = pd.read_csv(f'{args.output_prefix}_te_in_introns.bed', sep = '\t', header = None)
+        intronic_te = pd.read_csv(f'{output_prefix}te_in_introns.bed', sep = '\t', header = None)
         
         intronic_te.columns = ['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']
         intronic_te['index'] = intronic_te.index
@@ -172,8 +176,8 @@ def main():
                     intronic_te.loc[index,'start'] = intronic_te.loc[index,'end']-cut_length
         intronic_te = intronic_te[intronic_te['length'] <=cut_length]
         
-        intronic_te.to_csv(f'{args.output_prefix}_TE_intron.csv', header = False, index=False)
-        os.system(f"cat TE_intron.csv | tr ',' '\t' > {args.output_prefix}_TE_intron.bed")
+        intronic_te.to_csv(f'{output_prefix}TE_intron.csv', header = False, index=False)
+        os.system(f"cat {output_prefix}TE_intron.csv | tr ',' '\t' > {output_prefix}TE_intron.bed")
     print('Reference files are generated successfully!')
 if __name__ == "__main__":
     main()
