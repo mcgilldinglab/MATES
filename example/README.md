@@ -15,17 +15,12 @@ conda create -n mates_env python=3.9
 conda activate mates_env
 
 # Install required packages
-conda install -c bioconda samtools
-pip install pysam
-conda install -c bioconda bedtools
-pip install pybedtools
+conda install -c bioconda samtools -y
+conda install -c bioconda bedtools -y
 
 # Install MATES
 cd MATES
-pip3 install -r requirements.txt
-python setup.py install
 pip install .
-pip install velocyto
 
 # Add environment to Jupyter Notebook
 conda install ipykernel
