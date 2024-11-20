@@ -1,7 +1,10 @@
+import chunk
 import os
+from posixpath import sep
 import pysam
 import scipy
 import pybedtools
+import pickle as pkl
 import numpy as np
 from os.path import join
 from MATES.scripts.helper_function import *
@@ -12,6 +15,34 @@ from pathlib import Path
 from tqdm import tqdm
 import pandas as pd
 from scipy import sparse
+class BamWriter:
+    def __init__(self, alignment, barcodes, prefix):
+        self.alignment = alignment
+        self.prefix = prefix
+        self.barcodes = set(barcodes)
+        self._out_files = {}
+
+    def write_record_to_barcode(self, rec, barcode,option):
+        if barcode not in self.barcodes:
+            return
+        if barcode not in self._out_files:
+            self._open_file_for_barcode(barcode,option)
+        if option not in self._out_files[barcode]:
+            self._open_file_for_barcode(barcode,option)
+        self._out_files[barcode][option].write(rec)
+
+    def _open_file_for_barcode(self, barcode,option):
+        if barcode not in list(self._out_files.keys()):
+            self._out_files[barcode] = {}
+        self._out_files[barcode][option] = pysam.AlignmentFile(
+            f"{self.prefix}/{option}/{barcode}.bam", "wb", template=self.alignment,header=self.alignment.text
+        )
+
+    def close_files(self):
+        
+        for barcode in tqdm(self._out_files.keys(), total=len(list(self._out_files.keys())), desc="Writing sub-bam files"):
+            for each in self._out_files[barcode].keys():
+                self._out_files[barcode][each].close()
 def count_region_read(aligned_file, chromosome, start, end):    
     read_name = []
     for pileupcolumn in aligned_file.pileup(chromosome,start,end,truncate =True):
@@ -20,6 +51,40 @@ def count_region_read(aligned_file, chromosome, start, end):
                 if pileupread.alignment.query_name not in read_name:
                     read_name.append(pileupread.alignment.query_name)
     return len(read_name)
+def split_bam(input_bam, num_chunks, output_prefix, tag_field='CB'):
+    # Open the input BAM file
+    bamfile = input_bam
+    # Count the total number of reads
+    total_reads = bamfile.mapped
+    reads_per_chunk = total_reads // num_chunks
+    count = 0
+    no_chunk = 0
+    # Iterate through chunks and write each to a new BAM file
+    output_bam = f"{output_prefix}_chunk_{no_chunk}.bam"
+    outbam = pysam.AlignmentFile(output_bam, "wb", header=bamfile.header)
+    total_reads_per_cb = {}
+    
+    for i, read in tqdm(enumerate(bamfile.fetch()),total=total_reads, desc="Processing reads"):
+        count += 1
+        if read.has_tag(tag_field):
+            bc = read.get_tag(tag_field)
+            if bc not in total_reads_per_cb:
+                total_reads_per_cb[bc] = 0
+            total_reads_per_cb[bc] += 1
+        else:
+            continue
+        if count >= reads_per_chunk:
+            count = 0
+            no_chunk += 1
+            output_bam = f"{output_prefix}_chunk_{no_chunk}.bam"
+            outbam.close()
+            outbam = pysam.AlignmentFile(output_bam, "wb", header=bamfile.header)
+        
+        outbam.write(read)
+        if i == total_reads - 1:
+            outbam.close()
+    print(f"Splitting complete. Created {num_chunks} chunks.")
+    return total_reads_per_cb
 def get_read_num(samp_bc):
     total_reads=0
     sample = samp_bc[0]
@@ -72,16 +137,26 @@ def get_region_count(aligned_file, chromosome,start,end):
 
 import io
 import tempfile
-def generate_unique_matrix(aligned_file,dic,TE_selected_bed,cur_path, coverage_stored_dir, sample_name,total_reads, path,sav_vec):
+def generate_unique_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, coverage_stored_dir, sample_name,total_reads, path,sav_vec):
     
-    TE_index_dict = {}
     
-    for bc in tqdm(list(dic.keys()), desc="building unique coverage vectors"):
+    path = join(cur_path, coverage_stored_dir, sample_name)
+    if 'unique_TE_index_dict.pkl' not in os.listdir(path):
+        TE_index_dict = {}
+    else:
+        with open(join(path,'unique_TE_index_dict.pkl'), 'rb') as f:
+            TE_index_dict = pickle.load(f)
+        
+    for bc in tqdm(barcode_list, desc="building unique coverage vectors"):
         t = time.time()
         TE_index_list = []
         TE_region_read_num = []
         t = time.time()
         path = join(cur_path, coverage_stored_dir, sample_name)
+        bam_path = join(cur_path, 'sub_bam_files','unique',bc+'.bam')
+        bc_exist= os.listdir(join(cur_path, 'sub_bam_files','unique'))
+        if bc+'.bam' not in bc_exist:
+            continue
     # Create a temporary file to store the BAM data
         path = join(path, bc)
         if not os.path.exists(path):
@@ -89,119 +164,140 @@ def generate_unique_matrix(aligned_file,dic,TE_selected_bed,cur_path, coverage_s
         unique_vec_path = join(path,'unique_vec')
         if not os.path.exists(unique_vec_path):
             os.mkdir(unique_vec_path)
-        with tempfile.NamedTemporaryFile(suffix=".bam") as temp_bam:
-            # Write the AlignedSegment objects to the temporary BAM file
-            with pysam.AlignmentFile(temp_bam.name, "wb", header=aligned_file.text,template=aligned_file) as out_bam:
-                for read in dic[bc]['unique']:
-                    out_bam.write(read)
-            
-            pysam.index(temp_bam.name)
-            # t = time.time()
-            b = pybedtools.example_bedtool(temp_bam.name)
 
-            a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
-            TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
-            # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
-            # tt2 = time.time()
-            with pysam.AlignmentFile(temp_bam.name, "rb") as temp_unique_bam:
 
-                # for idx, row in TE_selected.iterrows():
-                for row in TE_selected.itertuples(index=False):
-                    
-                    chrom = row.chromosome#['chromosome']
-                    start = row.start#['start']
-                    end = row.end#['end']
-                    strand = row.strand#['strand']
-                    TE_index = row.index#['index']
-                    ##check if TE region has reads
-                    # tt2 = time.time()
-                    if temp_unique_bam.count(chrom,start,end) != 0:
-                        TE_region_count = get_region_count(temp_unique_bam, chrom,start,end)
-                        # print('tt2 ',time.time()-tt2)
-                        # tt3 = time.time()
-                        if TE_region_count!=0:
-                            TE_index_list.append(TE_index)
-                            TE_region_read_num.append(count_region_read(temp_unique_bam,chrom,start,end))
-                            ##setup coverage region
-                            if strand == '+':
-                                region_start = start - 1000
-                                region_end = start + 1000
-                            elif strand == '-':
-                                region_start = end - 1000
-                                region_end = end + 1000
-                            # print('tt3 ',time.time()-tt3)
-                            # tt4 = time.time()
-                            ##add coverage vector to the matrix
-                            coverage_vector, coverage_vector_igv = get_coverage_vector(temp_unique_bam, chrom,region_start, region_end,total_reads[bc])
-                            # print('tt4 ',time.time()-tt4)
-                            # tt5 = time.time()
-                            if sav_vec:
+        pysam.index(bam_path)
+        # t = time.time()
+        b = pybedtools.example_bedtool(bam_path)
+
+        a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
+        TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
+        # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
+        # tt2 = time.time()
+        with pysam.AlignmentFile(bam_path, "rb") as temp_unique_bam:
+
+            # for idx, row in TE_selected.iterrows():
+            for row in TE_selected.itertuples(index=False):
+                
+                chrom = row.chromosome#['chromosome']
+                start = row.start#['start']
+                end = row.end#['end']
+                strand = row.strand#['strand']
+                TE_index = row.index#['index']
+                ##check if TE region has reads
+                # tt2 = time.time()
+                if temp_unique_bam.count(chrom,start,end) != 0:
+                    TE_region_count = get_region_count(temp_unique_bam, chrom,start,end)
+                    # print('tt2 ',time.time()-tt2)
+                    # tt3 = time.time()
+                    if TE_region_count!=0:
+                        TE_index_list.append(TE_index)
+                        TE_region_read_num.append(count_region_read(temp_unique_bam,chrom,start,end))
+                        ##setup coverage region
+                        if strand == '+':
+                            region_start = start - 1000
+                            region_end = start + 1000
+                        elif strand == '-':
+                            region_start = end - 1000
+                            region_end = end + 1000
+                        # print('tt3 ',time.time()-tt3)
+                        # tt4 = time.time()
+                        ##add coverage vector to the matrix
+                        coverage_vector, coverage_vector_igv = get_coverage_vector(temp_unique_bam, chrom,region_start, region_end,total_reads[bc])
+                        # print('tt4 ',time.time()-tt4)
+                        # tt5 = time.time()
+                        if sav_vec:
+                            if not os.path.exists(join(unique_vec_path,str(TE_index)+".npz")):
                                 sparse_vector = sparse.csr_matrix(coverage_vector)
+                                sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
+                            else:
+                                sparse_vector = sparse.load_npz(join(unique_vec_path,str(TE_index)+".npz"))
+                                sparse_vector = sparse.vstack([sparse_vector, sparse.csr_matrix(coverage_vector)])
                                 sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
                             
         count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
         count_table_TE = pd.DataFrame(count_table_TE)
+        if 'TE_unique_Info.csv' in os.listdir(path):
+            old_count_table = pd.read_csv(join(path,'TE_unique_Info.csv'),sep = ',')
+            count_table_TE = pd.concat([old_count_table, count_table_TE], axis=0)
+            count_table_TE = count_table_TE.groupby('TE_index', as_index=False).sum()
         count_table_TE.to_csv(join(path,'TE_unique_Info.csv'),index = False)
         TE_index_dict[bc] = TE_index_list
-    return TE_index_dict
-def generate_multi_matrix(aligned_file,dic,TE_selected_bed,cur_path, coverage_stored_dir, sample_name,total_reads, path):
-    TE_index_dict = {}
-    
-    for bc in tqdm(list(dic.keys()), desc="building multi coverage vectors"):
+    # return TE_index_dict
+    path = join(cur_path, coverage_stored_dir, sample_name)
+    with open(join(path,'unique_TE_index_dict.pkl'), 'wb') as f:
+        pickle.dump(TE_index_dict, f)
+def generate_multi_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, coverage_stored_dir, sample_name,total_reads, path):
+   
+    path = join(cur_path, coverage_stored_dir, sample_name)
+    if 'multi_TE_index_dict.pkl' not in os.listdir(path):
+        TE_index_dict = {}
+    else:
+        with open(join(path,'multi_TE_index_dict.pkl'), 'rb') as f:
+            TE_index_dict = pickle.load(f)
+
+    for bc in tqdm(barcode_list, desc="building multi coverage vectors"):
         TE_index_list = []
         TE_region_read_num = []
         path = join(cur_path, coverage_stored_dir, sample_name)
     # Create a temporary file to store the BAM data
+        bam_path = join(cur_path, 'sub_bam_files','multi',bc+'.bam')
+        bc_exist= os.listdir(join(cur_path, 'sub_bam_files','multi'))
+        if bc+'.bam' not in bc_exist:
+            continue
         path = join(path, bc)
         if not os.path.exists(path):
             os.mkdir(path)
         multi_vec_path = join(path,'multi_vec')
         if not os.path.exists(multi_vec_path):
             os.mkdir(multi_vec_path)
-        with tempfile.NamedTemporaryFile(suffix=".bam") as temp_bam:
-            # Write the AlignedSegment objects to the temporary BAM file
-            with pysam.AlignmentFile(temp_bam.name, "wb", header=aligned_file.text,template=aligned_file) as out_bam:
-                for read in dic[bc]['multi']:
-                    out_bam.write(read)
-            
-            pysam.index(temp_bam.name)
-            b = pybedtools.example_bedtool(temp_bam.name)
-            tt = time.time()
-            a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
-            TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
-            # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
-            with pysam.AlignmentFile(temp_bam.name, "rb") as temp_multi_bam:
-                for idx, row in TE_selected.iterrows():
-                    chrom = row['chromosome']
-                    start = row['start']
-                    end = row['end']
-                    strand = row['strand']
-                    TE_index = row['index']
-                    ##check if TE region has reads
-                    if temp_multi_bam.count(chrom,start,end) != 0:
-                        TE_region_count = get_region_count(temp_multi_bam, chrom,start,end)
-                        if TE_region_count!=0:
-                            TE_index_list.append(TE_index)
-                            TE_region_read_num.append(count_region_read(temp_multi_bam,chrom,start,end))
-                            ##setup coverage region
-                            if strand == '+':
-                                region_start = start - 1000
-                                region_end = start + 1000
-                            elif strand == '-':
-                                region_start = end - 1000
-                                region_end = end + 1000
-                            
-                            ##add coverage vector to the matrix
-                            coverage_vector, coverage_vector_igv = get_coverage_vector(temp_multi_bam, chrom,region_start, region_end,total_reads[bc])
-                            sparse_vector = sparse.csr_matrix(coverage_vector)
-                            sparse.save_npz(join(multi_vec_path,str(TE_index)+".npz"), sparse_vector)
+
+        pysam.index(bam_path)
+        b = pybedtools.example_bedtool(bam_path)
+        tt = time.time()
+        a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
+        TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
+        # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
+        with pysam.AlignmentFile(bam_path, "rb") as temp_multi_bam:
+            for idx, row in TE_selected.iterrows():
+                chrom = row['chromosome']
+                start = row['start']
+                end = row['end']
+                strand = row['strand']
+                TE_index = row['index']
+                ##check if TE region has reads
+                if temp_multi_bam.count(chrom,start,end) != 0:
+                    TE_region_count = get_region_count(temp_multi_bam, chrom,start,end)
+                    if TE_region_count!=0:
+                        TE_index_list.append(TE_index)
+                        TE_region_read_num.append(count_region_read(temp_multi_bam,chrom,start,end))
+                        ##setup coverage region
+                        if strand == '+':
+                            region_start = start - 1000
+                            region_end = start + 1000
+                        elif strand == '-':
+                            region_start = end - 1000
+                            region_end = end + 1000
+                        
+                        ##add coverage vector to the matrix
+                        coverage_vector, coverage_vector_igv = get_coverage_vector(temp_multi_bam, chrom,region_start, region_end,total_reads[bc])
+                        sparse_vector = sparse.csr_matrix(coverage_vector)
+                        sparse.save_npz(join(multi_vec_path,str(TE_index)+".npz"), sparse_vector)
         count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
         count_table_TE = pd.DataFrame(count_table_TE)
+        if 'TE_multi_Info.csv' in os.listdir(path):
+            old_count_table = pd.read_csv(join(path,'TE_multi_Info.csv'),sep = ',')
+            count_table_TE = pd.concat([old_count_table, count_table_TE], axis=0)
+            count_table_TE = count_table_TE.groupby('TE_index', as_index=False).sum()
         count_table_TE.to_csv(join(path,'TE_multi_Info.csv'),index = False)
         TE_index_dict[bc] = TE_index_list
-    return TE_index_dict
-def generate_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir, tag_field='CB'):
+    path = join(cur_path, coverage_stored_dir, sample_name)
+    with open(join(path,'multi_TE_index_dict.pkl'), 'wb') as f:
+        pickle.dump(TE_index_dict, f)
+def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_stored_dir, tag_field='CB'):
     sample_name = samp_bc
+    bc = pd.read_csv(barcodes_file,sep='\t',header=None)
+    bc_list = bc[0].tolist()
     cur_path = os.getcwd()
     path = join(cur_path, coverage_stored_dir, sample_name)
     if not os.path.exists(path):
@@ -214,55 +310,103 @@ def generate_matric(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir, tag_f
     dic = {}
     count = 0
     total_reads = {}
-    for read in reads:
-        count += 1
-        if read.has_tag(tag_field) == False:
+    sub_bam_path = join(cur_path, 'sub_bam_files')
+    create_directory(sub_bam_path)
+    create_directory(sub_bam_path+'/unique')
+    create_directory(sub_bam_path+'/multi')
+    b_writer = BamWriter(aligned_file,bc_list, sub_bam_path)
+    for read in tqdm(reads,total=aligned_file.mapped, desc="Summarizing reads statistics"):
+        try:
+            bc = read.get_tag(tag_field)
+        except KeyError:
             continue
-        bc = read.get_tag(tag_field)
-        if bc not in dic:
+        try:
+            total_reads[bc] += 1
+        except KeyError:
+            total_reads[bc] = 1
             dic[bc] = {}
-            total_reads[bc] = 0
             dic[bc]['unique'] = []
             dic[bc]['multi'] = []
         if read.mapq == 255:
-            dic[bc]['unique'].append(read)
+            # dic[bc]['unique'].append(read)
+            b_writer.write_record_to_barcode(read, bc, 'unique')
         else:
-            dic[bc]['multi'].append(read)
-        total_reads[bc] += 1
+            # dic[bc]['multi'].append(read)
+            b_writer.write_record_to_barcode(read, bc, 'multi')
+    # print('writting sub bam files....')
+    b_writer.close_files()
 
-    b = pybedtools.example_bedtool(path_to_bam)
-    tt = time.time()
-    TE_selected = TE_ref_bed.intersect(b, u=True,nonamecheck=True)
-
-    unique_TE_index = generate_unique_matrix(aligned_file,dic,TE_selected,cur_path, coverage_stored_dir, sample_name,total_reads, path,sav_vec='True')
+    # b = pybedtools.example_bedtool(path_to_bam)
+    # print('load bam to bed')
+    # TE_selected = TE_ref_bed.intersect(b, u=True,nonamecheck=True)
+    generate_unique_matrix(aligned_file,bc_list,TE_ref_bed,cur_path, coverage_stored_dir, sample_name,total_reads, path,sav_vec='True')
+    with open(join(path,'unique_TE_index_dict.pkl'), 'rb') as f:
+        unique_TE_index = pickle.load(f)
     print("Unique matrix finished")
-    multi_TE_index = generate_multi_matrix(aligned_file,dic,TE_selected,cur_path, coverage_stored_dir, sample_name,total_reads, path)
+    generate_multi_matrix(aligned_file,bc_list,TE_ref_bed,cur_path, coverage_stored_dir, sample_name,total_reads, path)
+    with open(join(path,'multi_TE_index_dict.pkl'), 'rb') as f:
+        multi_TE_index = pickle.load(f)
     print("Multi matrix finished")
     return unique_TE_index, multi_TE_index
+
+def generate_matrix_chunk(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir, num_chunk, tag_field='CB'):
+    sample_name = samp_bc
+    cur_path = os.getcwd()
+    temp_path = join(cur_path,'temp')
+
+    path = join(cur_path, coverage_stored_dir, sample_name)
+    if not os.path.exists(path):
+        os.mkdir(path)
+    t = time.time()
+    create_directory(temp_path)
+    temp_path = temp_path+'/'+sample_name
+    print(temp_path) 
+    aligned_file = pysam.AlignmentFile(path_to_bam, "rb")
+    total_reads = split_bam(aligned_file, num_chunk, temp_path,tag_field)
+    
+    for i in range(num_chunk):
+        pysam.index(f'{temp_path}_chunk_{str(i)}.bam')
+        path_to_bam = temp_path+'_chunk_'+str(i)+'.bam'
+        aligned_file = pysam.AlignmentFile(path_to_bam, "rb")
+        reads = aligned_file.fetch()
+        dic = {}
+    
+        for read in reads:
+            if read.has_tag(tag_field) == False:
+                continue
+            bc = read.get_tag(tag_field)
+            if bc not in dic:
+                dic[bc] = {}
+                dic[bc]['unique'] = []
+                dic[bc]['multi'] = []
+            if read.mapq == 255:
+                dic[bc]['unique'].append(read)
+            else:
+                dic[bc]['multi'].append(read)
+            
+
+        b = pybedtools.example_bedtool(path_to_bam)
+        print(f'load chunk {i+1} bam to bed')
+        TE_selected = TE_ref_bed.intersect(b, u=True,nonamecheck=True)
+        generate_unique_matrix(aligned_file,dic,TE_selected,cur_path, coverage_stored_dir, sample_name,total_reads, path,sav_vec='True')
+        generate_multi_matrix(aligned_file,dic,TE_selected,cur_path, coverage_stored_dir, sample_name,total_reads, path)
+        
+    with open(join(path,'unique_TE_index_dict.pkl'), 'rb') as f:
+        unique_TE_index = pickle.load(f)
+    print("Unique matrix finished")
+    with open(join(path,'multi_TE_index_dict.pkl'), 'rb') as f:
+        multi_TE_index = pickle.load(f)
+    print("Multi matrix finished")
+    remove_directory(temp_path)
+    return unique_TE_index, multi_TE_index
+
 import sys  
 def start_split_count(barcode_field, path_to_bam, barcodes_file, sample, TE_mode, TE_ref_bed_path):
-    
-    # barcode_field = sys.argv[1]
-    # path_to_bam = sys.argv[2]
-    # barcodes_file = sys.argv[3]
-    # sample = sys.argv[4]
-    # TE_mode = sys.argv[5]
-    # TE_ref_bed_path = sys.argv[6]
-       
-    # path_to_bam = sys.argv[0]#'/mnt/md0/yumin/MATES/test_data/data_input/H1_possorted_genome_bam_CB_test.bam'
-    TE_ref_bed = pybedtools.example_bedtool(TE_ref_bed_path)#'/mnt/md0/yumin/MATES/test_data/TE_nooverlap.bed')
-    coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'intronic' else 'count_coverage'
-    
 
-    # sample = 'H1'#sys.argv[1]
-    unique_TE_index_dict, multi_TE_index_dict = generate_matric(sample, path_to_bam, TE_ref_bed, coverage_stored_dir,tag_field=barcode_field)
-    
-    # batch = int(sys.argv[2])
-    # batch_size = int(sys.argv[3])
-    # barcodes_file = '/mnt/md0/yumin/MATES/test_data/barcodes/H1_barcodes.tsv'#sys.argv[4]
-    # TE_mode = 'exclusive'#sys.argv[6]
-    
-    
+    TE_ref_bed = pybedtools.example_bedtool(TE_ref_bed_path)
+    coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'intronic' else 'count_coverage'
+
+    unique_TE_index_dict, multi_TE_index_dict = generate_matrix(sample, barcodes_file, path_to_bam, TE_ref_bed, coverage_stored_dir, tag_field=barcode_field)
     cur_path = os.getcwd()
     if not os.path.exists(join(cur_path,coverage_stored_dir)):
         os.mkdir(join(cur_path,coverage_stored_dir))
@@ -293,7 +437,8 @@ def start_split_count(barcode_field, path_to_bam, barcodes_file, sample, TE_mode
             TE_index_list_unique = unique_TE_index_dict[bc]
             k_path = join(cur_path, coverage_stored_dir, sample, bc)
             k_path_u = k_path + '/unique_vec'
-            os.rmdir(k_path_u)        
+            # os.rmdir(k_path_u)     
+            shutil.rmtree(k_path_u)   
             continue
 
         TE_index_list_unique = unique_TE_index_dict[bc]#generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, coverage_stored_dir, sav_vec = True)
@@ -367,19 +512,13 @@ if __name__ == "__main__":
     sample = sys.argv[4]
     TE_mode = sys.argv[5]
     TE_ref_bed_path = sys.argv[6]
-       
-    # path_to_bam = sys.argv[0]#'/mnt/md0/yumin/MATES/test_data/data_input/H1_possorted_genome_bam_CB_test.bam'
-    TE_ref_bed = pybedtools.example_bedtool(TE_ref_bed_path)#'/mnt/md0/yumin/MATES/test_data/TE_nooverlap.bed')
+
+    TE_ref_bed = pybedtools.example_bedtool(TE_ref_bed_path)
     coverage_stored_dir = 'count_coverage'
     
 
-    # sample = 'H1'#sys.argv[1]
-    unique_TE_index_dict, multi_TE_index_dict = generate_matric(sample, path_to_bam, TE_ref_bed, coverage_stored_dir,tag_field='CB')
-    
-    # batch = int(sys.argv[2])
-    # batch_size = int(sys.argv[3])
-    # barcodes_file = '/mnt/md0/yumin/MATES/test_data/barcodes/H1_barcodes.tsv'#sys.argv[4]
-    # TE_mode = 'exclusive'#sys.argv[6]
+    unique_TE_index_dict, multi_TE_index_dict = generate_matrix(sample, path_to_bam, TE_ref_bed, coverage_stored_dir,tag_field='CB')
+
     
     coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'intronic' else 'count_coverage'
     cur_path = os.getcwd()
@@ -412,7 +551,7 @@ if __name__ == "__main__":
             TE_index_list_unique = unique_TE_index_dict[bc]
             k_path = join(cur_path, coverage_stored_dir, sample, bc)
             k_path_u = k_path + '/unique_vec'
-            os.rmdir(k_path_u)        
+            shutil.rmtree(k_path_u)        
             continue
 
         TE_index_list_unique = unique_TE_index_dict[bc]#generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, coverage_stored_dir, sav_vec = True)

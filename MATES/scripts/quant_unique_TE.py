@@ -40,8 +40,12 @@ if data_mode == 'Smart_seq':
         for sample in sample_list[start_idx:end_idx]:
             path = join(cur_path,'count_coverage/'+sample)    
             if os.path.exists(path):
+
                 uniq_count_path = join(path, 'TE_unique_Info.csv')
-                uniq_count = pd.read_csv(uniq_count_path)
+                try:
+                    uniq_count = pd.read_csv(uniq_count_path)
+                except:
+                    continue
                 idx_list = uniq_count.TE_index.tolist()
                 for idx in idx_list:
                     read_num = uniq_count[uniq_count['TE_index'] == idx].TE_region_read_num.tolist()[0]
@@ -68,12 +72,15 @@ elif data_mode == '10X':
     for cell in barcodes[start_idx:end_idx]:
         unique_dict[cell]={}
     path = join(cur_path,'count_coverage/'+sample)
-    with tqdm(total = len(barcodes)) as pbar:
+    with tqdm(total = len(barcodes[start_idx:end_idx])) as pbar:
         for cb in barcodes[start_idx:end_idx]:
             cb_path=join(path,cb)
             if os.path.exists(cb_path):
                 uniq_count_path = join(cb_path, 'TE_unique_Info.csv')
-                uniq_count = pd.read_csv(uniq_count_path)
+                try:
+                    uniq_count = pd.read_csv(uniq_count_path)
+                except:
+                    continue
                 idx_list = uniq_count.TE_index.tolist()
                 for idx in idx_list:
                     read_num = uniq_count[uniq_count['TE_index'] == idx].TE_region_read_num.tolist()[0]

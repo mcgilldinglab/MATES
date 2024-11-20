@@ -4,7 +4,7 @@ import math
 import pkg_resources
 from .scripts import start_split_count
 from MATES.scripts.helper_function import *
-def split_count_10X_data(TE_mode,data_mode, threads_num, sample_list_file, bam_path_file, bc_path_file, bc_ind='CR', ref_path = 'Default'):
+def split_count_10X_data(TE_mode,data_mode, sample_list_file, bam_path_file, bc_path_file, bc_ind='CR', ref_path = 'Default'):
     cur_pwd = os.getcwd()
     if data_mode != "10X":
         raise ValueError("Invalid data format. Currently this function only support '10X' format.")
@@ -18,8 +18,6 @@ def split_count_10X_data(TE_mode,data_mode, threads_num, sample_list_file, bam_p
         TE_ref_path = ref_path
         
     TE_ref_path = os.path.join(cur_pwd, TE_ref_path)
-    sample_count = sum(1 for line in open(sample_list_file))
-    batch_size = math.ceil(sample_count / threads_num)
     # Check if the necessary files exist
     check_file_exists(TE_ref_path)
     check_file_exists(sample_list_file)
