@@ -15,9 +15,8 @@ with pysam.AlignmentFile(bam_file, "rb") as bam, open(output_tsv, "w", newline="
         if read.has_tag("CB"):  # Check if CB tag exists
             cell_barcode = read.get_tag("CB")
             unique_barcodes.add(cell_barcode)  # Add to set to ensure uniqueness
-    
     # Write all unique barcodes to the TSV file
     for barcode in unique_barcodes:
-        writer.writerow(barcode)
+        writer.writerow([barcode])
 
 print(f"Extraction complete. Cell barcodes saved to {output_tsv}")
