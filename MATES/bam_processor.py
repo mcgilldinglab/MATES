@@ -31,6 +31,8 @@ def split_count_10X_data(TE_mode,data_mode, sample_list_file, bam_path_file, bc_
     bam_files = read_file_lines(bam_path_file)
     for sample, bam_file,barcodes in zip(sample_names, bam_files,barcodes_paths):
         print(f"Start splitting and counting {sample} data ...")
+        print('barcode directory:',os.path.join(cur_pwd,barcodes))
+        check_file_exists(os.path.join(cur_pwd,barcodes))
         start_split_count(bc_ind, os.path.join(cur_pwd,bam_file), os.path.join(cur_pwd,barcodes), sample, TE_mode, TE_ref_path)
 
 def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, process_num=1,bc_ind='CR', long_read=False, bc_path_file=None):
