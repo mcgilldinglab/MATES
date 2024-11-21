@@ -9,7 +9,15 @@ def download_and_process_files(species, ref_mode, build_intronic):
             'repeatmasker': "https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz",
             'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz"
         },
+        'mouse': {
+            'repeatmasker': "https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz",
+            'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz"
+        },
         'Human': {
+            'repeatmasker': "https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz",
+            'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz"
+        },
+        'human': {
             'repeatmasker': "https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz",
             'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz"
         }
@@ -61,6 +69,7 @@ def download_and_process_files(species, ref_mode, build_intronic):
             csvfile.write(','.join(row) + '\n')
 
     TEs = pd.read_csv(te_csv, header=None)
+    print('Formatting TE reference files...')
     TEs = TEs.rename(columns={0: 'TE_chrom', 1: 'start', 2: 'end', 3: 'score', 4: 'strand', 5: 'TE_Name', 6: 'TE_Fam'})
     TEs['strand'] = TEs['strand'].apply(lambda x: '-' if x == 'C' else x)
     TEs['class'] = TEs['TE_Fam'].apply(lambda x: x.split('/')[0])
@@ -70,6 +79,7 @@ def download_and_process_files(species, ref_mode, build_intronic):
         TEs = TEs.iloc[:, :-1]
 
     TEs.to_csv(f'{species.lower()}_TEs.csv', index=False)
+    print(f"TEs reference saved to {species.lower()}_TEs.csv")
     os.remove(te_csv)
     os.remove(new_out_file)
     
@@ -77,6 +87,7 @@ def download_and_process_files(species, ref_mode, build_intronic):
         genes = pr.read_gtf(gtf_file)
         Genes = genes[['Chromosome', 'Feature', 'Start', 'End', 'Strand', 'gene_id', 'gene_name']]
         Genes.to_csv(f'{species.lower()}_Genes.csv')
+        print(f"Genes reference saved to {species.lower()}_Genes.csv")
     elif build_intronic:
         genes = pr.read_gtf(gtf_file)
         exons = genes[genes.Feature == "exon"]

@@ -5,6 +5,7 @@ import sys
 import pyranges as pr
 import argparse
 import pkg_resources
+from MATES.scripts import download_and_process_files
 
 def get_gene_name(TE_chrom_new, diff_ref):
     if TE_chrom_new in (diff_ref['TE_chrom'].tolist()):
@@ -15,7 +16,7 @@ def get_gene_name(TE_chrom_new, diff_ref):
 
 def main():
     parser = argparse.ArgumentParser(description="Process TE data")
-    parser.add_argument('--species', type=str, choices=['Mouse', 'Human', 'Other'], help='Species type')
+    parser.add_argument('--species', type=str, choices=['Mouse', 'Human', 'Other','human','mouse'], help='Species type')
     parser.add_argument('--ref_mode', type=str, default=['repeats', 'TE'], help='TE reference type')
     parser.add_argument('--cut_mode', type=str, default='5prime', choices=['5prime', '3prime'], help='Cut mode')
     parser.add_argument('--cut_length', type=int, default=1000, help='Cut length')
@@ -32,10 +33,8 @@ def main():
     build_intronic = args.intronic
     if args.output_prefix is None:
         output_prefix = ''
-    if species in ['Mouse', 'Human']:
-        script_path = pkg_resources.resource_filename('MATES', 'scripts/Ref2csv.py')
-        command = f"python {script_path} {species} {ref_mode} {build_intronic}" 
-        os.system(command)
+    if species in ['Mouse', 'Human', 'human', 'mouse']:
+        download_and_process_files(species, ref_mode, build_intronic)
         TEs = pd.read_csv(f'{species.lower()}_TEs.csv')
         TE_ref = TEs
         TE_ref['index'] = TE_ref.index
@@ -73,7 +72,7 @@ def main():
 
     TE_chr = TE.TE_chrom.unique().tolist()
     
-    if species in ['Mouse', 'Human']:
+    if species in ['Mouse', 'Human','mouse','human']:
         genes = genes[genes['Feature'] == 'gene']
     else:
         if suffix == 'gff3':
@@ -89,6 +88,7 @@ def main():
     for chromsome in Gene_chr:
         if chromsome not in TE_chr:
             diff_list.append(chromsome)
+
     script_path = pkg_resources.resource_filename('MATES', 'hg38.chromAlias.txt')
     parent_dir = os.path.dirname(os.path.dirname(script_path))
     # Construct the correct path to the file
