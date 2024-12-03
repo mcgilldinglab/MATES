@@ -153,7 +153,13 @@ def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file,ref_path = 'Defau
 
                 # Add the values for the same features
                 common_vars = adata_multi.var_names.intersection(adata_unique.var_names)
-                adata_multi[:, common_vars].X += adata_unique[:, common_vars].X
+                if len(adata_multi) != len(adata_unique):
+                    if len(adata_multi) > len(adata_unique):
+                        adata_multi = adata_multi[adata_unique.obs.index.tolist(), :]
+                        adata_multi[adata_unique.obs.index.tolist(), common_vars].X += adata_unique[:, common_vars].X
+                    else:
+                        adata_unique = adata_unique[adata_multi.obs.index.tolist(), :]
+                        adata_multi[:, common_vars].X += adata_unique[adata_multi.obs.index.tolist(), common_vars].X
 
                 # Concatenate AnnData objects along the features axis (axis=1)
                 combined_adata = ad.concat([adata_multi, adata_unique[:, adata_unique.var_names.difference(common_vars)]], axis=1)
@@ -166,7 +172,9 @@ def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file,ref_path = 'Defau
                 # Save the final combined AnnData object
                 combined_adata.write(os.path.join("10X_locus", sample, 'combined_matrix.h5ad'))
                 print("Finis finalizing locus expression matrix for " + sample + ".")
-    
+    elif data_mode == 'Smart_seq':
+        print("Finalizing locus expression matrix...")
+  
 ##### Quant All TE #####
 def finalize_TE_MTX(data_mode, sample_list_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":

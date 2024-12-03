@@ -40,6 +40,7 @@ def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False)
         # Write the 'TE_index' and 'Cell ID' to CSV files
         pivot_df.index.to_series().to_csv(os.path.join(save_dir,'Unique','features.csv'), index=False)
         pd.Series(pivot_df.columns).to_csv(os.path.join(save_dir,'Unique','barcodes.csv'), index=False)
+        print('finsihed finalizing Unique TE MTX for Smart_seq')
         
     elif data_mode == '10X':
         with open(sample_list_file) as sample_file:
