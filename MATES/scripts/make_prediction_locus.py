@@ -125,10 +125,12 @@ def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_tr
 
         if not os.path.isdir('Smartseq_locus'):
             os.mkdir('Smartseq_locus')
-
+        if not os.path.isdir(locus_TE_dir):
+            os.mkdir(locus_TE_dir)
         locus_multi_mtx_dir = 'Multi_intron' if TE_mode == 'intronic' else 'Multi'
         if not os.path.isdir(join('Smartseq_locus', locus_multi_mtx_dir)):
             os.mkdir(join('Smartseq_locus', locus_multi_mtx_dir))
+            
         df[['cell','TE_index','Calculated_Multimapping_reads']].to_csv(os.path.join(locus_TE_dir, 'Multi_MTX_locus.csv'))
         matrix_df = df.pivot_table(index='TE_index', columns='cell', values='Calculated_Multimapping_reads', fill_value=0)
 

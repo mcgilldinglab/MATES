@@ -173,8 +173,56 @@ def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file,ref_path = 'Defau
                 combined_adata.write(os.path.join("10X_locus", sample, 'combined_matrix.h5ad'))
                 print("Finis finalizing locus expression matrix for " + sample + ".")
     elif data_mode == 'Smart_seq':
-        print("Finalizing locus expression matrix...")
-  
+        print("Finalizing locus expression matrix for Smart_seq...")
+        mtx_filename_multi = os.path.join("Smartseq_locus/Multi", 'matrix.mtx')
+        features_filename_multi = os.path.join("Smartseq_locus/Multi", 'features.csv')
+        cells_filename_multi = os.path.join("Smartseq_locus/Multi", 'barcodes.csv')
+
+        mtx_filename_unique = os.path.join("Smartseq_locus/Unique", 'matrix.mtx')
+        features_filename_unique = os.path.join("Smartseq_locus/Unique", 'features.csv')
+        cells_filename_unique = os.path.join("Smartseq_locus/Unique", 'barcodes.csv')
+
+        # Load the data
+        matrix_multi = mmread(mtx_filename_multi).tocsr()
+        features_multi = pd.read_csv(features_filename_multi)
+        features_multi.index = features_multi['TE_index']
+        cells_multi = pd.read_csv(cells_filename_multi)
+
+        matrix_unique = mmread(mtx_filename_unique).tocsr()
+        features_unique = pd.read_csv(features_filename_unique)
+        features_unique.index = features_unique['TE_index']
+        cells_unique = pd.read_csv(cells_filename_unique)
+
+        # Create AnnData objects
+        adata_multi = ad.AnnData(X=matrix_multi.T, obs=cells_multi, var=features_multi)
+        adata_unique = ad.AnnData(X=matrix_unique.T, obs=cells_unique, var=features_unique)
+
+        adata_multi.var_names_make_unique()
+        adata_unique.var_names_make_unique()
+
+        # Add the values for the same features
+        common_vars = adata_multi.var_names.intersection(adata_unique.var_names)
+        if len(adata_multi) != len(adata_unique):
+            if len(adata_multi) > len(adata_unique):
+                adata_multi = adata_multi[adata_unique.obs.index.tolist(), :]
+                adata_multi[adata_unique.obs.index.tolist(), common_vars].X += adata_unique[:, common_vars].X
+            else:
+                adata_unique = adata_unique[adata_multi.obs.index.tolist(), :]
+                adata_multi[:, common_vars].X += adata_unique[adata_multi.obs.index.tolist(), common_vars].X
+
+        # Concatenate AnnData objects along the features axis (axis=1)
+        combined_adata = ad.concat([adata_multi, adata_unique[:, adata_unique.var_names.difference(common_vars)]], axis=1)
+        combined_adata.obs = adata_unique.obs
+        temp_output_dict = get_te_name(combined_adata.var_names.tolist(),TE_ref_path)
+        combined_adata.var['info'] = [temp_output_dict[i] for i in combined_adata.var_names]
+        combined_adata.var.index = combined_adata.var['info']
+        del combined_adata.var['info']
+        os.makedirs("Smartseq_locus", exist_ok = True)
+        # Save the final combined AnnData object
+        combined_adata.write(os.path.join("Smartseq_locus", 'combined_matrix.h5ad'))
+        print("Finish finalizing locus expression matrix for Smart_seq.")
+    else:
+        print('Invalid data format.')
 ##### Quant All TE #####
 def finalize_TE_MTX(data_mode, sample_list_file=None):
     if data_mode != "10X" and data_mode != "Smart_seq":
