@@ -23,7 +23,10 @@ def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False)
         combined_df = pd.DataFrame()
 
         for cell_idx, cell_file in enumerate(cell_files):
-            cell_df = pd.read_csv(cell_file)
+            try:
+                cell_df = pd.read_csv(cell_file)
+            except:
+                continue
             cell_id = cells[cell_idx]
             cell_df['Cell_ID'] = cell_id
             combined_df = pd.concat([combined_df, cell_df])
@@ -52,7 +55,10 @@ def unique_locus_TE_MTX(TE_mode, data_mode, sample_list_file, long_read = False)
         
             combined_df = pd.DataFrame()
             for cell_idx, cell_file in enumerate(cell_files):
-                cell_df = pd.read_csv(cell_file)
+                try:
+                    cell_df = pd.read_csv(cell_file)
+                except:
+                    continue
                 cell_id = cells[cell_idx]
                 cell_df['Cell_ID'] = cell_id
                 combined_df = pd.concat([combined_df, cell_df])
