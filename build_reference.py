@@ -53,12 +53,12 @@ def main():
         TEs = pd.read_csv(args.other_species_TE)
         TEs['index'] = TEs.index
         #check if 'genoName' is in the columns
-        if 'geno' in TEs.columns:
-            TEs = TEs[["genoName","genoStart","genoEnd", "strand","index", "repName","repClass"]]
+        if 'genoName' in TEs.columns:
+            TEs = TEs[["genoName","genoStart","genoEnd","index", "strand", "repName","repClass"]]
         elif 'chromStart' in TEs.columns:
             TEs['repClass'] = TEs['name'].apply(lambda x: x.split('#')[1])
             TEs['repName'] = TEs['name'].apply(lambda x: x.split('#')[0])
-            TEs = TEs[['#"chrom"',"chromStart","chromEnd", "strand","index", "repName","repClass"]]
+            TEs = TEs[['#"chrom"',"chromStart","chromEnd","index", "strand", "repName","repClass"]]
         TEs.columns = ['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']
         suffix = args.other_species_GTF.split('.')[-1]
         try:
