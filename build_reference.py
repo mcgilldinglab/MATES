@@ -52,7 +52,13 @@ def main():
             output_prefix = output_prefix + '_'
         TEs = pd.read_csv(args.other_species_TE)
         TEs['index'] = TEs.index
-        TEs = TEs[["genoName","genoStart","genoEnd", "strand","index", "repName","repClass"]]
+        #check if 'genoName' is in the columns
+        if 'geno' in TEs.columns:
+            TEs = TEs[["genoName","genoStart","genoEnd", "strand","index", "repName","repClass"]]
+        elif 'chromStart' in TEs.columns:
+            TEs['repClass'] = TEs['name'].apply(lambda x: x.split('#')[1])
+            TEs['repName'] = TEs['name'].apply(lambda x: x.split('#')[0])
+            TEs = TEs[['#"chrom"',"chromStart","chromEnd", "strand","index", "repName","repClass"]]
         TEs.columns = ['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']
         suffix = args.other_species_GTF.split('.')[-1]
         try:
@@ -66,7 +72,6 @@ def main():
         genes = genes.as_df()
         TE = TEs
 
-
     TE = TE.dropna()
     TE['length'] = TE['end']-TE['start']
 
@@ -75,11 +80,14 @@ def main():
     if species in ['Mouse', 'Human','mouse','human']:
         genes = genes[genes['Feature'] == 'gene']
     else:
-        if suffix == 'gff3':
-            genes = genes[genes['Feature'] == 'gene']
-            genes['Chromosome'] = genes['Chromosome'].astype(str)
+        genes['Chromosome'] = genes['Chromosome'].astype(str)
+        if 'Chr' not in genes['Chromosome'].iloc[0] and 'Chr' in TE['TE_chrom'].iloc[0] :
             genes['Chromosome'] = 'Chr'+genes['Chromosome']
-        else:
+        elif 'chr' not in genes['Chromosome'].iloc[0] and 'chr' in TE['TE_chrom'].iloc[0] :
+            genes['Chromosome'] = 'chr'+genes['Chromosome']
+        if 'gene' in genes['Feature'].unique().tolist():
+            genes = genes[genes['Feature'] == 'gene']
+        elif 'transcript' in genes['Feature'].unique().tolist():
             genes = genes[genes['Feature'] == 'transcript']
     if len(genes) == 0:
         raise ValueError('1, Please check if the GTF/GFF3 file contains the correct feature type (\'gene\' or \'transcript\') in the third column of the file. If not, please read the tutorial of building reference carefully and use the correct GTF/GFF3 files. \n 2, If the issue still exists, please contact the authors.')
@@ -117,6 +125,8 @@ def main():
         a = pybedtools.example_bedtool(cur_path+f'/{output_prefix}gene_bed.bed')
         b = pybedtools.example_bedtool(cur_path+f'/{output_prefix}TE_full.bed')
         tmp = b.subtract(a,A = True,nonamecheck=True)
+        if len(tmp) == 0:
+            raise ValueError('No TEs are found in the genome. Please check the input files.')
         tmp.saveas(f'{output_prefix}removed_TE.txt')
         removed_TE = pd.read_csv(f'{output_prefix}removed_TE.txt',sep='\t', header=None, low_memory=False)
         removed_TE.columns = TE.columns

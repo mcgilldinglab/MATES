@@ -43,7 +43,29 @@ import MATES
 ```
 ## Links
 Interactive MATES web server: <a>https://mates.cellcycle.org</a>.
-## Usage
+
+## Tutorials
+### Customize the reference genome for the species of interest
+
+We have supported automatic human and mouse TE/Gene reference genome creating using `python build_reference.py --species Human/Mouse`. For Arabidopsis thaliana and Drosophila melanogaster, please visit the shared [folder](https://mcgill-my.sharepoint.com/:f:/g/personal/yumin_zheng_mail_mcgill_ca/EpND9w0Rpf5EpEYGsxoV1I0BUz4svIoqnqWwXcDefeEwFA?e=9p10uW) for GTF file, RepeatMaskers file, and example script to create their TE/Gene reference genome. For other species, please refer to the [tutorial of building TE and Gene reference genome](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/reference_downloading.md).
+
+### Walkthrough Example
+From loading data to downstream analysis. Please refer to [Example](https://github.com/mcgilldinglab/MATES/blob/main/example) Section for deatils.
+
+### Example scripts for different type of single cell data
+* [MATES pipeline on Smart-seq2 scRNA and 10X scRNA/scATAC/Multi-Omics data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/pipeline_tutorial.ipynb)
+* [MATES pipeline on 10X Visium data](https://github.com/mcgilldinglab/MATES/blob/main/example/10X_visium_example/10X_visium_example.ipynb)
+* [MATES pipeline on Long Reads data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/Tut_LongRead.md)
+
+### 10x scRNA-seq dataset
+* [MATES downstream analysis on 10X scRNA data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scRNA/10X/scRNA_10X_GeneTE_Analysis.ipynb)
+### Smart-seq2 scRNA dataset
+* [MATES downstream analysis on Smart-seq2 scRNA data (TE only)](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scRNA/Smart_seq2/scRNA_SmartSeq_TE_Analysis.ipynb) 
+* [MATES downstream analysis on Smart-seq2 scRNA data (Gene+TE)](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scRNA/Smart_seq2/scRNA_SmartSeq_GeneTE_Analysis.ipynb) 
+### 10x scATAC-seq dataset
+* [MATES downstream analysis on 10X scATAC data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scATAC/scATAC_Peak_TE_analysis.ipynb)
+
+## APIs
 The MATES contains **six** modules.
 ```python
 import MATES
@@ -264,23 +286,7 @@ correct_intronic_TE(data_mode, sample_list_file, ref_path = 'Default')
 ## sample_list_file : <str> path to file conatins sample IDs
 ## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default TE reference is of name 'TE_intronic.csv'. 
 ``` 
-## Tutorials
-### Customize the reference genome for the species of interest. 
-Please refer to the [tutorial of building TE and Gene reference genome](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/reference_downloading.md).
 
-### Walkthrough Example
-From loading data to downstream analysis. Please refer to [Example](https://github.com/mcgilldinglab/MATES/blob/main/example) Section for deatils.
 
-### Pipeline implementation sample script on different type of single cell data
-* [MATES implementation procedures on Smart-seq2 scRNA and 10X scRNA/scATAC/Multi-Omics data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/pipeline_tutorial.ipynb)
-* [MATES pipeline on 10X Visium data](https://github.com/mcgilldinglab/MATES/blob/main/example/10X_visium_example/10X_visium_example.ipynb)
-* [MATES implementation procedures on Long Reads data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/Tut_LongRead.md)
-
-### 10x scRNA-seq dataset
-* [MATES downstream analysis on 10X scRNA data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scRNA/10X/scRNA_10X_GeneTE_Analysis.ipynb)
-### Smart-seq2 scRNA dataset
-* [MATES downstream analysis on Smart-seq2 scRNA data (TE only)](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scRNA/Smart_seq2/scRNA_SmartSeq_TE_Analysis.ipynb) 
-* [MATES downstream analysis on Smart-seq2 scRNA data (Gene+TE)](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scRNA/Smart_seq2/scRNA_SmartSeq_GeneTE_Analysis.ipynb) 
-### 10x scATAC-seq dataset
-* [MATES downstream analysis on 10X scATAC data](https://github.com/mcgilldinglab/MATES/blob/main/tutorial/scATAC/scATAC_Peak_TE_analysis.ipynb)
-
+## Contact
+[Yumin Zheng](mailto:yumin.zheng@mail.mcgill.ca), [Tao Wu](mailto:tao.wu@bcm.edu), [Jun Ding](mailto:jun.ding@mcgill.ca)
