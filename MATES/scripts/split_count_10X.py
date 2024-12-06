@@ -305,6 +305,8 @@ def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_st
     t = time.time()
     
     IGV_vecs = []   
+    if not os.path.exists(path_to_bam[:-4]+'.bai'):
+        pysam.index(path_to_bam)
     aligned_file = pysam.AlignmentFile(path_to_bam, "rb")
     reads = aligned_file.fetch()
     dic = {}
@@ -312,8 +314,9 @@ def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_st
     total_reads = {}
     sub_bam_path = join(cur_path, 'sub_bam_files')
     create_directory(sub_bam_path)
-    create_directory(sub_bam_path+'/unique')
-    create_directory(sub_bam_path+'/multi')
+    create_directory(sub_bam_path+'/'+sample_name)
+    create_directory(sub_bam_path+'/'+sample_name+'/unique')
+    create_directory(sub_bam_path+'/'+sample_name+'/multi')
     b_writer = BamWriter(aligned_file,bc_list, sub_bam_path)
     for read in tqdm(reads,total=aligned_file.mapped, desc="Summarizing reads statistics"):
         try:
@@ -347,6 +350,7 @@ def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_st
     with open(join(path,'multi_TE_index_dict.pkl'), 'rb') as f:
         multi_TE_index = pickle.load(f)
     print("Multi matrix finished")
+    shutil.rmtree(sub_bam_path)
     return unique_TE_index, multi_TE_index
 
 def generate_matrix_chunk(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir, num_chunk, tag_field='CB'):

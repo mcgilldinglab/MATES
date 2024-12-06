@@ -289,4 +289,4 @@ correct_intronic_TE(data_mode, sample_list_file, ref_path = 'Default')
 
 
 ## Contact
-[Yumin Zheng](mailto:yumin.zheng@mail.mcgill.ca), [Ruohan Wang](mailto:ruohan_wang@brown.edu),[Tao Wu](mailto:tao.wu@bcm.edu), [Jun Ding](mailto:jun.ding@mcgill.ca)
+[Yumin Zheng](mailto:yumin.zheng@mail.mcgill.ca), [Ruohan Wang](mailto:ruohan_wang@brown.edu), [Tao Wu](mailto:tao.wu@bcm.edu), [Jun Ding](mailto:jun.ding@mcgill.ca)
