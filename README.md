@@ -1,5 +1,5 @@
 # MATES
-A Deep Learning-Based Model for Quantifying Transposable Elements in Single-Cell Sequencing Data
+A Deep Learning-Based Model for Quantifying Transposable Elements in Single-Cell Sequencing Data ([Nature Communications, 2024](https://www.nature.com/articles/s41467-024-53114-7)).
 
 ## Overview
 <img title="Model Overview" alt="Alt text" src="/figures/Model-figure-01.png">
@@ -287,6 +287,9 @@ correct_intronic_TE(data_mode, sample_list_file, ref_path = 'Default')
 ## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default TE reference is of name 'TE_intronic.csv'. 
 ``` 
 
+## Citation
+If you use `MATES` in your research, please cite `MATES` publication as follows:
+>Wang, R., Zheng, Y., Zhang, Z. et al. MATES: a deep learning-based model for locus-specific quantification of transposable elements in single cell. Nat Commun 15, 8798 (2024). https://doi.org/10.1038/s41467-024-53114-7
 
 ## Contact
 [Yumin Zheng](mailto:yumin.zheng@mail.mcgill.ca), [Ruohan Wang](mailto:ruohan_wang@brown.edu), [Tao Wu](mailto:tao.wu@bcm.edu), [Jun Ding](mailto:jun.ding@mcgill.ca)
