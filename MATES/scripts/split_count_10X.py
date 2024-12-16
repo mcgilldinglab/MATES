@@ -153,8 +153,8 @@ def generate_unique_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, c
         TE_region_read_num = []
         t = time.time()
         path = join(cur_path, coverage_stored_dir, sample_name)
-        bam_path = join(cur_path, 'sub_bam_files','unique',bc+'.bam')
-        bc_exist= os.listdir(join(cur_path, 'sub_bam_files','unique'))
+        bam_path = join(cur_path, 'sub_bam_files',sample_name,'unique',bc+'.bam')
+        bc_exist= os.listdir(join(cur_path, 'sub_bam_files',sample_name,'unique'))
         if bc+'.bam' not in bc_exist:
             continue
     # Create a temporary file to store the BAM data
@@ -164,7 +164,6 @@ def generate_unique_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, c
         unique_vec_path = join(path,'unique_vec')
         if not os.path.exists(unique_vec_path):
             os.mkdir(unique_vec_path)
-
 
         pysam.index(bam_path)
         # t = time.time()
@@ -241,8 +240,8 @@ def generate_multi_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, co
         TE_region_read_num = []
         path = join(cur_path, coverage_stored_dir, sample_name)
     # Create a temporary file to store the BAM data
-        bam_path = join(cur_path, 'sub_bam_files','multi',bc+'.bam')
-        bc_exist= os.listdir(join(cur_path, 'sub_bam_files','multi'))
+        bam_path = join(cur_path, 'sub_bam_files',sample_name,'multi',bc+'.bam')
+        bc_exist= os.listdir(join(cur_path, 'sub_bam_files',sample_name,'multi'))
         if bc+'.bam' not in bc_exist:
             continue
         path = join(path, bc)
@@ -317,7 +316,7 @@ def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_st
     create_directory(sub_bam_path+'/'+sample_name)
     create_directory(sub_bam_path+'/'+sample_name+'/unique')
     create_directory(sub_bam_path+'/'+sample_name+'/multi')
-    b_writer = BamWriter(aligned_file,bc_list, sub_bam_path)
+    b_writer = BamWriter(aligned_file,bc_list, sub_bam_path+'/'+sample_name)
     for read in tqdm(reads,total=aligned_file.mapped, desc="Summarizing reads statistics"):
         try:
             bc = read.get_tag(tag_field)
