@@ -104,7 +104,7 @@ To run the first step, you'll be required to furnish three separate .txt files c
 import MATES
 from MATES import bam_processor
 
-bam_processor.split_count_10X_data(TE_mode, '10X', sample_list_file, bam_path_file, bc_path_file, bc_ind,TE_ref_path)
+bam_processor.split_count_10X_data(TE_mode, sample_list_file, bam_path_file, bc_path_file, bc_ind,TE_ref_path, num_threads)
 ```
 #### Alternative solution:
 These two commands could take long time to run, but it works well with large bam files.

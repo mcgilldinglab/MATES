@@ -17,34 +17,65 @@ from pathlib import Path
 from tqdm import tqdm
 import pandas as pd
 from scipy import sparse
+from multiprocessing import Pool, Manager
+import multiprocessing
+from tqdm import tqdm
+from collections import defaultdict
+
+
+    
+
 class BamWriter:
     def __init__(self, alignment, barcodes, prefix):
         self.alignment = alignment
         self.prefix = prefix
         self.barcodes = set(barcodes)
-        self._out_files = {}
+        self._out_files = defaultdict(dict)
 
-    def write_record_to_barcode(self, rec, barcode,option):
+    def write_record_to_barcode(self, rec, barcode, option):
         if barcode not in self.barcodes:
             return
-        if barcode not in self._out_files:
-            self._open_file_for_barcode(barcode,option)
         if option not in self._out_files[barcode]:
-            self._open_file_for_barcode(barcode,option)
+            self._open_file_for_barcode(barcode, option)
         self._out_files[barcode][option].write(rec)
 
-    def _open_file_for_barcode(self, barcode,option):
-        if barcode not in list(self._out_files.keys()):
-            self._out_files[barcode] = {}
+    def _open_file_for_barcode(self, barcode, option):
         self._out_files[barcode][option] = pysam.AlignmentFile(
-            f"{self.prefix}/{option}/{barcode}.bam", "wb", template=self.alignment,header=self.alignment.text
+            f"{self.prefix}/{option}/{barcode}.bam", "wb", template=self.alignment, header=self.alignment.text
         )
 
     def close_files(self):
-        
-        for barcode in tqdm(self._out_files.keys(), total=len(list(self._out_files.keys())), desc="Writing sub-bam files"):
+        for barcode in tqdm(self._out_files.keys(), total=len(self._out_files), desc="Writing sub-bam files"):
             for each in self._out_files[barcode].keys():
                 self._out_files[barcode][each].close()
+# class BamWriter:
+#     def __init__(self, alignment, barcodes, prefix):
+#         self.alignment = alignment
+#         self.prefix = prefix
+#         self.barcodes = set(barcodes)
+#         self._out_files = {}
+
+#     def write_record_to_barcode(self, rec, barcode,option):
+#         if barcode not in self.barcodes:
+#             return
+#         if barcode not in self._out_files:
+#             self._open_file_for_barcode(barcode,option)
+#         if option not in self._out_files[barcode]:
+#             self._open_file_for_barcode(barcode,option)
+#         self._out_files[barcode][option].write(rec)
+
+#     def _open_file_for_barcode(self, barcode,option):
+#         if barcode not in list(self._out_files.keys()):
+#             self._out_files[barcode] = {}
+#         self._out_files[barcode][option] = pysam.AlignmentFile(
+#             f"{self.prefix}/{option}/{barcode}.bam", "wb", template=self.alignment,header=self.alignment.text
+#         )
+
+#     def close_files(self):
+        
+#         for barcode in tqdm(self._out_files.keys(), total=len(list(self._out_files.keys())), desc="Writing sub-bam files"):
+#             for each in self._out_files[barcode].keys():
+#                 self._out_files[barcode][each].close()
 def count_region_read(aligned_file, chromosome, start, end):    
     read_name = []
     for pileupcolumn in aligned_file.pileup(chromosome,start,end,truncate =True):
@@ -159,6 +190,7 @@ def get_region_count(aligned_file, chromosome,start,end):
 
 import io
 import tempfile
+
 def count_unique_matrix(bc, cur_path,coverage_stored_dir,sample_name,TE_selected_bed,TE_index_dict,total_reads,sav_vec):
     t = time.time()
     TE_index_list = []
@@ -184,12 +216,14 @@ def count_unique_matrix(bc, cur_path,coverage_stored_dir,sample_name,TE_selected
         stderr_buffer = io.StringIO()
         with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
             a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
+        
         # if "has inconsistent naming convention for record:" in stdout_buffer.getvalue():
         #     raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
         # if "has inconsistent naming convention for record:" in stderr_buffer.getvalue():
         #     raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
 
         TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
+
         # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
         # tt2 = time.time()
         with pysam.AlignmentFile(bam_path, "rb") as temp_unique_bam:
@@ -238,6 +272,7 @@ def count_unique_matrix(bc, cur_path,coverage_stored_dir,sample_name,TE_selected
         count_table_TE.to_csv(join(path,'TE_unique_Info.csv'),index = False)
         TE_index_dict[bc] = TE_index_list
 
+    
 def generate_unique_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, coverage_stored_dir, sample_name,total_reads, path,sav_vec,num_threads=1):
     
     
@@ -274,11 +309,6 @@ def generate_unique_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, c
             stderr_buffer = io.StringIO()
             with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
                 a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
-            # if "has inconsistent naming convention for record:" in stdout_buffer.getvalue():
-            #     raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
-            # if "has inconsistent naming convention for record:" in stderr_buffer.getvalue():
-            #     raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
-        
 
             TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
             # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
@@ -446,12 +476,9 @@ def generate_multi_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, co
             stderr_buffer = io.StringIO()
             with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
                 a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
-            # if "has inconsistent naming convention for record:" in stdout_buffer.getvalue():
-            #     raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
-            # if "has inconsistent naming convention for record:" in stderr_buffer.getvalue():
-            #     raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
             
             TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
+            
             # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
             with pysam.AlignmentFile(bam_path, "rb") as temp_multi_bam:
                 for idx, row in TE_selected.iterrows():
@@ -506,27 +533,32 @@ def generate_multi_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, co
     TE_index_dict = dict(TE_index_dict)
     with open(join(path,'multi_TE_index_dict.pkl'), 'wb') as f:
         pickle.dump(TE_index_dict, f)
-def write_sub_bam_files_process(bc_list_chunks, path_to_bam, total_reads, sub_bam_path, sample_name, tag_field='CB'):
-    aligned_file = pysam.AlignmentFile(path_to_bam, "rb")
-    reads = aligned_file.fetch()
-    b_writer = BamWriter(aligned_file,bc_list_chunks, sub_bam_path+'/'+sample_name)
+def write_sub_bam_files_process(read, total_reads, b_writer,  tag_field='CB'):
+    try:
+        bc = read.get_tag(tag_field)
+    except KeyError:
+        return 
+    try:
+        total_reads[bc] += 1
+    except KeyError:
+        total_reads[bc] = 1
+    if read.mapq == 255:
+        b_writer.write_record_to_barcode(read, bc, 'unique')
+    else:
+        b_writer.write_record_to_barcode(read, bc, 'multi')
 
-    
-    for read in tqdm(reads,total=aligned_file.mapped, desc="Summarizing reads statistics"):
-        try:
-            bc = read.get_tag(tag_field)
-        except KeyError:
-            continue
-        try:
-            total_reads[bc] += 1
-        except KeyError:
-            total_reads[bc] = 1
-        if read.mapq == 255:
-            b_writer.write_record_to_barcode(read, bc, 'unique')
-        else:
-            b_writer.write_record_to_barcode(read, bc, 'multi')
-    b_writer.close_files()
-    
+def check_chromosome_format(bam_file, TE_selected_bed):
+    bam_chroms = set(bam_file.references)
+    TE_chroms = []
+    try:
+        for i in range(1000):
+            temp = TE_selected_bed[i].chrom
+            if temp in bam_chroms:
+                return None
+    except IndexError:
+        pass
+    raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
+
 def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_stored_dir, num_threads=1,tag_field='CB'):
     sample_name = samp_bc
     bc = pd.read_csv(barcodes_file,sep='\t',header=None)
@@ -543,25 +575,22 @@ def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_st
     
     dic = {}
     count = 0
-    total_reads = {}
     sub_bam_path = join(cur_path, 'sub_bam_files')
     create_directory(sub_bam_path)
     create_directory(sub_bam_path+'/'+sample_name)
     create_directory(sub_bam_path+'/'+sample_name+'/unique')
     create_directory(sub_bam_path+'/'+sample_name+'/multi')
     aligned_file = pysam.AlignmentFile(path_to_bam, "rb")
+    check_chromosome_format(aligned_file, TE_ref_bed)
     reads = aligned_file.fetch()
     b_writer = BamWriter(aligned_file,bc_list, sub_bam_path+'/'+sample_name)
-    
-    for read in tqdm(reads,total=aligned_file.mapped, desc="Summarizing reads statistics"):
+    total_reads = defaultdict(int)
+    for read in tqdm(reads, total=aligned_file.mapped, desc="Summarizing reads statistics"):
         try:
             bc = read.get_tag(tag_field)
         except KeyError:
             continue
-        try:
-            total_reads[bc] += 1
-        except KeyError:
-            total_reads[bc] = 1
+        total_reads[bc] += 1
         if read.mapq == 255:
             b_writer.write_record_to_barcode(read, bc, 'unique')
         else:
@@ -639,6 +668,7 @@ def generate_matrix_chunk(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir,
     return unique_TE_index, multi_TE_index
 
 import sys  
+from multiprocessing import Pool
 def start_split_count(barcode_field, path_to_bam, barcodes_file, sample, TE_mode, TE_ref_bed_path,num_threads):
 
     TE_ref_bed = pybedtools.example_bedtool(TE_ref_bed_path)

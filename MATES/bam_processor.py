@@ -4,8 +4,9 @@ import math
 import pkg_resources
 from .scripts import start_split_count
 from MATES.scripts.helper_function import *
-def split_count_10X_data(TE_mode,data_mode, sample_list_file, bam_path_file, bc_path_file, num_threads = 1, bc_ind='CR', ref_path = 'Default'):
+def split_count_10X_data(TE_mode, sample_list_file, bam_path_file, bc_path_file, num_threads = 1, bc_ind='CR', ref_path = 'Default'):
     cur_pwd = os.getcwd()
+    data_mode = "10X"
     if data_mode != "10X":
         raise ValueError("Invalid data format. Currently this function only support '10X' format.")
     if TE_mode not in ["inclusive", "exclusive"]:

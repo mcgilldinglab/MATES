@@ -13,11 +13,12 @@ Transposable elements (TEs) are crucial for genetic diversity and gene regulatio
 <!-- With the burgeoning field of single-cell sequencing data, the potential for in-depth TE quantification and analysis is enormous, opening avenues to gain invaluable insights into the molecular mechanisms underpinning various human diseases. MATES furnishes a powerful tool for accurately quantifying and investigating TEs at specific loci and single-cell level, thereby significantly enriching our understanding of complex biological processes. This opens a new dimension for genomics and cell biology research and holds promise for potential therapeutic breakthroughs. -->
 
 ## Relesae Note
+* Version 0.1.7: Parallelize preprocessing for 10X-format data.
 * Version 0.1.6: Add a simple mode for MATES to quantify TE within 3 lines of code. Add a common errors Q&A. 
 * Version 0.1.5: Improve the efficiency of splitting BAM files and counting TEs reads.
 * Version 0.1.4: Enhanced the build_reference.py script and the tutorial to build reference genome for species other than Human and Mouse.
 
-MATES is actively under development; please feel free to reach out if you encounter any issues.
+MATES is actively under development; please feel free to reach out if you encounter any issue.
 
 ## Installation
 
@@ -43,7 +44,7 @@ pip install .
 conda install ipykernel
 python -m ipykernel install --user --name=mates_env
 ```
-Installation should take only a few minutes. Verify that MATES is correctly installed by running in python:
+Installation should take only a few minutes. Verify installation:
 ```python
 import MATES
 ```
@@ -98,24 +99,25 @@ from MATES import TE_quantifier_Intronic
 ```
 * **bam_processor**
 	The bam_processor module efficiently manages input BAM files by partitioning them into sub-BAM files for individual cells, distinguishing unique mapping from multi mapping reads. It also constructs TE-specific coverage vectors, shedding light on read distributions around TE instances at the single-cell level, enabling accurate TE quantification and comprehensive cellular characterization.
+###### For simplicity, in **data_mode**, we use **10X** to represent the format of data in which each BAM file contains reads from multiple cells, and **Smart_seq** to represent the type of data where individual BAM files contain reads from only one cell.
 
-**In the MATES v0.1.5, we released a new function `bam_processor.split_count_10X_data()` to speed up the preprocessing step for 10X data.**
+
 ```python 
-bam_processor.split_count_10X_data(TE_mode,data_mode, sample_list_file, bam_path_file, bc_path_file, bc_ind='CB', ref_path = 'Default')
+bam_processor.split_count_10X_data(TE_mode, sample_list_file, bam_path_file, bc_path_file, bc_ind='CB', ref_path = 'Default',num_threads=1)
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene (for intronic, refer to below section)
-## data_mode : <str> 10X, This function currently only support 10X data.
 ## sample_list_file : <str> path to file conatins sample IDs
 ## bam_path_file : <str> path to file conatins matching bam file address of sample in sample list
 ## bc_path_file(optional) : <str> path to file contains matching barcodes list address of sample in sample list
 ## bc_ind:<str> barcode field indicator in bam files, e.g. CB/CR...
 ## ref_path(optional): <str> TE reference bed file. Only needed for self generated reference, provide path to reference. By default, exclusive have reference 'TE_nooverlap.bed' and inclusive have reference 'TE_full.bed'.
+## num_threads(optional):  <int> The number of process. By default it is 1. Increase the number of threads will reduce the running time, but increase the memory overhead. It should not be larger than the total number of CPUs in your device.
 ```
 ```python
 bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file,bc_ind = None, bc_path_file=None)
 # Parameters
-## data_mode : <str> 10X or Smart_seq, we encourage you to use bam_processor.split_count_10X_data() for 10X data.
-## threads_num : <int>
+## data_mode : <str> 10X or Smart_seq, we encourage you to use bam_processor.split_count_10X_data() for 10X format data.
+## threads_num : <int> Only speed up Smart_seq format data processing. 
 ## sample_list_file : <str> path to file conatins sample IDs
 ## bam_path_file : <str> path to file conatins matching bam file address of sample in sample list
 ## bc_ind:<str> barcode field indicator in bam files, e.g. CB/CR...
@@ -125,15 +127,13 @@ bam_processor.split_bam_files(data_mode, threads_num, sample_list_file, bam_path
 bam_processor.count_coverage_vec(TE_mode, data_mode, threads_num, sample_list_file, ref_path = "Default", bc_path_file=None)
 # Parameters
 ## TE_mode : <str> exclusive or inclusive, represents whether remove TE instances have overlap with gene (for intronic, refer to below section)
-## data_mode : <str> 10X or Smart_seq, we encourage you to use bam_processor.split_count_10X_data() for 10X data.
-## threads_num : <int>
+## data_mode : <str> 10X or Smart_seq, we encourage you to use bam_processor.split_count_10X_data() for 10X format data.
+## threads_num : <int> Only speed up Smart_seq format data processing. 
 ## sample_list_file : <str> path to file conatins sample IDs
 ## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default, exclusive have reference 'TE_nooverlap.csv' and inclusive have reference 'TE_full.csv'.
 ## bc_path_file(optional) : <str> only needed for 10X data, path to file contains matching barcodes list address of sample in sample list
 ```
 If you want to perform TE quantification on Long Reads data, you can use **bam_processor.split_bam_files** based on your sequencing plantform. **Instead** of using **bam_processor.count_coverage_vec**, use below function:
-###### For simplicity, in **data_mode**, we use **10X** to indicating data using barcodes to distinguish data, i.e. you may have a barcode file to seperating the data in the bam file or **Smart_seq** to indicating data do not use barcodes to distinguish data, i.e. one bam file per cell.
-
 
 ```python
 bam_processor.count_long_reads(TE_mode, data_mode, threads_num, sample_list_file, bam_dir, ref_path = "Default", bc_path_file=None):
