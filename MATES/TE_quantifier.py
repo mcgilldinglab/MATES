@@ -165,9 +165,9 @@ def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file,ref_path = 'Defau
                 combined_adata = ad.concat([adata_multi, adata_unique[:, adata_unique.var_names.difference(common_vars)]], axis=1)
                 combined_adata.obs = adata_unique.obs
                 temp_output_dict = get_te_name(combined_adata.var_names.tolist(),TE_ref_path)
-                combined_adata.var['info'] = [temp_output_dict[i] for i in combined_adata.var_names]
-                combined_adata.var.index = combined_adata.var['info']
-                del combined_adata.var['info']
+                combined_adata.var['TE'] = [temp_output_dict[i] for i in combined_adata.var_names]
+                combined_adata.var.index = combined_adata.var['TE']
+                del combined_adata.var['TE']
                 os.makedirs(os.path.join("10X_locus", sample), exist_ok = True)
                 # Save the final combined AnnData object
                 combined_adata.write(os.path.join("10X_locus", sample, 'combined_matrix.h5ad'))
@@ -214,9 +214,9 @@ def quantify_locus_TE_MTX(TE_mode, data_mode, sample_list_file,ref_path = 'Defau
         combined_adata = ad.concat([adata_multi, adata_unique[:, adata_unique.var_names.difference(common_vars)]], axis=1)
         combined_adata.obs = adata_unique.obs
         temp_output_dict = get_te_name(combined_adata.var_names.tolist(),TE_ref_path)
-        combined_adata.var['info'] = [temp_output_dict[i] for i in combined_adata.var_names]
-        combined_adata.var.index = combined_adata.var['info']
-        del combined_adata.var['info']
+        combined_adata.var['TE'] = [temp_output_dict[i] for i in combined_adata.var_names]
+        combined_adata.var.index = combined_adata.var['TE']
+        del combined_adata.var['TE']
         os.makedirs("Smartseq_locus", exist_ok = True)
         # Save the final combined AnnData object
         combined_adata.write(os.path.join("Smartseq_locus", 'combined_matrix.h5ad'))
@@ -240,12 +240,24 @@ def finalize_TE_MTX(data_mode, sample_list_file=None):
         df_full.drop_duplicates().to_csv('Combination/TE_MTX.csv')
         print("Finish create TE_MTX.")
         os.makedirs("result_MTX", exist_ok=True)
-        os.rename("Combination/TE_MTX.csv", "result_MTX/TE_MTX.csv")
+        # os.rename("Combination/TE_MTX.csv", "result_MTX/TE_MTX.csv")
         os.rename("Unique_TE/Unique_All_MTX.csv", "result_MTX/Unique_TE_MTX.csv")
         os.rename("prediction/Multi_MTX.csv", "result_MTX/Multi_TE_MTX.csv")
         shutil.rmtree("Combination")
         shutil.rmtree("Unique_TE")
         shutil.rmtree("prediction")
+        unqiue_TE = pd.read_csv('result_MTX/Unique_TE_MTX.csv', index_col = 0)
+        multi_TE = pd.read_csv('result_MTX/Multi_TE_MTX.csv', index_col = 0)
+        TE_MTX = unqiue_TE.add(multi_TE, fill_value=0)
+        te_names = TE_MTX.index.tolist()
+        cb_names = TE_MTX.columns.tolist()
+        te_names_df = pd.DataFrame({'TE':te_names})
+        cb_names_df = pd.DataFrame({'Cell_ID':cb_names})
+        TE_MTX_ad = ad.AnnData(X=csr_matrix(TE_MTX.values.T), obs=cb_names_df, var=te_names_df)
+        TE_MTX_ad.obs.index = TE_MTX_ad.obs['Cell_ID']
+        TE_MTX_ad.var.index = TE_MTX_ad.var['TE']
+        TE_MTX.to_csv('result_MTX/TE_MTX.csv')
+        TE_MTX_ad.write('result_MTX/TE_MTX.h5ad')
     elif data_mode == "10X":
         os.makedirs("result_MTX", exist_ok=True)
         if sample_list_file == None:
@@ -267,13 +279,25 @@ def finalize_TE_MTX(data_mode, sample_list_file=None):
                 df_full.drop_duplicates().to_csv('Combination/'+line+'/TE_MTX.csv')
                 print("Finish create TE_MTX for ", line)
                 os.makedirs(f"result_MTX/{line}", exist_ok=True)
-                os.rename(f"Combination/{line}/TE_MTX.csv", f"result_MTX/{line}/TE_MTX.csv")
+                # os.rename(f"Combination/{line}/TE_MTX.csv", f"result_MTX/{line}/TE_MTX.csv")
                 os.rename(f"Unique_TE/{line}/Unique_All_MTX.csv", f"result_MTX/{line}/Unique_TE_MTX.csv")
                 os.rename(f"prediction/{line}/Multi_MTX.csv", f"result_MTX/{line}/Multi_TE_MTX.csv")
                 shutil.rmtree(f"Combination/{line}")
                 shutil.rmtree(f"Unique_TE/{line}")
                 shutil.rmtree(f"prediction/{line}")
-
+                unqiue_TE = pd.read_csv(f"result_MTX/{line}/Unique_TE_MTX.csv", index_col = 0)
+                multi_TE = pd.read_csv(f"result_MTX/{line}/Multi_TE_MTX.csv", index_col = 0)
+                TE_MTX = unqiue_TE.add(multi_TE, fill_value=0)
+                TE_MTX.to_csv(f"result_MTX/{line}/TE_MTX.csv")
+                te_names = TE_MTX.index.tolist()
+                cb_names = TE_MTX.columns.tolist()
+                te_names_df = pd.DataFrame({'TE':te_names})
+                cb_names_df = pd.DataFrame({'Cell_ID':cb_names})
+                from scipy.sparse import csr_matrix
+                TE_MTX_ad = ad.AnnData(X=csr_matrix(TE_MTX.values.T), obs=cb_names_df, var=te_names_df)
+                TE_MTX_ad.obs.index = TE_MTX_ad.obs['Cell_ID']
+                TE_MTX_ad.var.index = TE_MTX_ad.var['TE']
+                TE_MTX_ad.write(f"result_MTX/{line}/TE_MTX.h5ad")
         shutil.rmtree("Combination")
         shutil.rmtree("Unique_TE")
         shutil.rmtree("prediction")

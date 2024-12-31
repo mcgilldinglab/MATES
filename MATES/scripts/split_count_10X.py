@@ -6,6 +6,8 @@ import scipy
 import pybedtools
 import pickle as pkl
 import numpy as np
+import io
+from contextlib import redirect_stdout, redirect_stderr
 from os.path import join
 from MATES.scripts.helper_function import *
 import time
@@ -113,7 +115,17 @@ def get_coverage_vector(aligned_file,chromosome,start,end,total_reads):
         diff = - start
         start = 0
         prefix = True
-    coverage_tuples = aligned_file.count_coverage(chromosome,start,end)
+    quality_flag = True
+    for each in aligned_file:
+        if each.query_qualities is None:
+            quality_flag = False
+            break
+        else:
+            break
+    if quality_flag == False:
+        coverage_tuples = aligned_file.count_coverage(chromosome,start,end,quality_threshold=0)
+    else:
+        coverage_tuples = aligned_file.count_coverage(chromosome,start,end)
     coverage_vector=[0]*(len(coverage_tuples[0]))
 
     for element in coverage_tuples:
@@ -129,7 +141,17 @@ def get_coverage_vector(aligned_file,chromosome,start,end,total_reads):
     coverage_vector = coverage_vector/(total_reads)
     return coverage_vector, coverage_vector_igv
 def get_region_count(aligned_file, chromosome,start,end):
-    coverage_tuples = aligned_file.count_coverage(chromosome,start,end)
+    quality_flag = True
+    for each in aligned_file:
+        if each.query_qualities is None:
+            quality_flag = False
+            break
+        else:
+            break
+    if quality_flag == False:
+        coverage_tuples = aligned_file.count_coverage(chromosome,start,end,quality_threshold=0)
+    else:
+        coverage_tuples = aligned_file.count_coverage(chromosome,start,end)
     coverage_vector=[0]*(end-start)
     for element in coverage_tuples:
         coverage_vector = np.array(coverage_vector) + np.array(element)
@@ -168,8 +190,16 @@ def generate_unique_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, c
         pysam.index(bam_path)
         # t = time.time()
         b = pybedtools.example_bedtool(bam_path)
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=False)
+        if "has inconsistent naming convention for record:" in stdout_buffer.getvalue():
+            raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
+        if "has inconsistent naming convention for record:" in stderr_buffer.getvalue():
+            raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
+       
 
-        a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
         TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
         # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
         # tt2 = time.time()
@@ -254,7 +284,16 @@ def generate_multi_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, co
         pysam.index(bam_path)
         b = pybedtools.example_bedtool(bam_path)
         tt = time.time()
-        a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
+        
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=False)
+        if "has inconsistent naming convention for record:" in stdout_buffer.getvalue():
+            raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
+        if "has inconsistent naming convention for record:" in stderr_buffer.getvalue():
+            raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
+        
         TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
         # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
         with pysam.AlignmentFile(bam_path, "rb") as temp_multi_bam:
@@ -390,7 +429,16 @@ def generate_matrix_chunk(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir,
 
         b = pybedtools.example_bedtool(path_to_bam)
         print(f'load chunk {i+1} bam to bed')
-        TE_selected = TE_ref_bed.intersect(b, u=True,nonamecheck=True)
+        
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=False)
+        if "has inconsistent naming convention for record:" in stdout_buffer.getvalue():
+            raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
+        if "has inconsistent naming convention for record:" in stderr_buffer.getvalue():
+            raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
+        
         generate_unique_matrix(aligned_file,dic,TE_selected,cur_path, coverage_stored_dir, sample_name,total_reads, path,sav_vec='True')
         generate_multi_matrix(aligned_file,dic,TE_selected,cur_path, coverage_stored_dir, sample_name,total_reads, path)
         

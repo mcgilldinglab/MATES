@@ -24,7 +24,7 @@ def prediction(TE_mode, data_mode, sample_list_file, bin_size=5, proportion=80, 
     
     
     if data_mode != "10X" and data_mode != "Smart_seq":
-        raise ValueError('Invalid data format.')
+        raise ValueError("Invalid data format. Supported formats are '10X' and 'Smart_seq'.")
     
     if TE_mode not in ["inclusive", "exclusive"]:
         raise ValueError("Invalid TE mode. Supported formats are 'inclusive' or 'exclusive'.")

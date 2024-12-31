@@ -73,7 +73,7 @@ def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, pro
 
         if data_mode == "10X":
             if not bc_path_file:
-                raise ValueError('Please provide barcodes file for 10X data!')
+                raise ValueError('Please provide barcodes file for 10X format data!')
 
             print("Start splitting multi sub-bam based on cell barcodes...")
             script_path = pkg_resources.resource_filename('MATES', 'scripts/split_bc_u.sh')

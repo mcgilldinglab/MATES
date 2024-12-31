@@ -1,13 +1,19 @@
 # MATES
 A Deep Learning-Based Model for Quantifying Transposable Elements in Single-Cell Sequencing Data ([Nature Communications, 2024](https://www.nature.com/articles/s41467-024-53114-7)).
+### Citation
+If you use `MATES` in your research, please cite `MATES` publication as follows:
+>Wang, R., Zheng, Y., Zhang, Z. et al. MATES: a deep learning-based model for locus-specific quantification of transposable elements in single cell. Nat Commun 15, 8798 (2024). https://doi.org/10.1038/s41467-024-53114-7
 
 ## Overview
 <img title="Model Overview" alt="Alt text" src="/figures/Model-figure-01.png">
-MATES is a specialized tool designed for precise quantification of transposable elements (TEs) in various single-cell datasets. The workflow consists of multiple stages to ensure accurate results. In the initial phase, raw reads are mapped to the reference genome, differentiating between unique-mapping and multi-mapping reads associated with TE loci. Unique-mapping reads create coverage vectors (V<sub>u</sub>), while multi-mapping reads remain associated with V<sub>m</sub> vectors, both capturing read distribution around TEs. TEs are then divided into bins, either unique-dominant (U) or multi-dominant (M), based on read proportion. An autoEncoder model is employed to create latent embeddings (Z<sub>m</sub>) capturing local read context and is combined with TE family information (T<sub>k</sub>). In the subsequent stage, the obtained embeddings are used to jointly estimate the multi-mapping ratio (α<sub>i</sub>) via a multilayer perceptron. Training the model involves a global loss (L<sub>1</sub> and L<sub>2</sub>) comprising reconstruction loss and read coverage continuity. Trained to predict multi-mapping ratios, the model counts reads in TE regions, enabling probabilistic TE quantification at the single-cell level. MATES enhances cell clustering and biomarker identification by integrating TE quantification with gene expression methods.
 
-With the burgeoning field of single-cell sequencing data, the potential for in-depth TE quantification and analysis is enormous, opening avenues to gain invaluable insights into the molecular mechanisms underpinning various human diseases. MATES furnishes a powerful tool for accurately quantifying and investigating TEs at specific loci and single-cell level, thereby significantly enriching our understanding of complex biological processes. This opens a new dimension for genomics and cell biology research and holds promise for potential therapeutic breakthroughs.
+Transposable elements (TEs) are crucial for genetic diversity and gene regulation. Current single-cell quantification methods often align multi-mapping reads to either ‘best-mapped’ or ‘random-mapped’ locations and categorize them at the subfamily levels, overlooking the biological necessity for accurate, locus-specific TE quantification. Moreover, these existing methods are primarily designed for and focused on transcriptomics data, which restricts their adaptability to single-cell data of other modalities. To address these challenges, here we introduce MATES, a deep-learning approach that accurately allocates multi-mapping reads to specific loci of TEs, utilizing context from adjacent read alignments flanking the TE locus. When applied to diverse single-cell omics datasets, MATES shows improved performance over existing methods, enhancing the accuracy of TE quantification and aiding in the identification of marker TEs for identified cell populations. This development facilitates the exploration of single-cell heterogeneity and gene regulation through the lens of TEs, offering an effective transposon quantification tool for the single-cell genomics community.
+<!-- MATES is a specialized tool designed for precise quantification of transposable elements (TEs) in various single-cell datasets. The workflow consists of multiple stages to ensure accurate results. In the initial phase, raw reads are mapped to the reference genome, differentiating between unique-mapping and multi-mapping reads associated with TE loci. Unique-mapping reads create coverage vectors (V<sub>u</sub>), while multi-mapping reads remain associated with V<sub>m</sub> vectors, both capturing read distribution around TEs. TEs are then divided into bins, either unique-dominant (U) or multi-dominant (M), based on read proportion. An autoEncoder model is employed to create latent embeddings (Z<sub>m</sub>) capturing local read context and is combined with TE family information (T<sub>k</sub>). In the subsequent stage, the obtained embeddings are used to jointly estimate the multi-mapping ratio (α<sub>i</sub>) via a multilayer perceptron. Training the model involves a global loss (L<sub>1</sub> and L<sub>2</sub>) comprising reconstruction loss and read coverage continuity. Trained to predict multi-mapping ratios, the model counts reads in TE regions, enabling probabilistic TE quantification at the single-cell level. MATES enhances cell clustering and biomarker identification by integrating TE quantification with gene expression methods. -->
+
+<!-- With the burgeoning field of single-cell sequencing data, the potential for in-depth TE quantification and analysis is enormous, opening avenues to gain invaluable insights into the molecular mechanisms underpinning various human diseases. MATES furnishes a powerful tool for accurately quantifying and investigating TEs at specific loci and single-cell level, thereby significantly enriching our understanding of complex biological processes. This opens a new dimension for genomics and cell biology research and holds promise for potential therapeutic breakthroughs. -->
 
 ## Relesae Note
+* Version 0.1.6: Add a simple mode for MATES to quantify TE within 3 lines of code. Add a common errors Q&A. 
 * Version 0.1.5: Improve the efficiency of splitting BAM files and counting TEs reads.
 * Version 0.1.4: Enhanced the build_reference.py script and the tutorial to build reference genome for species other than Human and Mouse.
 
@@ -41,8 +47,22 @@ Installation should take only a few minutes. Verify that MATES is correctly inst
 ```python
 import MATES
 ```
-## Links
-Interactive MATES web server: <a>https://mates.cellcycle.org</a>.
+
+## Usage
+### Simple mode
+Use the all in one `MATES_pipeline` class.
+```python
+from MATES import MATES_pipeline
+mates = MATES_pipeline(TE_mode, Data_format_type, sample_list_file, bam_path_file,  bc_ind, bc_path_file, ref_path) #set up parameters
+mates.preprocessing() #Preprocessing
+mates.run() #train model and quantify both subfamily and locus-level TE expression
+```
+
+### Advanced mode
+Count coverage vector, Determine U/M region, Generate training and prediction data, Train models, Quantify sub-family level TEs, and Quantify locus_level TEs step by step. Please read our [Examples](https://github.com/mcgilldinglab/MATES/blob/main/example) and [tutorials](https://github.com/mcgilldinglab/MATES/tree/main?tab=readme-ov-file#tutorials). 
+
+### Common Q&A
+If you encounter errors when using MATES, please read our [common Q&A](https://github.com/mcgilldinglab/MATES/blob/main/common_errors.md). 
 
 ## Tutorials
 ### Customize the reference genome for the species of interest
@@ -286,10 +306,8 @@ correct_intronic_TE(data_mode, sample_list_file, ref_path = 'Default')
 ## sample_list_file : <str> path to file conatins sample IDs
 ## ref_path(optional): <str> only needed for self generated reference, provide path to reference. By default TE reference is of name 'TE_intronic.csv'. 
 ``` 
-
-## Citation
-If you use `MATES` in your research, please cite `MATES` publication as follows:
->Wang, R., Zheng, Y., Zhang, Z. et al. MATES: a deep learning-based model for locus-specific quantification of transposable elements in single cell. Nat Commun 15, 8798 (2024). https://doi.org/10.1038/s41467-024-53114-7
+## Links
+Interactive MATES web server: <a>https://mates.cellcycle.org</a>.
 
 ## Contact
 [Yumin Zheng](mailto:yumin.zheng@mail.mcgill.ca), [Ruohan Wang](mailto:ruohan_wang@brown.edu), [Tao Wu](mailto:tao.wu@bcm.edu), [Jun Ding](mailto:jun.ding@mcgill.ca)
