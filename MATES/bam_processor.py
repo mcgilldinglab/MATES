@@ -4,7 +4,7 @@ import math
 import pkg_resources
 from .scripts import start_split_count
 from MATES.scripts.helper_function import *
-def split_count_10X_data(TE_mode,data_mode, sample_list_file, bam_path_file, bc_path_file, bc_ind='CR', ref_path = 'Default'):
+def split_count_10X_data(TE_mode,data_mode, sample_list_file, bam_path_file, bc_path_file, num_threads = 1, bc_ind='CR', ref_path = 'Default'):
     cur_pwd = os.getcwd()
     if data_mode != "10X":
         raise ValueError("Invalid data format. Currently this function only support '10X' format.")
@@ -33,7 +33,7 @@ def split_count_10X_data(TE_mode,data_mode, sample_list_file, bam_path_file, bc_
         print(f"Start splitting and counting {sample} data ...")
         print('barcode directory:',os.path.join(cur_pwd,barcodes))
         check_file_exists(os.path.join(cur_pwd,barcodes))
-        start_split_count(bc_ind, os.path.join(cur_pwd,bam_file), os.path.join(cur_pwd,barcodes), sample, TE_mode, TE_ref_path)
+        start_split_count(bc_ind, os.path.join(cur_pwd,bam_file), os.path.join(cur_pwd,barcodes), sample, TE_mode, TE_ref_path,num_threads)
 
 def split_bam_files(data_mode, threads_num, sample_list_file, bam_path_file, process_num=1,bc_ind='CR', long_read=False, bc_path_file=None):
     if data_mode not in ["10X", "Smart_seq"]:
