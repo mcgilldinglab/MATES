@@ -51,10 +51,10 @@ import MATES
 
 ## Usage
 ### Simple mode
-Use the all in one `MATES_pipeline` class.
+Use the all in one `MATES_pipeline`. Please read our [Examples and APIs](https://github.com/mcgilldinglab/MATES/blob/main/example/simple_mode_sample_pipeline.ipynb) for details. 
 ```python
 from MATES import MATES_pipeline
-mates = MATES_pipeline(TE_mode, Data_format_type, sample_list_file, bam_path_file,  bc_ind, bc_path_file, ref_path) #set up parameters
+mates = MATES_pipeline(TE_mode, data_mode, sample_list_file, bam_path_file) #set up parameters
 mates.preprocessing() #Preprocessing
 mates.run() #train model and quantify both subfamily and locus-level TE expression
 ```

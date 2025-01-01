@@ -223,7 +223,7 @@ TEs=pd.read_csv(TE_ref_path,header=None)
 TEs.columns = ['chromosome','start','end','TE_Name', 'index','strand', 'TE_fam','length']
 
 TE_ref_bed = pybedtools.example_bedtool(cur_path+'/'+TE_ref_path[:-4] + '.bed')
-
+TE_chroms = list(TEs['chromosome'].unique())
 if Path(barcodes_file).is_file():
     with open(barcodes_file, "r") as fh:
         barcodes = [l.rstrip() for l in fh.readlines()]
@@ -234,14 +234,22 @@ if (batch+1)*batch_size > len(barcodes):
     end_idx = len(barcodes)
 else:
     end_idx = (batch+1)*batch_size
-
+flag = False
 for bc in barcodes[start_idx: end_idx]:
     counted += 1
     if counted % 10 == 0 or counted == batch_size:
         print("Processing batch " + str(batch) + ":" + str(counted) +"/"+ str(batch_size) + " for sample " + sample)
     path_to_unique_bam =  join(unique_path, bc+'.bam')
     path_to_multi_bam =  join(multi_path, bc+'.bam')
-    
+    unique_bam = pysam.AlignmentFile(path_to_unique_bam, "rb")
+    multi_bam = pysam.AlignmentFile(path_to_multi_bam, "rb")
+    bam_chroms = list(unique_bam.references)
+    bam_chroms += list(multi_bam.references)
+    if flag == False:
+        if len(set(bam_chroms) & set(TE_chroms)) == 0:
+            raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
+        else:
+            flag = True
     samp_bc = [sample,bc]
     if not os.path.exists(path_to_unique_bam):        
         continue

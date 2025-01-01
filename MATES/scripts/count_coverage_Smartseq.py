@@ -218,7 +218,8 @@ else:
 TEs=pd.read_csv(TE_ref_path,header=None)
 TEs.columns = ['chromosome', 'start','end', 'TE_Name', 'index','strand','TE_Fam','length']
 TE_ref_bed = pybedtools.example_bedtool(cur_path+'/'+TE_ref_path[:-4] + '.bed')
-
+TE_chroms = list(TEs['chromosome'].unique())
+flag = False
 print('Start build coverage vector for thread ' + str(batch) + '...')
 for sample in sample_list[start_idx: end_idx]:
     if not os.path.exists(join(cur_path,'count_coverage/'+sample)):
@@ -230,7 +231,15 @@ for sample in sample_list[start_idx: end_idx]:
     
     path_to_unique_bam =  join(unique_path, sample+'_uniqueread.bam')
     path_to_multi_bam =  join(multi_path, sample+'_multireads.bam')
-
+    unique_bam = pysam.AlignmentFile(path_to_unique_bam, "rb")
+    multi_bam = pysam.AlignmentFile(path_to_multi_bam, "rb")
+    bam_chroms = list(unique_bam.references)
+    bam_chroms += list(multi_bam.references)
+    if flag == False:
+        if len(set(bam_chroms) & set(TE_chroms)) == 0:
+            raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
+        else:
+            flag = True
     if not os.path.exists(path_to_unique_bam):        
         continue
 
