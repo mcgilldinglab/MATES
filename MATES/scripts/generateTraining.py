@@ -117,6 +117,22 @@ def generate_Training(data_mode, file_name, bin_size, prop,cut_off=50):
         cell_ana = pickle.load(file)
         csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'
         stat = pd.read_csv(csv)
+        # if stat['count'].sum() == 0:
+        #     print("**Warning ")
+        # if stat['count'].max() < cut_off:
+        with open(path+'total_unique_TE_reads.txt', 'r') as f:
+            total_unique_TE_reads = int(f.read())
+        with open(path+'total_multi_TE_reads.txt', 'r') as f:
+            total_multi_TE_reads = int(f.read())
+        if  total_unique_TE_reads + total_multi_TE_reads == 0:
+            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+        elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+            #warning
+            print("**Warning**: The provided bam files don't have enough multi-mapping TE reads.\n**Warning**: Skip generating the training set!")
+            return
+        elif total_unique_TE_reads == 0:
+            raise RuntimeError("The provided bam files don't have enough uniquely mapping TE reads. Unable to quantify TE reads!")
+
         print('Start generating training sample for unqiue read TE...')
         unique_vec_matrix, unique_TE_matrix, unique_vec_meta_select = get_unique_sample(cell_ana,stat,data_mode,cut_off=cut_off)
         TE_train = np.array(unique_vec_matrix)
@@ -155,6 +171,19 @@ def generate_Training(data_mode, file_name, bin_size, prop,cut_off=50):
     elif data_mode == '10X':
         sample=file_name
         path = cur_path+'/MU_Stats/'+sample+'/'
+        with open(path+'total_unique_TE_reads.txt', 'r') as f:
+            total_unique_TE_reads = int(f.read())
+        with open(path+'total_multi_TE_reads.txt', 'r') as f:
+            total_multi_TE_reads = int(f.read())
+        if  total_unique_TE_reads + total_multi_TE_reads == 0:
+            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+        elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+            #warning
+            print(f"**Warning**: The provided bam files don't have enough multi-mapping TE reads in sample: {sample}.\n**Warning**: Skip generating the training set for sample: {sample}!")
+            return
+        elif total_unique_TE_reads == 0:
+            raise RuntimeError("The provided bam files don't have enough uniquely mapping TE reads. Unable to quantify TE reads!")
+
         file = open(path + 'M&U_'+str(bin_size)+'_'+str(prop)+'%.pkl', 'rb')
         cell_ana = pickle.load(file)
         csv = path + str(bin_size)+'_'+str(prop)+'_stat.csv'

@@ -13,10 +13,11 @@ Transposable elements (TEs) are crucial for genetic diversity and gene regulatio
 <!-- With the burgeoning field of single-cell sequencing data, the potential for in-depth TE quantification and analysis is enormous, opening avenues to gain invaluable insights into the molecular mechanisms underpinning various human diseases. MATES furnishes a powerful tool for accurately quantifying and investigating TEs at specific loci and single-cell level, thereby significantly enriching our understanding of complex biological processes. This opens a new dimension for genomics and cell biology research and holds promise for potential therapeutic breakthroughs. -->
 
 ## Relesae Note
+* Version 0.1.8: Support TE quantification for data without sufficient multi-mapping TE reads.
 * Version 0.1.7: Parallelize preprocessing for 10X-format data.
 * Version 0.1.6: Add a simple mode for MATES to quantify TE within 3 lines of code. Add a common errors Q&A. 
 * Version 0.1.5: Improve the efficiency of splitting BAM files and counting TEs reads.
-* Version 0.1.4: Enhanced the build_reference.py script and the tutorial to build reference genome for species other than Human and Mouse.
+<!-- * Version 0.1.4: Enhanced the build_reference.py script and the tutorial to build reference genome for species other than Human and Mouse. -->
 
 MATES is actively under development; please feel free to reach out if you encounter any issue.
 

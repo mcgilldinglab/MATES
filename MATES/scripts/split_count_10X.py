@@ -704,13 +704,15 @@ def start_split_count(barcode_field, path_to_bam, barcodes_file, sample, TE_mode
         if bc not in list(multi_TE_index_dict.keys()):
             TE_index_list_unique = unique_TE_index_dict[bc]
             k_path = join(cur_path, coverage_stored_dir, sample, bc)
+            # os.rename(k_path + '/TE_unique_Info.csv', k_path + '/TE_solely_unique_Info.csv')
             k_path_u = k_path + '/unique_vec'
             # os.rmdir(k_path_u)     
+
             shutil.rmtree(k_path_u)   
             continue
 
-        TE_index_list_unique = unique_TE_index_dict[bc]#generate_unique_matric(samp_bc,path_to_unique_bam, TE_ref_bed, coverage_stored_dir, sav_vec = True)
-        TE_index_list_multi = multi_TE_index_dict[bc]#generate_multi_matric(samp_bc, path_to_multi_bam, TE_ref_bed, coverage_stored_dir)
+        TE_index_list_unique = unique_TE_index_dict[bc]
+        TE_index_list_multi = multi_TE_index_dict[bc]
         overlap = list(set(TE_index_list_unique) & set(TE_index_list_multi))
         
         ## remove unique reads coverage vector not in overlap list

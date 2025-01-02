@@ -1,19 +1,13 @@
-import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import math
 from os.path import join
 import scipy
-import os
 import pandas as pd
 import pickle
 import numpy as np
-from tqdm import tqdm
 import torch
-from torch.utils.data import DataLoader
-from torch.autograd import Variable
 from tqdm import tqdm
-import numpy as np
 from scipy import sparse
 from scipy.io import mmwrite
 import os
@@ -45,7 +39,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
         MLP.train()
         AENet.train()
         torch.autograd.set_detect_anomaly(True)
-        with tqdm (total = (len(MLP_TE_full)//BATCH_SIZE)+1) as pbar:
+        with tqdm (total = (len(MLP_TE_full)//BATCH_SIZE)+1, desc='Predicting locus level TE expression') as pbar:
             for step, (TE_vecs, Batch_ids, metainfo) in enumerate(MLP_full_loader):
                 current_batch_size = TE_vecs.size(0)
                 MLP_TE_data = torch.Tensor(current_batch_size,1*2001)
@@ -82,6 +76,19 @@ def make_prediction_locus(data_mode, bin_size, proportion, path_to_TE_ref, AE_tr
     BIN_SIZE = str(bin_size)
     PROP = str(proportion)
     cur_path = os.getcwd()
+    path = cur_path + '/MU_Stats/'+sample   
+    with open(join(path, 'total_unique_TE_reads.txt'), 'r') as f:
+        total_unique_TE_reads = int(f.read())
+    with open(join(path, 'total_multi_TE_reads.txt'), 'r') as f:
+        total_multi_TE_reads = int(f.read())
+    if  total_unique_TE_reads + total_multi_TE_reads == 0:
+        raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+    elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+        #warning
+        print(f"**Warning**: The provided bam files don't have enough multi-mapping TE reads in sample: {sample}.\n**Warning**: Skip multi-mapping TE prediction for sample: {sample}!")
+        return
+    elif total_unique_TE_reads == 0:
+            raise RuntimeError("The provided bam files don't have enough uniquely mapping TE reads. Unable to quantify TE reads!")
 
     def check_cuda_device(device='cuda:0'):
         if device == 'cpu':

@@ -298,14 +298,6 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
         print(e)
     
     DEVICE = torch.device(DEVICE)
-    
-    # if USE_GPU and torch.cuda.is_available():
-    #     DEVICE = torch.device('cuda:0')
-    #     torch.cuda.empty_cache()
-    #     torch.cuda.memory_allocated()
-    # else:
-    #     DEVICE = torch.device('cpu')
-    
     print('Data Mode: ',data_mode)
     print('AE Settings:  Epoch: {:6d}, Learning Rate: {:.6f}'.format(AE_EPOCHS,AE_LR))
     print('MLP Settings: Epoch: {:6d}, Learning Rate: {:.6f}'.format(MLP_EPOCHS,MLP_LR))
@@ -322,6 +314,16 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
             os.mkdir(path_dir + '/MLP')
 
         path = cur_path + '/MU_Stats'  
+        with open(join(path, 'total_unique_TE_reads.txt'), 'r') as f:
+            total_unique_TE_reads = int(f.read())
+        with open(join(path, 'total_multi_TE_reads.txt'), 'r') as f:
+            total_multi_TE_reads = int(f.read())
+        if  total_unique_TE_reads + total_multi_TE_reads == 0:
+            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+        elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+            #warning
+            print("**Warning**: The provided bam files don't have enough multi-mapping TE reads!\n**Warning**: Skip model training, will quantify unique TE only.")
+            return
         p1= path + '/Unique_TE_train_'+BIN_SIZE + '_' + PROP + '.npz'
         unique_vec_matrix = scipy.sparse.load_npz(p1)
         p2 = path + '/Unique_BATCH_train_'+BIN_SIZE + '_' + PROP+ '.npz'
@@ -333,7 +335,18 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
         try:
             Batch_train = unique_TE_matrix.toarray().reshape(i,)
         except:
-            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+            with open(join(path, 'total_unique_TE_reads.txt'), 'r') as f:
+                total_unique_TE_reads = int(f.read())
+            with open(join(path, 'total_multi_TE_reads.txt'), 'r') as f:
+                total_multi_TE_reads = int(f.read())
+            if  total_unique_TE_reads + total_multi_TE_reads == 0:
+                raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+            elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+                #warning
+                print("**Warning**: The provided bam files don't have enough multi-mapping TE reads!\n**Warning**: Skip model training, will quantify unique TE only.")
+                return
+            else:
+                raise RuntimeError("Failed to load training data.")
         p3 = path + '/Multi_TE_train_'+BIN_SIZE + '_' + PROP+'.npz'
         p4 = path + '/Multi_Batch_train_'+BIN_SIZE + '_' + PROP+'.npz'
         p5 = path + '/Multi_Region_train_'+BIN_SIZE + '_' + PROP +'.npz'
@@ -371,7 +384,17 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
         if not os.path.isdir(join(path_dir, sample) + '/MLP'):
             os.mkdir(join(path_dir, sample) + '/MLP')
 
-        path = cur_path + '/MU_Stats/'+sample      
+        path = cur_path + '/MU_Stats/'+sample   
+        with open(join(path, 'total_unique_TE_reads.txt'), 'r') as f:
+            total_unique_TE_reads = int(f.read())
+        with open(join(path, 'total_multi_TE_reads.txt'), 'r') as f:
+            total_multi_TE_reads = int(f.read())
+        if  total_unique_TE_reads + total_multi_TE_reads == 0:
+            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+        elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+            #warning
+            print(f"**Warning**: The provided bam files don't have enough multi-mapping TE reads in sample: {sample}!\n**Warning**: Skip model training for sample: {sample}, will quantify unique TE only.")
+            return   
         p1= path + '/Unique_TE_train_'+BIN_SIZE + '_' + PROP + '.npz'
         unique_vec_matrix = scipy.sparse.load_npz(p1)
         p2 = path + '/Unique_BATCH_train_'+BIN_SIZE + '_' + PROP+ '.npz'
@@ -383,7 +406,18 @@ def MATES_train(data_mode, file_name, bin_size, prop, BATCH_SIZE= 4096, AE_LR = 
         try:
             Batch_train = unique_TE_matrix.toarray().reshape(i,)
         except:
-            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+            with open(join(path, 'total_unique_TE_reads.txt'), 'r') as f:
+                total_unique_TE_reads = int(f.read())
+            with open(join(path, 'total_multi_TE_reads.txt'), 'r') as f:
+                total_multi_TE_reads = int(f.read())
+            if  total_unique_TE_reads + total_multi_TE_reads == 0:
+                raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+            elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+                #warning
+                print(f"**Warning**: The provided bam files don't have enough multi-mapping TE reads! in sample: {sample}.\n**Warning**: Skip model training for sample: {sample}, will quantify unique TE only.")
+                return
+            else:
+                raise ValueError("Failed to load training data!")
         p3 = path + '/Multi_TE_train_'+BIN_SIZE + '_' + PROP+'.npz'
         p4 = path + '/Multi_Batch_train_'+BIN_SIZE + '_' + PROP+'.npz'
         p5 = path + '/Multi_Region_train_'+BIN_SIZE + '_' + PROP +'.npz'

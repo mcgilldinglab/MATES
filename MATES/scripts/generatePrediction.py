@@ -16,6 +16,20 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, cut_
     if not os.path.isdir(join(cur_path ,Multi_TE_dir)):
             os.mkdir(join(cur_path, Multi_TE_dir))
     if data_mode == 'Smart_seq':
+        path = cur_path + '/MU_Stats'
+        with open(join(path, 'total_unique_TE_reads.txt'), 'r') as f:
+            total_unique_TE_reads = int(f.read())
+        with open(join(path, 'total_multi_TE_reads.txt'), 'r') as f:
+            total_multi_TE_reads = int(f.read())
+        if  total_unique_TE_reads + total_multi_TE_reads == 0:
+            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+        elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+            #warning
+            print("**Warning**: The provided bam files don't have enough multi-mapping TE reads.\n**Warning**: Skip generating data for prediction!.")
+            return
+        elif total_unique_TE_reads == 0:
+            raise RuntimeError("The provided bam files don't have enough uniquely mapping TE reads. Unable to quantify TE reads!")
+
         TE_fam_path = join(cur_path,'MU_Stats',str(bin_size)+'_'+str(prop)+'_stat.csv')
         tmp = pd.read_csv(TE_fam_path)
         tmp.columns=['TE_fam', 'count']
@@ -34,6 +48,20 @@ def generate_Prediction(data_mode,file_name,bin_size, prop, path_to_TE_ref, cut_
     
     elif data_mode == '10X':
         sample = file_name
+        path = cur_path + '/MU_Stats/'+sample   
+        with open(join(path, 'total_unique_TE_reads.txt'), 'r') as f:
+            total_unique_TE_reads = int(f.read())
+        with open(join(path, 'total_multi_TE_reads.txt'), 'r') as f:
+            total_multi_TE_reads = int(f.read())
+        if  total_unique_TE_reads + total_multi_TE_reads == 0:
+            raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+        elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+            #warning
+            print(f"**Warning**: The provided bam files don't have enough multi-mapping TE reads in sample: {sample}.\n**Warning**: Skip generating to predict sample: {sample}!.")
+            return
+        elif total_unique_TE_reads == 0:
+            raise RuntimeError("The provided bam files don't have enough uniquely mapping TE reads. Unable to quantify TE reads!")
+
         TE_fam_path = join(cur_path,'MU_Stats',sample,str(bin_size)+'_'+str(prop)+'_stat.csv')
         tmp = pd.read_csv(TE_fam_path)
         tmp.columns=['TE_fam', 'count']

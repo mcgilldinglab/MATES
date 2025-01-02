@@ -52,7 +52,7 @@ def prediction(path_dir, device, MLP_Batch_full, MLP_meta_full, MLP_TE_full, AE_
         MLP.train()
         AENet.train()
         torch.autograd.set_detect_anomaly(True)
-        with tqdm (total = (len(MLP_TE_full)//BATCH_SIZE)+1) as pbar:
+        with tqdm (total = (len(MLP_TE_full)//BATCH_SIZE)+1,desc='Predicting TE expression') as pbar:
             for step, (TE_vecs, Batch_ids, metainfo) in enumerate(MLP_full_loader):
                 # MLP_TE_data.data.copy_(TE_vecs)
                 # # MLP_Region_data.data.copy_(TE_region)
@@ -97,6 +97,19 @@ def make_prediction(data_mode, bin_size, proportion, path_to_TE_ref, AE_trained_
     BIN_SIZE = str(bin_size)
     PROP = str(proportion)
     cur_path = os.getcwd()
+    path = cur_path + '/MU_Stats/'+sample   
+    with open(join(path, 'total_unique_TE_reads.txt'), 'r') as f:
+        total_unique_TE_reads = int(f.read())
+    with open(join(path, 'total_multi_TE_reads.txt'), 'r') as f:
+        total_multi_TE_reads = int(f.read())
+    if  total_unique_TE_reads + total_multi_TE_reads == 0:
+        raise ValueError("The provided bam files don't have enough reads mapped to TE loci.")
+    elif total_unique_TE_reads > 0 and total_multi_TE_reads == 0:
+        #warning
+        print(f"**Warning**: The provided bam files don't have enough multi-mapping TE reads in sample: {sample}.\n**Warning**: Skip multi-mapping TE prediction for sample: {sample}!")
+        return
+    elif total_unique_TE_reads == 0:
+            raise RuntimeError("The provided bam files don't have enough uniquely mapping TE reads. Unable to quantify TE reads!")
 
     def check_cuda_device(device='cuda:0'):
         if device == 'cpu':

@@ -1,6 +1,7 @@
 import torch
 from MATES import bam_processor, data_processor, MATES_model, TE_quantifier
 import warnings
+import shutil
 class MATES_pipeline:
     def __init__(self,TE_mode, data_mode, sample_list_file, bam_path_file, bc_ind='CB', threads_num=1,bc_path_file=None, bin_size=5, proportion=80, cut_off=50,ref_path = 'Default'):
         '''
@@ -83,10 +84,13 @@ class MATES_pipeline:
         MATES_model.train(self.data_mode, self.sample_list_file, bin_size = self.bin_size, proportion = self.proportion, BATCH_SIZE = BATCH_SIZE, AE_LR = AE_LR, MLP_LR = MLP_LR, AE_EPOCHS = AE_EPOCHS, MLP_EPOCHS = MLP_EPOCHS, DEVICE = DEVICE)
         MATES_model.prediction(self.TE_mode, self.data_mode, self.sample_list_file, bin_size = self.bin_size, proportion = self.proportion, AE_trained_epochs = MLP_EPOCHS, MLP_trained_epochs = MLP_EPOCHS, DEVICE = DEVICE)
         if self.data_mode == '10X':
-            TE_quantifier.unique_TE_MTX(self.TE_mode, self.data_mode, self.sample_list_file, 1, ref_path = self.ref_path, bc_path_file = self.bc_path_file)
+            TE_quantifier.unique_TE_MTX(self.TE_mode, self.data_mode, self.sample_list_file, self.threads_num, ref_path = self.ref_path, bc_path_file = self.bc_path_file)
         else:
             TE_quantifier.unique_TE_MTX(self.TE_mode, self.data_mode, self.sample_list_file, self.threads_num, ref_path = self.ref_path, bc_path_file = self.bc_path_file)
         TE_quantifier.finalize_TE_MTX(self.data_mode, self.sample_list_file)
         if quantify_locus_TE:
             MATES_model.prediction_locus(self.TE_mode, self.data_mode, self.sample_list_file, bin_size = self.bin_size, proportion = self.proportion, AE_trained_epochs = MLP_EPOCHS, MLP_trained_epochs = MLP_EPOCHS, DEVICE = DEVICE, ref_path = self.ref_path)
             TE_quantifier.quantify_locus_TE_MTX(self.TE_mode, self.data_mode, self.sample_list_file)
+        import os
+        if os.path.exists('Multi_TE'):
+            shutil.rmtree('Multi_TE')

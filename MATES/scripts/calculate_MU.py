@@ -32,10 +32,18 @@ def calculate_M_U_Smart_seq(sample_list, TE_ref, BIN_SIZE, PROPORTION):
     for fam in TE_ref.TE_fam.unique():
         vec_count[fam]={}
     print('Start calculating U/M region for each cell...')
+    total_unique_TE_reads = 0
+    total_multi_TE_reads = 0
     with tqdm(total = len(sample_list)) as pbar:
         for sample in sample_list:
             path = join(cur_path, 'count_coverage/'+sample)
             if os.path.isdir(path):
+                unique_te_info = join(path,'TE_unique_Info.csv')
+                unique_te_info = pd.read_csv(unique_te_info)
+                total_unique_TE_reads+=unique_te_info['TE_region_read_num'].sum()
+                if Path(join(path,'TE_multi_Info.csv')).is_file():
+                    multi_te_info = pd.read_csv(join(path,'TE_multi_Info.csv'))
+                    total_multi_TE_reads+=multi_te_info['TE_region_read_num'].sum()
                 unique_path = join(path,'unique.npz')
                 multi_path = join(path,'multi.npz')
                 if Path(multi_path).is_file() and os.stat(multi_path).st_size != 0:
@@ -98,7 +106,7 @@ def calculate_M_U_Smart_seq(sample_list, TE_ref, BIN_SIZE, PROPORTION):
                             vec_count[TE_fam][sample]=[]
                         vec_count[TE_fam][sample].append(key)
             pbar.update(1)
-    return vec_count
+    return vec_count, total_unique_TE_reads, total_multi_TE_reads
 
 
 def calculate_M_U_10X(sample, TE_ref, barcodes, BIN_SIZE, PROPORTION):
@@ -109,11 +117,19 @@ def calculate_M_U_10X(sample, TE_ref, barcodes, BIN_SIZE, PROPORTION):
     path = join(cur_path, 'count_coverage/'+sample)
     if not os.path.exists(cur_path + '/MU_Stats/'+ sample):
         os.mkdir(cur_path + '/MU_Stats/'+ sample)
+    total_unique_TE_reads = 0
+    total_multi_TE_reads = 0
     print('Start Calculating U/M region for cells in ' + sample + '...')
     with tqdm(total = len(barcodes)) as pbar:
         for cb in barcodes:
             cb_path=join(path,cb)
             if os.path.isdir(cb_path):
+                unique_te_info = join(cb_path,'TE_unique_Info.csv')
+                unique_te_info = pd.read_csv(unique_te_info)
+                total_unique_TE_reads+=unique_te_info['TE_region_read_num'].sum()
+                if Path(join(cb_path,'TE_multi_Info.csv')).is_file():
+                    multi_te_info = pd.read_csv(join(cb_path,'TE_multi_Info.csv'))
+                    total_multi_TE_reads+=multi_te_info['TE_region_read_num'].sum()
                 unique_path = join(cb_path,'unique.npz')
                 multi_path = join(cb_path,'multi.npz')
                 if Path(multi_path).is_file() and os.stat(multi_path).st_size != 0:
@@ -177,7 +193,7 @@ def calculate_M_U_10X(sample, TE_ref, barcodes, BIN_SIZE, PROPORTION):
                             vec_count[TE_fam][cb]=[]
                         vec_count[TE_fam][cb].append(key)
                 pbar.update(1)
-    return vec_count
+    return vec_count, total_unique_TE_reads, total_multi_TE_reads
 
 
 def calculate_MU(data_mode, file_name, BIN_SIZE, PROPORTION, path_to_TE_ref, cut_off=50,barcodes_file=None):
@@ -195,7 +211,12 @@ def calculate_MU(data_mode, file_name, BIN_SIZE, PROPORTION, path_to_TE_ref, cut
         for i in range(len(sample_list)):
             if sample_list[i][-1] == '\n':
                 sample_list[i] = sample_list[i][:-1]
-        vec_count = calculate_M_U_Smart_seq(sample_list, TE_ref, BIN_SIZE, PROPORTION)
+        vec_count,total_unique_TE_reads,total_multi_TE_reads = calculate_M_U_Smart_seq(sample_list, TE_ref, BIN_SIZE, PROPORTION)
+        #write total_unique_TE_reads to a file
+        with open(cur_path + '/MU_Stats/total_unique_TE_reads.txt', 'w') as f:
+            f.write(str(total_unique_TE_reads))
+        with open(cur_path + '/MU_Stats/total_multi_TE_reads.txt', 'w') as f:
+            f.write(str(total_multi_TE_reads))
         print('Finish calculating U/M region for each cell, finalizing...')
 
         count_dict = {}
@@ -240,7 +261,12 @@ def calculate_MU(data_mode, file_name, BIN_SIZE, PROPORTION, path_to_TE_ref, cut
         if Path(barcodes_file).is_file():
             with open(barcodes_file, "r") as fh:
                 barcodes = [l.rstrip() for l in fh.readlines()]
-        vec_count = calculate_M_U_10X(sample, TE_ref, barcodes, BIN_SIZE, PROPORTION)
+        vec_count, total_unique_TE_reads,total_multi_TE_reads = calculate_M_U_10X(sample, TE_ref, barcodes, BIN_SIZE, PROPORTION)
+        #write total_unique_TE_reads to a file
+        with open(cur_path + '/MU_Stats/'+sample+'/total_unique_TE_reads.txt', 'w') as f:
+            f.write(str(total_unique_TE_reads))
+        with open(cur_path + '/MU_Stats/'+sample+'/total_multi_TE_reads.txt', 'w') as f:
+            f.write(str(total_multi_TE_reads))
         print('Finish calculating U/M region for cells in '+ sample +', finalizing...')
         count_dict = {}
         for key in vec_count.keys():
