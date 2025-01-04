@@ -13,15 +13,23 @@ import pysam
 import pybedtools
 
 
+# def count_region_read(aligned_file, chromosome, start, end):    
+#     read_name = []
+#     for pileupcolumn in aligned_file.pileup(chromosome,start,end,truncate =True):
+#         for pileupread in pileupcolumn.pileups:
+#             if not pileupread.is_del and not pileupread.is_refskip:
+#                 if pileupread.alignment.query_name not in read_name:
+#                     read_name.append(pileupread.alignment.query_name)
+#     return len(read_name)
 def count_region_read(aligned_file, chromosome, start, end):    
     read_name = []
-    for pileupcolumn in aligned_file.pileup(chromosome,start,end,truncate =True):
-        for pileupread in pileupcolumn.pileups:
-            if not pileupread.is_del and not pileupread.is_refskip:
-                if pileupread.alignment.query_name not in read_name:
-                    read_name.append(pileupread.alignment.query_name)
-    return len(read_name)
-
+    for each_read in aligned_file.fetch(chromosome,start,end):
+        for (cigar_op, length) in each_read.cigartuples:
+            if cigar_op in [2, 3]:  # 2 = deletion , 3 = skip
+                continue
+            else:
+                read_name.append(each_read.query_name)
+    return len(set(read_name))
 def get_read_num(sample_name):
     total_reads=0
     cur_path = os.getcwd()

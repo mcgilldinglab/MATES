@@ -43,12 +43,12 @@ class MATES_pipeline:
         self.threads_num = threads_num
         if self.data_mode == '10X' and self.bc_path_file == None:
             raise ValueError("Please provide barcodes file for 10X data!")
-    def preprocessing(self):
+    def preprocessing(self,debug=False):
         '''
             Preprocesses the data for the MATES training and quantifying TEs.
         '''
         if self.data_mode == '10X':
-            bam_processor.split_count_10X_data(self.TE_mode, self.sample_list_file, self.bam_path_file, self.bc_path_file, bc_ind = self.bc_ind, ref_path = self.ref_path, num_threads = self.threads_num)
+            bam_processor.split_count_10X_data(self.TE_mode, self.sample_list_file, self.bam_path_file, self.bc_path_file, bc_ind = self.bc_ind, ref_path = self.ref_path, num_threads = self.threads_num,debug=debug)
             data_processor.calculate_UM_region(self.TE_mode, self.data_mode, self.sample_list_file, bin_size = self.bin_size, proportion = self.proportion, cut_off = self.cut_off, ref_path = self.ref_path, bc_path_file = self.bc_path_file)
             data_processor.generate_training_sample(self.data_mode, self.sample_list_file, self.bin_size, self.proportion)
             data_processor.generate_prediction_sample(self.TE_mode, self.data_mode, self.sample_list_file, self.bin_size, self.proportion, cut_off = self.cut_off, ref_path = self.ref_path, bc_path_file = self.bc_path_file)

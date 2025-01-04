@@ -76,14 +76,23 @@ class BamWriter:
 #         for barcode in tqdm(self._out_files.keys(), total=len(list(self._out_files.keys())), desc="Writing sub-bam files"):
 #             for each in self._out_files[barcode].keys():
 #                 self._out_files[barcode][each].close()
+# def count_region_read(aligned_file, chromosome, start, end):    
+#     read_name = []
+#     for pileupcolumn in aligned_file.pileup(chromosome,start,end,truncate =True):
+#         for pileupread in pileupcolumn.pileups:
+#             if not pileupread.is_del and not pileupread.is_refskip:
+#                 if pileupread.alignment.query_name not in read_name:
+#                     read_name.append(pileupread.alignment.query_name)
+#     return len(read_name)
 def count_region_read(aligned_file, chromosome, start, end):    
     read_name = []
-    for pileupcolumn in aligned_file.pileup(chromosome,start,end,truncate =True):
-        for pileupread in pileupcolumn.pileups:
-            if not pileupread.is_del and not pileupread.is_refskip:
-                if pileupread.alignment.query_name not in read_name:
-                    read_name.append(pileupread.alignment.query_name)
-    return len(read_name)
+    for each_read in aligned_file.fetch(chromosome,start,end):
+        for (cigar_op, length) in each_read.cigartuples:
+            if cigar_op in [2, 3]:  # 2 = deletion , 3 = skip
+                continue
+            else:
+                read_name.append(each_read.query_name)
+    return len(set(read_name))
 def split_bam(input_bam, num_chunks, output_prefix, tag_field='CB'):
     # Open the input BAM file
     bamfile = input_bam
@@ -231,11 +240,11 @@ def count_unique_matrix(bc, cur_path,coverage_stored_dir,sample_name,TE_selected
             # for idx, row in TE_selected.iterrows():
             for row in TE_selected.itertuples(index=False):
                 
-                chrom = row.chromosome#['chromosome']
-                start = row.start#['start']
-                end = row.end#['end']
-                strand = row.strand#['strand']
-                TE_index = row.index#['index']
+                chrom = row.chromosome
+                start = row.start
+                end = row.end
+                strand = row.strand
+                TE_index = row.index
                 ##check if TE region has reads
                 # tt2 = time.time()
                 if temp_unique_bam.count(chrom,start,end) != 0:
@@ -559,7 +568,7 @@ def check_chromosome_format(bam_file, TE_selected_bed):
         pass
     raise RuntimeError("Chromosome name formatting conflicts in the input bam and TE reference!")
 
-def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_stored_dir, num_threads=1,tag_field='CB'):
+def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_stored_dir, num_threads=1,tag_field='CB',debug=False):
     sample_name = samp_bc
     bc = pd.read_csv(barcodes_file,sep='\t',header=None)
     bc_list = bc[0].tolist()
@@ -604,7 +613,10 @@ def generate_matrix(samp_bc, barcodes_file, path_to_bam, TE_ref_bed, coverage_st
     with open(join(path,'multi_TE_index_dict.pkl'), 'rb') as f:
         multi_TE_index = pickle.load(f)
     print("Multi matrix finished")
-    shutil.rmtree(sub_bam_path)
+    if debug==False:
+        shutil.rmtree(sub_bam_path)
+    else:
+        pass
     return unique_TE_index, multi_TE_index
 
 def generate_matrix_chunk(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir, num_chunk, tag_field='CB'):
@@ -669,12 +681,12 @@ def generate_matrix_chunk(samp_bc, path_to_bam, TE_ref_bed, coverage_stored_dir,
 
 import sys  
 from multiprocessing import Pool
-def start_split_count(barcode_field, path_to_bam, barcodes_file, sample, TE_mode, TE_ref_bed_path,num_threads):
+def start_split_count(barcode_field, path_to_bam, barcodes_file, sample, TE_mode, TE_ref_bed_path,num_threads,debug=False):
 
     TE_ref_bed = pybedtools.example_bedtool(TE_ref_bed_path)
     coverage_stored_dir = 'count_coverage_intron' if TE_mode == 'intronic' else 'count_coverage'
 
-    unique_TE_index_dict, multi_TE_index_dict = generate_matrix(sample, barcodes_file, path_to_bam, TE_ref_bed, coverage_stored_dir, num_threads=num_threads,tag_field=barcode_field)
+    unique_TE_index_dict, multi_TE_index_dict = generate_matrix(sample, barcodes_file, path_to_bam, TE_ref_bed, coverage_stored_dir, num_threads=num_threads,tag_field=barcode_field,debug=debug)
     cur_path = os.getcwd()
     if not os.path.exists(join(cur_path,coverage_stored_dir)):
         os.mkdir(join(cur_path,coverage_stored_dir))
