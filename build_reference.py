@@ -16,7 +16,7 @@ def get_gene_name(TE_chrom_new, diff_ref):
 
 def main():
     parser = argparse.ArgumentParser(description="Process TE data")
-    parser.add_argument('--species', type=str, choices=['Mouse', 'Human', 'Other','human','mouse'], help='Species type')
+    parser.add_argument('--species', type=str, choices=['Mouse', 'Human', 'Other','human','mouse','other'], help='Species type')
     parser.add_argument('--ref_mode', type=str, default=['repeats', 'TE'], help='TE reference type')
     parser.add_argument('--cut_mode', type=str, default='5prime', choices=['5prime', '3prime'], help='Cut mode')
     parser.add_argument('--cut_length', type=int, default=1000, help='Cut length')
@@ -41,7 +41,7 @@ def main():
         TE = TE_ref[['TE_chrom','start','end','index','strand','TE_Name','TE_Fam']]
         genes = pd.read_csv(f"{species.lower()}_Genes.csv")
         
-    elif species == 'Other':
+    elif species == 'Other' or species == 'other':
         if args.other_species_TE is None or args.other_species_GTF is None:
             raise ValueError('Please provide the path to the TE reference and GTF file')
         if args.output_prefix is None:
@@ -68,6 +68,14 @@ def main():
                 genes = pr.read_gff3(args.other_species_GTF)
         except:
             raise ValueError('Please check your GTF file, unable to read it.')
+        if build_intronic:
+            introns = genes.features.introns(by="gene")
+            if len(introns) == 0:
+                raise ValueError('No introns are found in the GTF. Please check the input files.')
+            introns.df.to_csv(f'{species.lower()}_introns.csv', index=False)
+            introns = pd.read_csv(f'{species.lower()}_introns.csv')
+            bed_introns = introns[['Chromosome', 'Start', 'End']]
+            bed_introns.to_csv(f'{species.lower()}_introns.bed', sep='\t', index=False, header=False)
         genes = genes[['Chromosome','Feature','Start','End','Strand','gene_id','gene_name']]
         genes = genes.as_df()
         TE = TEs
