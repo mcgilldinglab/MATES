@@ -22,7 +22,7 @@ def download_and_process_files(species, ref_mode, build_intronic):
             'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz"
         }
     }
-    build_intronic = (build_intronic=='True')
+    build_intronic = (build_intronic==True)
     if species not in urls:
         print("Please enter valid reference species Mouse/Human.")
         return
@@ -90,6 +90,9 @@ def download_and_process_files(species, ref_mode, build_intronic):
         print(f"Genes reference saved to {species.lower()}_Genes.csv")
     elif build_intronic:
         genes = pr.read_gtf(gtf_file)
+        Genes = genes[['Chromosome', 'Feature', 'Start', 'End', 'Strand', 'gene_id', 'gene_name']]
+        Genes.to_csv(f'{species.lower()}_Genes.csv')
+        print(f"Genes reference saved to {species.lower()}_Genes.csv")
         exons = genes[genes.Feature == "exon"]
         transcripts = genes[genes.Feature == "transcript"]
         # Subtract exons from transcripts to get introns
@@ -99,7 +102,7 @@ def download_and_process_files(species, ref_mode, build_intronic):
         introns = pd.read_csv(f'{species.lower()}_introns.csv')
         bed_introns = introns[['Chromosome', 'Start', 'End']]
         bed_introns.to_csv(f'{species.lower()}_introns.bed', sep='\t', index=False, header=False)
-
+        print(f"Introns reference saved to {species.lower()}_introns.csv and {species.lower()}_introns.bed")
 
 if __name__ == "__main__":
     species = sys.argv[1]
