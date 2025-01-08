@@ -235,6 +235,7 @@ def count_unique_matrix(bc, cur_path,coverage_stored_dir,sample_name,TE_selected
 
         # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
         # tt2 = time.time()
+        unique_index_vector = {}
         with pysam.AlignmentFile(bam_path, "rb") as temp_unique_bam:
 
             # for idx, row in TE_selected.iterrows():
@@ -262,16 +263,23 @@ def count_unique_matrix(bc, cur_path,coverage_stored_dir,sample_name,TE_selected
                             region_start = end - 1000
                             region_end = end + 1000
                         ##add coverage vector to the matrix
-                        coverage_vector, coverage_vector_igv = get_coverage_vector(temp_unique_bam, chrom,region_start, region_end,total_reads[bc])
-                        if sav_vec:
-                            if not os.path.exists(join(unique_vec_path,str(TE_index)+".npz")):
-                                sparse_vector = sparse.csr_matrix(coverage_vector)
-                                sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
-                            else:
-                                sparse_vector = sparse.load_npz(join(unique_vec_path,str(TE_index)+".npz"))
-                                sparse_vector = sparse.vstack([sparse_vector, sparse.csr_matrix(coverage_vector)])
-                                sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
-                            
+                        coverage_vector, coverage_vector_igv = get_coverage_vector(temp_unique_bam, chrom,region_start, region_end,total_reads[bc])           
+                        try:
+                            temp = unique_index_vector[TE_index]
+                            sparse_vector = sparse.vstack([temp, sparse.csr_matrix(coverage_vector)])
+                        except:
+                            sparse_vector = sparse.csr_matrix(coverage_vector)
+                        unique_index_vector[TE_index] = sparse_vector
+                        # if sav_vec:
+                            # if not os.path.exists(join(unique_vec_path,str(TE_index)+".npz")):
+                            #     sparse_vector = sparse.csr_matrix(coverage_vector)
+                            #     sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
+                            # else:
+                            #     sparse_vector = sparse.load_npz(join(unique_vec_path,str(TE_index)+".npz"))
+                            #     sparse_vector = sparse.vstack([sparse_vector, sparse.csr_matrix(coverage_vector)])
+                            #     sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
+        if sav_vec:
+            np.save(join(unique_vec_path,"unique_index_vector.npy"),unique_index_vector)     
         count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
         count_table_TE = pd.DataFrame(count_table_TE)
         if 'TE_unique_Info.csv' in os.listdir(path):
@@ -322,6 +330,7 @@ def generate_unique_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, c
             TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
             # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
             # tt2 = time.time()
+            unique_index_vector = {}
             with pysam.AlignmentFile(bam_path, "rb") as temp_unique_bam:
 
                 # for idx, row in TE_selected.iterrows():
@@ -354,15 +363,23 @@ def generate_unique_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, c
                             coverage_vector, coverage_vector_igv = get_coverage_vector(temp_unique_bam, chrom,region_start, region_end,total_reads[bc])
                             # print('tt4 ',time.time()-tt4)
                             # tt5 = time.time()
-                            if sav_vec:
-                                if not os.path.exists(join(unique_vec_path,str(TE_index)+".npz")):
-                                    sparse_vector = sparse.csr_matrix(coverage_vector)
-                                    sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
-                                else:
-                                    sparse_vector = sparse.load_npz(join(unique_vec_path,str(TE_index)+".npz"))
-                                    sparse_vector = sparse.vstack([sparse_vector, sparse.csr_matrix(coverage_vector)])
-                                    sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
-                                
+                            try:
+                                temp = unique_index_vector[TE_index]
+                                sparse_vector = sparse.vstack([temp, sparse.csr_matrix(coverage_vector)])
+                            except:
+                                sparse_vector = sparse.csr_matrix(coverage_vector)
+                            unique_index_vector[TE_index] = sparse_vector
+                            # if sav_vec:
+                                # if not os.path.exists(join(unique_vec_path,str(TE_index)+".npz")):
+                                #     sparse_vector = sparse.csr_matrix(coverage_vector)
+                                #     sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
+                                    
+                                # else:
+                                #     sparse_vector = sparse.load_npz(join(unique_vec_path,str(TE_index)+".npz"))
+                                #     sparse_vector = sparse.vstack([sparse_vector, sparse.csr_matrix(coverage_vector)])
+                                #     sparse.save_npz(join(unique_vec_path,str(TE_index)+".npz"), sparse_vector)
+            if sav_vec:
+                np.save(join(unique_vec_path,"unique_index_vector.npy"),unique_index_vector)           
             count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
             count_table_TE = pd.DataFrame(count_table_TE)
             if 'TE_unique_Info.csv' in os.listdir(path):
@@ -418,6 +435,7 @@ def count_multi_matrix(bc, cur_path,coverage_stored_dir,sample_name,TE_selected_
             a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
         TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
         # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
+        multi_index_vector = {}
         with pysam.AlignmentFile(bam_path, "rb") as temp_multi_bam:
             for idx, row in TE_selected.iterrows():
                 chrom = row['chromosome']
@@ -441,8 +459,15 @@ def count_multi_matrix(bc, cur_path,coverage_stored_dir,sample_name,TE_selected_
                         
                         ##add coverage vector to the matrix
                         coverage_vector, coverage_vector_igv = get_coverage_vector(temp_multi_bam, chrom,region_start, region_end,total_reads[bc])
-                        sparse_vector = sparse.csr_matrix(coverage_vector)
-                        sparse.save_npz(join(multi_vec_path,str(TE_index)+".npz"), sparse_vector)
+                        # sparse.save_npz(join(multi_vec_path,str(TE_index)+".npz"), sparse_vector)
+                        try:
+                            temp = multi_index_vector[TE_index]
+                            sparse_vector = sparse.vstack([temp, sparse.csr_matrix(coverage_vector)])
+                        except:
+                            sparse_vector = sparse.csr_matrix(coverage_vector)
+                        multi_index_vector[TE_index] = sparse_vector
+
+        np.save(join(multi_vec_path,"multi_index_vector.npy"),multi_index_vector)
         count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
         count_table_TE = pd.DataFrame(count_table_TE)
         if 'TE_multi_Info.csv' in os.listdir(path):
@@ -512,8 +537,15 @@ def generate_multi_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, co
                             
                             ##add coverage vector to the matrix
                             coverage_vector, coverage_vector_igv = get_coverage_vector(temp_multi_bam, chrom,region_start, region_end,total_reads[bc])
-                            sparse_vector = sparse.csr_matrix(coverage_vector)
-                            sparse.save_npz(join(multi_vec_path,str(TE_index)+".npz"), sparse_vector)
+                            # sparse.save_npz(join(multi_vec_path,str(TE_index)+".npz"), sparse_vector)
+                            try:
+                                temp = multi_index_vector[TE_index]
+                                sparse_vector = sparse.vstack([temp, sparse.csr_matrix(coverage_vector)])
+                            except:
+                                sparse_vector = sparse.csr_matrix(coverage_vector)
+                            multi_index_vector[TE_index] = sparse_vector
+
+            np.save(join(multi_vec_path,"multi_index_vector.npy"),multi_index_vector)
             count_table_TE = {'TE_index':TE_index_list, 'TE_region_read_num': TE_region_read_num}
             count_table_TE = pd.DataFrame(count_table_TE)
             if 'TE_multi_Info.csv' in os.listdir(path):
@@ -551,7 +583,7 @@ def write_sub_bam_files_process(read, total_reads, b_writer,  tag_field='CB'):
         total_reads[bc] += 1
     except KeyError:
         total_reads[bc] = 1
-    if read.mapq == 255:
+    if read.mapq >= 255:
         b_writer.write_record_to_barcode(read, bc, 'unique')
     else:
         b_writer.write_record_to_barcode(read, bc, 'multi')
@@ -732,17 +764,24 @@ def start_split_count(barcode_field, path_to_bam, barcodes_file, sample, TE_mode
         k_path_u = join(k_path, 'unique_vec')
         k_path_m = join(k_path, 'multi_vec')
         
-        for rname in os.listdir(k_path_u):
-            if int(rname[:-4]) not in overlap:
-                r_path = join(k_path_u, str(rname))
-                if os.path.isfile(r_path):
-                    os.remove(r_path)
+        k_u_dict = np.load(join(k_path_u,"unique_index_vector.npy"),allow_pickle='True').item()
+        for kname in list(k_u_dict.keys()):
+            if kname not in overlap:
+                k_u_dict.pop(kname)
+        k_m_dict = np.load(join(k_path_m,"multi_index_vector.npy"),allow_pickle='True').item()
+        # for rname in os.listdir(k_path_u):
+        #     if int(rname[:-4]) not in overlap:
+        #         r_path = join(k_path_u, str(rname))
+        #         if os.path.isfile(r_path):
+        #             os.remove(r_path)
 
         ## save full multi TE for prediction    
         k_m = []
         k_meta = TE_index_list_multi
+        
         for kname in k_meta:
-            data_m = scipy.sparse.load_npz(join(k_path_m, str(kname)+'.npz'))
+            data_m = k_m_dict[kname]
+            # data_m = scipy.sparse.load_npz(join(k_path_m, str(kname)+'.npz'))
             k_m.append(data_m.toarray()[0])
         k_m = np.array(k_m)
         multi_mtx = sparse.csr_matrix(k_m)
@@ -750,11 +789,14 @@ def start_split_count(barcode_field, path_to_bam, barcodes_file, sample, TE_mode
         with open(join(k_path,"meta_multi_full.npz"),'wb') as f:
             pickle.dump(k_meta,f)
 
-        for rname in os.listdir(k_path_m):
-            if int(rname[:-4]) not in overlap:
-                h_path = join(k_path_m, str(rname))
-                if os.path.isfile(h_path):
-                    os.remove(h_path)        
+        for kname in list(k_m_dict.keys()):
+            if kname not in overlap:
+                k_m_dict.pop(kname)
+        # for rname in os.listdir(k_path_m):
+        #     if int(rname[:-4]) not in overlap:
+        #         h_path = join(k_path_m, str(rname))
+        #         if os.path.isfile(h_path):
+        #             os.remove(h_path)        
 
         ## save samples could use for training
         k_path = join(cur_path, coverage_stored_dir, sample, bc)
@@ -765,12 +807,14 @@ def start_split_count(barcode_field, path_to_bam, barcodes_file, sample, TE_mode
         k_m = []
         k_overlap = overlap
         for kname in k_overlap:
-            data_u = scipy.sparse.load_npz(join(k_path_u, str(kname)+'.npz'))
+            # data_u = scipy.sparse.load_npz(join(k_path_u, str(kname)+'.npz'))
+            data_u = k_u_dict[kname]
             k_u.append(data_u.toarray()[0])
             if os.path.isfile(join(k_path_u, str(kname)+'.npz')):
                 os.remove(join(k_path_u, str(kname)+'.npz'))
 
-            data_m = scipy.sparse.load_npz(join(k_path_m, str(kname)+'.npz'))
+            # data_m = scipy.sparse.load_npz(join(k_path_m, str(kname)+'.npz'))
+            data_m = k_m_dict[kname]
             k_m.append(data_m.toarray()[0])
             if os.path.isfile(join(k_path_m, str(kname)+'.npz')):
                 os.remove(join(k_path_m, str(kname)+'.npz'))
