@@ -512,7 +512,7 @@ def generate_multi_matrix(aligned_file,barcode_list,TE_selected_bed,cur_path, co
                 a_with_b = TE_selected_bed.intersect(b, u=True, wa = True, nonamecheck=True)
             
             TE_selected = a_with_b.to_dataframe(names=['chromosome', 'start', 'end', 'TE_Name', 'index', 'strand','TE_fam', 'length'])
-            
+            multi_index_vector = {}
             # TE_selected = TE_vec_count[TE_vec_count['count'] != 0]
             with pysam.AlignmentFile(bam_path, "rb") as temp_multi_bam:
                 for idx, row in TE_selected.iterrows():
