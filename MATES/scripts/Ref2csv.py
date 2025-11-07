@@ -6,19 +6,19 @@ import pyranges as pr
 def download_and_process_files(species, ref_mode, build_intronic):
     urls = {
         'Mouse': {
-            'repeatmasker': "https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz",
+            'repeatmasker': "https://www.repeatmasker.org/genomes/mm10/rmsk4.0.5_rb20140131/mm10.fa.out.gz",
             'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz"
         },
         'mouse': {
-            'repeatmasker': "https://www.repeatmasker.org/genomes/mm10/RepeatMasker-rm405-db20140131/mm10.fa.out.gz",
+            'repeatmasker': "https://www.repeatmasker.org/genomes/mm10/rmsk4.0.5_rb20140131/mm10.fa.out.gz",
             'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M10/gencode.vM10.annotation.gtf.gz"
         },
         'Human': {
-            'repeatmasker': "https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz",
+            'repeatmasker': "https://www.repeatmasker.org/genomes/hg38/rmsk4.0.5_rb20140131/hg38.fa.out.gz",
             'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz"
         },
         'human': {
-            'repeatmasker': "https://www.repeatmasker.org/genomes/hg38/RepeatMasker-rm405-db20140131/hg38.fa.out.gz",
+            'repeatmasker': "https://www.repeatmasker.org/genomes/hg38/rmsk4.0.5_rb20140131/hg38.fa.out.gz",
             'gtf': "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.primary_assembly.annotation.gtf.gz"
         }
     }
