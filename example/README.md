@@ -1,6 +1,6 @@
 # Example
 
-We provide an example dataset containing 50 cells from 10X scRNA 2CLCs mouse data. This example will guide you through the process of using MATES to quantify TE expression in this sample data. The sample data can be downloaded [here](https://mcgill-my.sharepoint.com/:u:/g/personal/yumin_zheng_mail_mcgill_ca/ESmJrKvPuapBiuh7noTKksIBWosum5rswiG28Sgvb-IDUg?e=5sSfkZ). You may place downloaded data at this folder under the directory with name 'sample_data'.
+We provide an example dataset containing 50 cells from 10X scRNA 2CLCs mouse data. This example will guide you through the process of using MATES to quantify TE expression in this sample data. The sample data can be downloaded [here](https://zenodo.org/records/17900966). You may place downloaded data at this folder under the directory with name 'sample_data'.
 
 ## Package Installation
 
